@@ -1,0 +1,129 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model League {
+  id             String          @id @default(cuid())
+  name           String
+  createdAt      DateTime        @default(now())
+  managers       Manager[]
+  players        Player[]
+  fixtures       Fixture[]
+  draftEvents    DraftEvent[]
+  transferWindow TransferWindow?
+}
+
+model Manager {
+  id            String   @id @default(cuid())
+  token         String   @unique
+  teamName      String
+  coachName     String
+  isBot         Boolean  @default(false)
+  captainPlayerId String?
+  // Seeded flavor numbers for bot managers, added on top of anything actually
+  // computed from owned players' real match stats (real managers start at 0).
+  bonusPoints   Int      @default(0)
+  bonusGwPoints Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  leagueId String
+  league   League @relation(fields: [leagueId], references: [id])
+
+  players     Player[]     @relation("PlayerOwner")
+  draftEvents DraftEvent[]
+
+  @@index([leagueId])
+}
+
+// SQLite has no native enum support in Prisma, so `position` is a plain
+// string constrained in application code to "GK" | "DEF" | "MID" | "FWD"
+// (see src/types.ts).
+model Player {
+  id       String   @id
+  name     String
+  club     String
+  position String
+  price    Float
+  form     Float
+  photoUrl String?
+
+  leagueId String
+  league   League @relation(fields: [leagueId], references: [id])
+
+  ownerId String?
+  owner   Manager? @relation("PlayerOwner", fields: [ownerId], references: [id])
+  isBench Boolean  @default(false)
+
+  draftEvents DraftEvent[]
+  matchStats  PlayerMatchStat[]
+
+  @@index([leagueId])
+  @@index([ownerId])
+}
+
+model DraftEvent {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  leagueId String
+  league   League @relation(fields: [leagueId], references: [id])
+
+  managerId String
+  manager   Manager @relation(fields: [managerId], references: [id])
+
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
+
+  @@index([leagueId, createdAt])
+}
+
+model TransferWindow {
+  id       String @id @default(cuid())
+  leagueId String @unique
+  league   League @relation(fields: [leagueId], references: [id])
+
+  opensAt  DateTime
+  closesAt DateTime
+
+  // Demo/admin override so the app's phase toggle can drive state directly
+  // instead of waiting on the real clock. Null = derive phase from the clock.
+  phaseOverride String?
+
+  autoAssignDone Boolean @default(false)
+}
+
+model Fixture {
+  id        String   @id @default(cuid())
+  leagueId  String
+  league    League   @relation(fields: [leagueId], references: [id])
+  gameweek  Int
+  homeClub  String
+  awayClub  String
+  homeScore Int
+  awayScore Int
+  kickoffAt DateTime
+
+  stats PlayerMatchStat[]
+
+  @@index([leagueId, gameweek])
+}
+
+model PlayerMatchStat {
+  id         String  @id @default(cuid())
+  fixtureId  String
+  fixture    Fixture @relation(fields: [fixtureId], references: [id])
+  playerId   String
+  player     Player  @relation(fields: [playerId], references: [id])
+  goals      Int     @default(0)
+  assists    Int     @default(0)
+  cleanSheet Boolean @default(false)
+  yellow     Int     @default(0)
+  red        Int     @default(0)
+
+  @@unique([fixtureId, playerId])
+}

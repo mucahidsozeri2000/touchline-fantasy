@@ -1,0 +1,16 @@
+node_modules/
+dist/
+*.log
+
+# server
+server/prisma/dev.db
+server/prisma/dev.db-journal
+server/.env
+
+# mobile / expo
+mobile/.expo/
+mobile/node_modules/
+mobile/dist/
+mobile/web-build/
+
+.DS_Store
