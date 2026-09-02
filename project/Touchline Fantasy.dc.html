@@ -1,0 +1,2175 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="stylesheet" href="_ds/modernist-bb859f29-ea22-4a65-a2ab-5126da7b8670/styles.css">
+</helmet>
+<div style="min-height:100vh;background:var(--color-neutral-300);display:flex;align-items:center;justify-content:center;padding:32px;font-family:var(--font-body)">
+<div style="width:400px;height:844px;background:var(--color-bg);box-shadow:var(--shadow-lg);display:flex;flex-direction:column;overflow:hidden;position:relative">
+
+<!-- LOGIN -->
+<sc-if value="{{ isLogin }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;flex:1;min-height:0;padding:32px 24px;justify-content:center;gap:28px">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+    <span style="font-family:var(--font-heading);font-weight:800;font-size:26px;letter-spacing:0.02em">TOUCHLINE</span>
+    <div style="display:flex;flex:none">
+      <button onClick="{{ setLangEn }}" style="padding:5px 10px;border:1px solid {{ langEnBorder }};background:{{ langEnBg }};color:{{ langEnColor }};font-family:var(--font-heading);font-weight:800;font-size:10px;letter-spacing:0.06em;cursor:pointer">EN</button>
+      <button onClick="{{ setLangTr }}" style="padding:5px 10px;border:1px solid {{ langTrBorder }};border-left:none;background:{{ langTrBg }};color:{{ langTrColor }};font-family:var(--font-heading);font-weight:800;font-size:10px;letter-spacing:0.06em;cursor:pointer">TR</button>
+    </div>
+  </div>
+  <span style="font-size:13px;color:color-mix(in srgb, var(--color-text) 55%, transparent);margin-top:-20px">{{ t.tagline }}</span>
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <div class="field">
+      <label>{{ t.teamNameLabel }}</label>
+      <input class="input" placeholder="{{ t.teamNamePh }}" value="{{ teamName }}" onChange="{{ setTeamName }}">
+    </div>
+    <div class="field">
+      <label>{{ t.coachNameLabel }}</label>
+      <input class="input" placeholder="{{ t.coachNamePh }}" value="{{ coachName }}" onChange="{{ setCoachName }}">
+    </div>
+    <button class="btn btn-primary btn-block" disabled="{{ loginDisabled }}" onClick="{{ startOnboarding }}">{{ t.enterLeague }}</button>
+    <div style="display:flex;align-items:center;gap:10px;margin:4px 0">
+      <div style="flex:1;height:1px;background:var(--color-divider)"></div>
+      <span style="font-size:11px;color:color-mix(in srgb, var(--color-text) 50%, transparent)">{{ t.or }}</span>
+      <div style="flex:1;height:1px;background:var(--color-divider)"></div>
+    </div>
+    <button class="btn btn-secondary btn-block" onClick="{{ signInGoogle }}" style="display:flex;align-items:center;gap:10px">
+      <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.63h6.47c-.28 1.5-1.13 2.77-2.4 3.62v3.01h3.86c2.26-2.08 3.59-5.16 3.59-8.81z"></path><path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.94-2.92l-3.86-3.01c-1.07.72-2.45 1.15-4.08 1.15-3.14 0-5.8-2.12-6.75-4.97H1.24v3.11C3.2 21.3 7.26 24 12 24z"></path><path fill="#FBBC05" d="M5.25 14.25a7.19 7.19 0 0 1 0-4.5V6.64H1.24a11.98 11.98 0 0 0 0 10.72l4.01-3.11z"></path><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.43-3.43C17.95 1.19 15.24 0 12 0 7.26 0 3.2 2.7 1.24 6.64l4.01 3.11C6.2 6.9 8.86 4.75 12 4.75z"></path></svg>
+      {{ t.google }}
+    </button>
+  </div>
+</div>
+</sc-if>
+
+<!-- ONBOARDING -->
+<sc-if value="{{ isOnboarding }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div style="flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:32px;text-align:center">
+    <div style="width:64px;height:64px;border:2px solid var(--color-accent);display:flex;align-items:center;justify-content:center;color:var(--color-accent-700);font-family:var(--font-heading);font-weight:800;font-size:24px">{{ onboardStep.num }}</div>
+    <span style="font-family:var(--font-heading);font-weight:800;font-size:20px">{{ onboardStep.title }}</span>
+    <span style="font-size:13px;line-height:1.5;color:color-mix(in srgb, var(--color-text) 55%, transparent);max-width:280px">{{ onboardStep.body }}</span>
+    <div style="display:flex;gap:6px;margin-top:8px">
+      <sc-for list="{{ onboardDots }}" as="dot" hint-placeholder-count="3">
+        <div style="width:{{ dot.size }};height:6px;background:{{ dot.bg }}"></div>
+      </sc-for>
+    </div>
+  </div>
+  <div style="padding:16px 24px 24px;display:flex;flex-direction:column;gap:8px;flex:none">
+    <button class="btn btn-primary btn-block" onClick="{{ onboardNext }}">{{ onboardCta }}</button>
+    <button class="btn btn-ghost btn-block" onClick="{{ skipOnboarding }}">{{ t.skip }}</button>
+  </div>
+</div>
+</sc-if>
+
+<!-- LEAGUE SETUP -->
+<sc-if value="{{ isLeagueSetup }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div class="nav" style="padding:14px 16px;flex:none;gap:10px">
+    <button onClick="{{ goHome }}" style="background:transparent;border:none;cursor:pointer;padding:0;display:flex;color:var(--color-text)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+    <span class="nav-brand" style="font-size:16px">{{ t.setupTitle }}</span>
+  </div>
+  <div class="seg" style="margin:16px 16px 0;align-self:flex-start;flex:none">
+    <label class="seg-opt"><input type="radio" name="setupMode" checked="{{ setupIsCreate }}" onChange="{{ setSetupCreate }}">Oluştur</label>
+    <label class="seg-opt"><input type="radio" name="setupMode" checked="{{ setupIsJoin }}" onChange="{{ setSetupJoin }}">Katıl</label>
+  </div>
+
+  <sc-if value="{{ setupIsCreate }}" hint-placeholder-val="{{ true }}">
+  <div style="flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:18px">
+    <div class="field">
+      <label>Lig Adı</label>
+      <input class="input" placeholder="örn. Ofsayt Tuzağı" value="{{ newLeagueName }}" onChange="{{ setNewLeagueName }}">
+    </div>
+    <div>
+      <h6>Menajerler</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button onClick="{{ decSize }}" style="width:38px;height:38px;flex:none;display:flex;align-items:center;justify-content:center;border:1px solid var(--color-divider);background:transparent;color:var(--color-text);cursor:pointer;padding:0;font-family:var(--font-heading);font-weight:800;font-size:16px">–</button>
+        <input class="input" type="number" min="4" max="20" value="{{ leagueSize }}" onChange="{{ setLeagueSize }}" style="flex:1;text-align:center;font-family:var(--font-heading);font-weight:800;font-size:18px">
+        <button onClick="{{ incSize }}" style="width:38px;height:38px;flex:none;display:flex;align-items:center;justify-content:center;border:1px solid var(--color-divider);background:transparent;color:var(--color-text);cursor:pointer;padding:0;font-family:var(--font-heading);font-weight:800;font-size:16px">+</button>
+      </div>
+      <p style="font-size:12px;line-height:1.5;margin:8px 0 0;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ sizeHint }}</p>
+    </div>
+    <div>
+      <h6>Menajer Başına Bütçe</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <div style="display:flex;align-items:baseline;gap:10px">
+        <span style="font-family:var(--font-heading);font-weight:800;font-size:26px;color:var(--color-accent-700)">£{{ budgetSetting }}M</span>
+        <span style="font-size:12px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">15 oyunculu kadro</span>
+      </div>
+      <input type="range" min="80" max="200" step="10" value="{{ budgetSetting }}" onChange="{{ setBudgetSetting }}" style="width:100%;margin-top:10px;accent-color:var(--color-accent)">
+    </div>
+    <div>
+      <h6>İhale Penceresi</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="field"><label>Açılış</label><input class="input" value="{{ auctionOpens }}" onChange="{{ setAuctionOpens }}"></div>
+        <div class="field"><label>Kapanış</label><input class="input" value="{{ auctionCloses }}" onChange="{{ setAuctionCloses }}"></div>
+      </div>
+      <p style="font-size:12px;line-height:1.5;margin:10px 0 0;color:color-mix(in srgb, var(--color-text) 55%, transparent)">Menajerler bu pencere içinde oyuncular için teklif verir. Pencere kapandığında kazanan teklifler kadroya katılır, satılmayan her oyuncu liste fiyatından açık satışa çıkar.</p>
+    </div>
+    <div>
+      <h6>Davet Kodu</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:var(--color-surface);border:1px solid var(--color-divider)">
+        <span style="font-family:var(--font-heading);font-weight:800;font-size:18px;letter-spacing:0.12em">{{ inviteCode }}</span>
+        <span class="tag tag-outline">Paylaş</span>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-block" disabled="{{ createDisabled }}" onClick="{{ confirmLeague }}">Lig Oluştur</button>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ setupIsJoin }}" hint-placeholder-val="{{ false }}">
+  <div style="flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:18px">
+    <div class="field">
+      <label>Davet Kodu</label>
+      <input class="input" placeholder="örn. TCH-4Q2X" value="{{ joinCode }}" onChange="{{ setJoinCode }}">
+    </div>
+    <p style="font-size:12px;line-height:1.5;margin:0;color:color-mix(in srgb, var(--color-text) 55%, transparent)">Kodu lig yöneticisinden isteyin. Ligin bütçesi ve ihale penceresi zaten ayarlanmış olarak katılırsınız.</p>
+    <div>
+      <h6>Açık Ligler</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ openLeagues }}" as="lg" hint-placeholder-count="3">
+          <button onClick="{{ lg.join }}" style="width:100%;text-align:left;background:var(--color-surface);border:1px solid var(--color-divider);padding:14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;gap:10px">
+            <span style="display:flex;flex-direction:column;gap:3px">
+              <span style="font-family:var(--font-heading);font-weight:800;font-size:13px">{{ lg.name }}</span>
+              <span style="font-size:11px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ lg.seats }} · İhale {{ lg.opens }}</span>
+            </span>
+            <span class="tag tag-accent" style="white-space:nowrap">£{{ lg.budget }}M</span>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-block" disabled="{{ joinDisabled }}" onClick="{{ confirmLeague }}">Lige Katıl</button>
+  </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isApp }}" hint-placeholder-val="{{ false }}">
+<!-- AUCTION -->
+<sc-if value="{{ isAuction }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div class="nav" style="padding:14px 16px;flex:none;gap:10px">
+    <button onClick="{{ goHome }}" style="background:transparent;border:none;cursor:pointer;padding:0;display:flex;color:var(--color-text)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg></button>
+    <span class="nav-brand" style="font-size:16px;flex:1">İHALE</span>
+    <span class="tag tag-accent" style="white-space:nowrap">{{ auctionTag }}</span>
+  </div>
+  <div style="background:var(--color-accent);color:var(--color-bg);padding:12px 16px;display:flex;justify-content:space-between;align-items:baseline;flex:none">
+    <span style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;font-family:var(--font-heading);font-weight:800">{{ clockLabel }}</span>
+    <span style="font-family:var(--font-heading);font-weight:800;font-size:16px">{{ auctionClock }}</span>
+  </div>
+  <sc-if value="{{ extensionActive }}" hint-placeholder-val="{{ false }}">
+  <div style="padding:10px 16px;background:var(--color-accent-100);border-bottom:2px solid var(--color-accent);display:flex;align-items:center;gap:8px;flex:none">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex:none;color:var(--color-accent-700)"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+    <span style="font-size:12px;line-height:1.35"><span style="font-family:var(--font-heading);font-weight:800;color:var(--color-accent-700)">Son saniyeler…</span> gecikmeli bir teklif bu loту 60 saniye uzattı.</span>
+  </div>
+  </sc-if>
+  <sc-if value="{{ hasOutbidAlerts }}" hint-placeholder-val="{{ false }}">
+  <div style="border-bottom:2px solid var(--color-divider);flex:none">
+    <sc-for list="{{ outbidAlerts }}" as="al" hint-placeholder-count="1">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--color-surface);border-bottom:1px solid var(--color-divider)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex:none;color:var(--color-accent-700)"><path d="M10.268 21a2 2 0 0 0 3.464 0"></path><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path></svg>
+        <span style="flex:1;font-size:12px;line-height:1.35"><span style="font-family:var(--font-heading);font-weight:800">{{ al.bidder }}</span> seni <span style="font-family:var(--font-heading);font-weight:800">{{ al.name }}</span> için geçti — £{{ al.amount }}M</span>
+        <button onClick="{{ al.counter }}" style="flex:none;padding:0 10px;height:28px;border:1px solid var(--color-accent);background:var(--color-accent);color:var(--color-bg);font-family:var(--font-heading);font-weight:800;font-size:10px;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;white-space:nowrap">Karşı Teklif</button>
+      </div>
+    </sc-for>
+  </div>
+  </sc-if>
+  <div style="display:flex;border-bottom:2px solid var(--color-divider);flex:none">
+    <label class="seg-opt" style="flex:1;display:flex;align-items:center;gap:8px;padding:10px 16px;cursor:pointer;border:none">
+      <input type="checkbox" checked="{{ blindRound }}" onChange="{{ toggleBlind }}" style="accent-color:var(--color-accent);width:16px;height:16px;flex:none">
+      <span style="display:flex;flex-direction:column;gap:1px;text-align:left">
+        <span style="font-family:var(--font-heading);font-weight:800;font-size:11px;letter-spacing:0.06em;text-transform:uppercase">Kör Tur</span>
+        <span style="font-size:11px;color:color-mix(in srgb, var(--color-text) 55%, transparent);text-transform:none;letter-spacing:0">{{ blindHint }}</span>
+      </span>
+    </label>
+  </div>
+  <div style="display:flex;border-bottom:2px solid var(--color-divider);flex:none">
+    <div style="flex:1;padding:10px 14px;border-right:1px solid var(--color-divider)"><h6 style="margin:0 0 2px">Serbest Bakiye</h6><div style="font-family:var(--font-heading);font-weight:800;font-size:18px;color:var(--color-accent-700)">£{{ freeFunds }}M</div></div>
+    <div style="flex:1;padding:10px 14px;border-right:1px solid var(--color-divider)"><h6 style="margin:0 0 2px">Bağlanan</h6><div style="font-family:var(--font-heading);font-weight:800;font-size:18px">£{{ committed }}M</div></div>
+    <div style="flex:1;padding:10px 14px"><h6 style="margin:0 0 2px">Önde</h6><div style="font-family:var(--font-heading);font-weight:800;font-size:18px">{{ leadingCount }}/{{ bidCount }}</div></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:2px solid var(--color-divider);flex:none">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;color:var(--color-neutral-600)"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+    <input class="input" style="flex:1;border:none;background:transparent;padding:0" placeholder="Oyuncu veya kulüp ara" value="{{ lotQuery }}" onChange="{{ setLotQuery }}">
+    <sc-if value="{{ hasLotQuery }}" hint-placeholder-val="{{ false }}">
+      <button onClick="{{ clearLotQuery }}" style="flex:none;background:transparent;border:none;cursor:pointer;padding:0;display:flex;color:var(--color-neutral-600)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+    </sc-if>
+  </div>
+  <div class="seg" style="margin:14px 16px 0;align-self:flex-start;flex:none">
+    <label class="seg-opt"><input type="radio" name="lotPos" checked="{{ lotPosIsAll }}" onChange="{{ setLotPosAll }}">Tümü</label>
+    <label class="seg-opt"><input type="radio" name="lotPos" checked="{{ lotPosIsGK }}" onChange="{{ setLotPosGK }}">GK</label>
+    <label class="seg-opt"><input type="radio" name="lotPos" checked="{{ lotPosIsDEF }}" onChange="{{ setLotPosDEF }}">DEF</label>
+    <label class="seg-opt"><input type="radio" name="lotPos" checked="{{ lotPosIsMID }}" onChange="{{ setLotPosMID }}">MID</label>
+    <label class="seg-opt"><input type="radio" name="lotPos" checked="{{ lotPosIsFWD }}" onChange="{{ setLotPosFWD }}">FWD</label>
+  </div>
+  <div style="flex:1;min-height:0;overflow-y:auto;padding:12px 16px 16px;display:flex;flex-direction:column;gap:10px">
+    <sc-if value="{{ lotsEmpty }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:40px 16px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-neutral-500)"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path><path d="M8 11h6"></path></svg>
+        <span style="font-size:13px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">"{{ lotQuery }}" ile eşleşen lot yok.</span>
+      </div>
+    </sc-if>
+    <sc-for list="{{ lots }}" as="lot" hint-placeholder-count="5">
+      <div style="border:1px solid {{ lot.cardBorder }};background:{{ lot.cardBg }}">
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 14px">
+          <div style="position:relative;width:36px;height:36px;border-radius:50%;background:var(--color-bg);border:1px solid var(--color-divider);flex:none;display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:800;font-size:12px"><span style="position:absolute;top:-2px;right:-2px;width:10px;height:10px;border-radius:50%;background:{{ lot.clubDot }};border:1.5px solid var(--color-bg)"></span>{{ lot.initials }}</div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+            <span style="font-family:var(--font-heading);font-weight:800;font-size:14px">{{ lot.name }}</span>
+            <span style="font-size:11px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ lot.pos }} · {{ lot.club }} · Liste £{{ lot.listPrice }}M</span>
+          </div>
+          <span style="white-space:nowrap;flex:none;background:{{ lot.chipBg }};color:{{ lot.chipColor }};border:1px solid {{ lot.chipBorder }};padding:3px 8px;font-family:var(--font-heading);font-weight:800;font-size:10px;letter-spacing:0.06em;text-transform:uppercase">{{ lot.statusLabel }}</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;padding:10px 14px;border-top:1px solid var(--color-divider);background:var(--color-bg)">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+            <h6 style="margin:0">{{ lot.topLabel }}</h6>
+            <span style="white-space:nowrap"><span style="font-family:var(--font-heading);font-weight:800;font-size:16px">{{ lot.topBidDisplay }}</span> <span style="font-size:11px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ lot.topBidder }}</span></span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <button onClick="{{ lot.dec }}" disabled="{{ lot.closed }}" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:1px solid var(--color-divider);background:transparent;color:var(--color-text);cursor:pointer;padding:0;font-family:var(--font-heading);font-weight:800">–</button>
+            <span style="flex:1;text-align:center;white-space:nowrap;font-family:var(--font-heading);font-weight:800;font-size:14px">£{{ lot.myBidLabel }}M</span>
+            <button onClick="{{ lot.inc }}" disabled="{{ lot.closed }}" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:1px solid var(--color-divider);background:transparent;color:var(--color-text);cursor:pointer;padding:0;font-family:var(--font-heading);font-weight:800">+</button>
+            <button onClick="{{ lot.placeBid }}" disabled="{{ lot.bidDisabled }}" style="padding:0 12px;height:32px;border:1px solid {{ lot.btnBorder }};background:{{ lot.btnBg }};color:{{ lot.btnColor }};font-family:var(--font-heading);font-weight:800;font-size:11px;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;white-space:nowrap">{{ lot.btnLabel }}</button>
+          </div>
+        </div>
+      </div>
+    </sc-for>
+    <p style="font-size:12px;line-height:1.5;margin:4px 0 0;color:color-mix(in srgb, var(--color-text) 55%, transparent)">Teklifler serbest bakiyenden düşülür. Pencere kapandığında önde olan teklifler imzaya dönüşür — diğerlerinin hedefleri liste fiyatından açık satışa döner.</p>
+
+    <div style="margin-top:8px">
+      <h6>Waiver Havuzu</h6><div class="hr" style="margin:6px 0 4px"></div>
+      <p style="font-size:12px;line-height:1.5;margin:0 0 10px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">Sakatlık veya eleme sonucu serbest kalan oyuncular. Öncelik sondan başlar: sırada {{ waiverPriority }} sıradasın.</p>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ waivers }}" as="w" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--color-divider);background:var(--color-surface)">
+            <div style="width:32px;height:32px;border-radius:50%;background:var(--color-bg);border:1px solid var(--color-divider);flex:none;display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:800;font-size:11px">{{ w.initials }}</div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+              <span style="font-family:var(--font-heading);font-weight:800;font-size:13px">{{ w.name }}</span>
+              <span style="font-size:11px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ w.pos }} · {{ w.club }} · {{ w.reason }}</span>
+            </div>
+            <button onClick="{{ w.claim }}" disabled="{{ w.claimed }}" style="flex:none;padding:0 10px;height:30px;border:1px solid {{ w.btnBorder }};background:{{ w.btnBg }};color:{{ w.btnColor }};font-family:var(--font-heading);font-weight:800;font-size:10px;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;white-space:nowrap">{{ w.btnLabel }}</button>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- PAYWALL -->
+<sc-if value="{{ isPaywall }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div class="nav" style="padding:14px 16px;flex:none;gap:10px">
+    <button onClick="{{ goHome }}" style="background:transparent;border:none;cursor:pointer;padding:0;display:flex;color:var(--color-text)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+    <span class="nav-brand" style="font-size:16px;flex:1">YÜKSELT</span>
+  </div>
+
+  <div style="background:var(--color-accent);color:var(--color-bg);padding:20px 16px;flex:none;display:flex;flex-direction:column;gap:6px">
+    <span style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;font-family:var(--font-heading);font-weight:800;opacity:0.85">Tek ödeme, tüm lig</span>
+    <span style="font-family:var(--font-heading);font-weight:800;font-size:24px;line-height:1.1">Sezonu kilitsiz oyna</span>
+    <span style="font-size:13px;line-height:1.45;opacity:0.9">Komisyoncu bir kez öder, tüm menajerler ücretsiz oynar. Kişi başı ücret yok, maç günü reklamı yok, parayla satın alınan bir avantaj yok.</span>
+  </div>
+
+  <div style="flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:20px">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <sc-for list="{{ plans }}" as="pl" hint-placeholder-count="3">
+        <button onClick="{{ pl.pick }}" style="width:100%;text-align:left;border:1px solid {{ pl.border }};background:{{ pl.bg }};padding:14px;display:flex;flex-direction:column;gap:6px;cursor:pointer">
+          <span style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;width:100%">
+            <span style="font-family:var(--font-heading);font-weight:800;font-size:14px;color:{{ pl.color }}">{{ pl.name }}</span>
+            <span style="white-space:nowrap;font-family:var(--font-heading);font-weight:800;font-size:16px;color:{{ pl.color }}">{{ pl.price }}</span>
+          </span>
+          <span style="font-size:12px;line-height:1.45;color:{{ pl.subColor }}">{{ pl.detail }}</span>
+        </button>
+      </sc-for>
+    </div>
+
+    <div>
+      <h6>Neler Açılıyor</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <div style="display:flex;flex-direction:column">
+        <sc-for list="{{ unlockRows }}" as="u" hint-placeholder-count="6">
+          <div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--color-divider)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex:none;color:var(--color-accent-700)"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <div style="flex:1;display:flex;flex-direction:column;gap:1px">
+              <span style="font-family:var(--font-heading);font-weight:800;font-size:13px">{{ u.title }}</span>
+              <span style="font-size:11px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ u.body }}</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div>
+      <h6>Asla Satılık Değil</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <div style="display:flex;flex-direction:column">
+        <sc-for list="{{ neverRows }}" as="n" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--color-divider);opacity:0.75">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex:none;color:var(--color-neutral-600)"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+            <span style="flex:1;font-size:12px;line-height:1.4">{{ n.label }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <p style="font-size:12px;line-height:1.5;margin:10px 0 0;color:color-mix(in srgb, var(--color-text) 55%, transparent)">Kimse arkadaşlarına karşı avantaj satın almaz. Ödeme, ligin nasıl yönetildiğini ve kulübünün görünüşünü açar — kadronun ne yapabileceğini asla.</p>
+    </div>
+  </div>
+
+  <div style="padding:12px 16px;border-top:2px solid var(--color-divider);flex:none;display:flex;flex-direction:column;gap:8px">
+    <button onClick="{{ purchase }}" style="width:100%;padding:12px 16px;border:1px solid var(--color-accent);background:var(--color-accent);color:var(--color-bg);font-family:var(--font-heading);font-weight:800;font-size:13px;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer">{{ purchaseLabel }}</button>
+    <button onClick="{{ goHome }}" class="btn btn-ghost btn-block">Ücretsizde kal</button>
+  </div>
+</div>
+</sc-if>
+
+<!-- LEAGUE CHAT -->
+<sc-if value="{{ isChat }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div class="nav" style="padding:14px 16px;flex:none;gap:10px">
+    <button onClick="{{ goHome }}" style="background:transparent;border:none;cursor:pointer;padding:0;display:flex;color:var(--color-text)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg></button>
+    <span class="nav-brand" style="font-size:16px;flex:1">{{ t.leagueChat }}</span>
+    <span class="tag tag-outline" style="white-space:nowrap">{{ leagueName }}</span>
+  </div>
+  <div style="flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px">
+    <sc-for list="{{ messages }}" as="msg" hint-placeholder-count="6">
+      <div style="display:flex;flex-direction:column;align-items:{{ msg.align }}">
+        <div style="max-width:80%;background:{{ msg.bg }};padding:{{ msg.pad }};display:flex;flex-direction:column;gap:3px">
+          <div style="display:flex;gap:8px;align-items:baseline">
+            <span style="font-family:var(--font-heading);font-weight:800;font-size:11px;letter-spacing:0.04em;text-transform:uppercase;color:{{ msg.nameColor }}">{{ msg.sender }}</span>
+            <span style="font-size:10px;color:color-mix(in srgb, var(--color-text) 45%, transparent)">{{ msg.time }}</span>
+          </div>
+          <div style="font-size:14px;line-height:1.4">{{ msg.text }}</div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="display:flex;gap:8px;padding:10px 16px;border-top:2px solid var(--color-divider);align-items:center;flex:none">
+    <input class="input" style="flex:1" placeholder="{{ t.chatPlaceholder }}" value="{{ chatInput }}" onChange="{{ setChatInput }}" onKeyDown="{{ handleChatKey }}">
+    <button class="btn btn-icon btn-primary" onClick="{{ sendMessage }}" style="flex:none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
+    </button>
+  </div>
+</div>
+</sc-if>
+
+<!-- MATCHDAY LIVE -->
+<sc-if value="{{ isLive }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div class="nav" style="padding:14px 16px;flex:none;gap:10px">
+    <button onClick="{{ goHome }}" style="background:transparent;border:none;cursor:pointer;padding:0;display:flex;color:var(--color-text)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg></button>
+    <span class="nav-brand" style="font-size:16px;flex:1">MAÇ GÜNÜ</span>
+    <span style="white-space:nowrap;flex:none;background:var(--color-accent);color:var(--color-bg);padding:3px 8px;font-family:var(--font-heading);font-weight:800;font-size:10px;letter-spacing:0.06em;text-transform:uppercase">Canlı</span>
+  </div>
+
+  <div style="background:var(--color-accent);color:var(--color-bg);padding:16px;flex:none;display:flex;align-items:flex-end;justify-content:space-between;gap:12px">
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <span style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;font-family:var(--font-heading);font-weight:800;opacity:0.85">Canlı puan</span>
+      <span style="font-family:var(--font-heading);font-weight:800;font-size:40px;line-height:1">{{ livePoints }}</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:3px;text-align:right">
+      <span style="font-size:11px;opacity:0.9;white-space:nowrap">{{ liveRankLine }}</span>
+      <span style="font-size:11px;opacity:0.9;white-space:nowrap">{{ livePlayingLine }}</span>
+    </div>
+  </div>
+
+  <div style="display:flex;border-bottom:2px solid var(--color-divider);flex:none">
+    <button onClick="{{ setLiveTabFeed }}" style="flex:1;padding:11px 0;border:none;border-right:1px solid var(--color-divider);background:{{ liveFeedBg }};color:{{ liveFeedColor }};font-family:var(--font-heading);font-weight:800;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer">Akış</button>
+    <button onClick="{{ setLiveTabSquad }}" style="flex:1;padding:11px 0;border:none;border-right:1px solid var(--color-divider);background:{{ liveSquadBg }};color:{{ liveSquadColor }};font-family:var(--font-heading);font-weight:800;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer">İlk 11</button>
+    <button onClick="{{ setLiveTabTable }}" style="flex:1;padding:11px 0;border:none;background:{{ liveTableBg }};color:{{ liveTableColor }};font-family:var(--font-heading);font-weight:800;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer">Lig</button>
+  </div>
+
+  <sc-if value="{{ liveTabIsFeed }}" hint-placeholder-val="{{ true }}">
+  <div style="flex:1;min-height:0;overflow-y:auto;padding:0 16px">
+    <sc-for list="{{ liveFeed }}" as="ev" hint-placeholder-count="8">
+      <div style="display:flex;align-items:flex-start;gap:12px;padding:13px 0;border-bottom:1px solid var(--color-divider)">
+        <span style="flex:none;width:34px;font-family:var(--font-heading);font-weight:800;font-size:12px;color:var(--color-accent-700)">{{ ev.minute }}</span>
+        <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+          <span style="font-size:13px;line-height:1.35"><span style="font-family:var(--font-heading);font-weight:800">{{ ev.player }}</span> {{ ev.action }}</span>
+          <span style="font-size:11px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ ev.match }}{{ ev.ownerNote }}</span>
+        </div>
+        <span style="flex:none;font-family:var(--font-heading);font-weight:800;font-size:14px;color:{{ ev.ptsColor }};white-space:nowrap">{{ ev.pts }}</span>
+      </div>
+    </sc-for>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ liveTabIsSquad }}" hint-placeholder-val="{{ false }}">
+  <div style="flex:1;min-height:0;overflow-y:auto;padding:0 16px">
+    <sc-for list="{{ liveSquad }}" as="p" hint-placeholder-count="8">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--color-divider)">
+        <div style="width:8px;height:8px;flex:none;background:{{ p.statusDot }}"></div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+          <span style="font-family:var(--font-heading);font-weight:800;font-size:13px">{{ p.name }}{{ p.capMark }}</span>
+          <span style="font-size:11px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ p.club }} · {{ p.statusLabel }}</span>
+        </div>
+        <span style="flex:none;font-family:var(--font-heading);font-weight:800;font-size:15px;color:{{ p.ptsColor }};white-space:nowrap">{{ p.pts }}</span>
+      </div>
+    </sc-for>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ liveTabIsTable }}" hint-placeholder-val="{{ false }}">
+  <div style="flex:1;min-height:0;overflow-y:auto;padding:16px">
+    <table class="table">
+      <thead><tr><th>Sıra</th><th>Menajer</th><th>Canlı</th><th>Oynuyor</th></tr></thead>
+      <tbody>
+        <sc-for list="{{ liveTable }}" as="r" hint-placeholder-count="6">
+          <tr style="background:{{ r.rowBg }};font-weight:{{ r.rowWeight }}">
+            <td>{{ r.posLabel }}</td><td>{{ r.manager }}</td><td>{{ r.live }}</td><td>{{ r.playing }}</td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+    <p style="font-size:12px;line-height:1.5;margin:12px 0 0;color:color-mix(in srgb, var(--color-text) 55%, transparent)">Goller girdikçe sıralama güncellenir. Oklar başlangıçtan bu yana hareketi gösterir.</p>
+  </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<!-- RE-AUCTION -->
+<sc-if value="{{ isReauction }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div class="nav" style="padding:14px 16px;flex:none;gap:10px">
+    <button onClick="{{ goHome }}" style="background:transparent;border:none;cursor:pointer;padding:0;display:flex;color:var(--color-text)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg></button>
+    <span class="nav-brand" style="font-size:16px;flex:1">YENİDEN İHALE</span>
+    <span class="tag tag-accent" style="white-space:nowrap">QF</span>
+  </div>
+
+  <div style="background:var(--color-accent);color:var(--color-bg);padding:16px;flex:none;display:flex;flex-direction:column;gap:5px">
+    <span style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;font-family:var(--font-heading);font-weight:800;opacity:0.85">Turlar arası</span>
+    <span style="font-family:var(--font-heading);font-weight:800;font-size:20px;line-height:1.15">Çeyrek final yeniden ihalesi</span>
+    <span style="font-size:13px;line-height:1.4;opacity:0.9">Elenen kulüpler tüm kadrolardan temizlendi ve ücretleri iade edildi. Fiyatlar son iki turun formuna göre yeniden değerlendirildi.</span>
+  </div>
+
+  <div style="display:flex;border-bottom:2px solid var(--color-divider);flex:none">
+    <div style="flex:1;padding:10px 14px;border-right:1px solid var(--color-divider)"><h6 style="margin:0 0 2px">İade Edilen</h6><div style="font-family:var(--font-heading);font-weight:800;font-size:18px;color:var(--color-accent-700)">£{{ refundTotal }}M</div></div>
+    <div style="flex:1;padding:10px 14px;border-right:1px solid var(--color-divider)"><h6 style="margin:0 0 2px">Yeni Bütçe</h6><div style="font-family:var(--font-heading);font-weight:800;font-size:18px">£{{ reBudget }}M</div></div>
+    <div style="flex:1;padding:10px 14px"><h6 style="margin:0 0 2px">Açık Slot</h6><div style="font-family:var(--font-heading);font-weight:800;font-size:18px">{{ openSlots }}</div></div>
+  </div>
+
+  <div style="flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:20px">
+    <div>
+      <h6>Kadrondan Temizlenenler</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <div style="display:flex;flex-direction:column">
+        <sc-for list="{{ clearedPlayers }}" as="cp" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--color-divider);opacity:0.7">
+            <div style="width:30px;height:30px;border-radius:50%;background:var(--color-surface);border:1px solid var(--color-divider);flex:none;display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:800;font-size:10px">{{ cp.initials }}</div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:1px">
+              <span style="font-family:var(--font-heading);font-weight:800;font-size:13px;text-decoration:line-through">{{ cp.name }}</span>
+              <span style="font-size:11px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ cp.club }} elendi · iade £{{ cp.refund }}M</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div>
+      <h6>Haftalık Yeniden Değerleme</h6><div class="hr" style="margin:6px 0 4px"></div>
+      <p style="font-size:12px;line-height:1.5;margin:0 0 12px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">Liste fiyatları her hafta oynanan dakika, gol katkısı ve gol yememe durumuna göre değişir. Teklif vermeden önce en çok hareketlenenlere göre sırala.</p>
+      <div class="seg" style="align-self:flex-start;margin-bottom:12px;flex:none">
+        <label class="seg-opt"><input type="radio" name="moverSort" checked="{{ moverIsRisers }}" onChange="{{ setMoverRisers }}">Yükselenler</label>
+        <label class="seg-opt"><input type="radio" name="moverSort" checked="{{ moverIsFallers }}" onChange="{{ setMoverFallers }}">Düşenler</label>
+      </div>
+      <div style="display:flex;flex-direction:column">
+        <sc-for list="{{ movers }}" as="mv" hint-placeholder-count="6">
+          <div style="display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--color-divider)">
+            <div style="width:32px;height:32px;border-radius:50%;background:var(--color-surface);border:1px solid var(--color-divider);flex:none;display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:800;font-size:11px">{{ mv.initials }}</div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+              <span style="font-family:var(--font-heading);font-weight:800;font-size:13px">{{ mv.name }}</span>
+              <span style="font-size:11px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ mv.pos }} · {{ mv.club }} · {{ mv.driver }}</span>
+            </div>
+            <div style="flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:1px">
+              <span style="font-family:var(--font-heading);font-weight:800;font-size:13px;white-space:nowrap">£{{ mv.newPrice }}M</span>
+              <span style="font-size:11px;font-family:var(--font-heading);font-weight:800;white-space:nowrap;color:{{ mv.deltaColor }}">{{ mv.delta }}</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:12px 16px;border-top:2px solid var(--color-divider);flex:none">
+    <button onClick="{{ goAuction }}" style="width:100%;padding:12px 16px;border:1px solid var(--color-accent);background:var(--color-accent);color:var(--color-bg);font-family:var(--font-heading);font-weight:800;font-size:13px;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer">İhaleye Katıl</button>
+  </div>
+</div>
+</sc-if>
+
+<!-- ELIMINATION RISK -->
+<sc-if value="{{ isRisk }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div class="nav" style="padding:14px 16px;flex:none;gap:10px">
+    <button onClick="{{ goHome }}" style="background:transparent;border:none;cursor:pointer;padding:0;display:flex;color:var(--color-text)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg></button>
+    <span class="nav-brand" style="font-size:16px;flex:1">RİSK DAĞILIMI</span>
+    <span class="tag tag-outline" style="white-space:nowrap">{{ riskRound }}</span>
+  </div>
+
+  <div style="padding:18px 16px;background:{{ riskHeaderBg }};color:{{ riskHeaderColor }};flex:none;display:flex;flex-direction:column;gap:6px">
+    <span style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;font-family:var(--font-heading);font-weight:800;opacity:0.85">Risk altındaki puan</span>
+    <span style="font-family:var(--font-heading);font-weight:800;font-size:34px;line-height:1">{{ riskPct }}%</span>
+    <span style="font-size:13px;line-height:1.4;opacity:0.9">{{ riskSummary }}</span>
+  </div>
+
+  <div style="flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:20px">
+    <div>
+      <h6>Kulüp Maruziyeti</h6><div class="hr" style="margin:6px 0 4px"></div>
+      <p style="font-size:12px;line-height:1.5;margin:0 0 12px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">Bir kulüp elenirse oyuncuları turnuvanın kalanında puan üretmez. Kadronu güvendiğin eşleşmelere yay.</p>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <sc-for list="{{ clubExposure }}" as="c" hint-placeholder-count="5">
+          <div style="border:1px solid {{ c.cardBorder }};background:{{ c.cardBg }};padding:12px">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+              <span style="font-family:var(--font-heading);font-weight:800;font-size:13px">{{ c.club }}</span>
+              <span style="white-space:nowrap;font-size:11px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ c.count }} oyuncu · {{ c.pts }} puan</span>
+            </div>
+            <div style="margin-top:8px;height:6px;background:var(--color-divider);display:flex">
+              <div style="width:{{ c.barWidth }};background:{{ c.barColor }}"></div>
+            </div>
+            <div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+              <span style="font-size:11px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ c.tie }}</span>
+              <span style="white-space:nowrap;flex:none;background:{{ c.chipBg }};color:{{ c.chipColor }};border:1px solid {{ c.chipBorder }};padding:3px 8px;font-family:var(--font-heading);font-weight:800;font-size:10px;letter-spacing:0.06em;text-transform:uppercase">{{ c.riskLabel }}</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div>
+      <h6>Tur Takvimi</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <div style="display:flex;flex-direction:column">
+        <sc-for list="{{ riskTimeline }}" as="t" hint-placeholder-count="4">
+          <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--color-divider)">
+            <div style="width:8px;height:8px;flex:none;background:{{ t.dotBg }}"></div>
+            <span style="flex:1;font-family:var(--font-heading);font-weight:800;font-size:13px;color:{{ t.nameColor }}">{{ t.round }}</span>
+            <span style="flex:none;font-size:11px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ t.note }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- PREDICTIONS -->
+<sc-if value="{{ isPredict }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div class="nav" style="padding:14px 16px;flex:none;gap:10px">
+    <button onClick="{{ goHome }}" style="background:transparent;border:none;cursor:pointer;padding:0;display:flex;color:var(--color-text)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg></button>
+    <span class="nav-brand" style="font-size:16px;flex:1">TAHMİNLER</span>
+    <span class="tag tag-outline" style="white-space:nowrap">GW 4</span>
+  </div>
+
+  <div style="display:flex;border-bottom:2px solid var(--color-divider);flex:none">
+    <div style="flex:1;padding:12px 14px;border-right:1px solid var(--color-divider)"><h6 style="margin:0 0 2px">Doğruluk</h6><div style="font-family:var(--font-heading);font-weight:800;font-size:18px;color:var(--color-accent-700)">{{ predictAccuracy }}%</div></div>
+    <div style="flex:1;padding:12px 14px;border-right:1px solid var(--color-divider)"><h6 style="margin:0 0 2px">Seri</h6><div style="font-family:var(--font-heading);font-weight:800;font-size:18px">{{ predictStreak }}</div></div>
+    <div style="flex:1;padding:12px 14px"><h6 style="margin:0 0 2px">Bonus Puan</h6><div style="font-family:var(--font-heading);font-weight:800;font-size:18px">{{ predictBonus }}</div></div>
+  </div>
+
+  <div style="flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:20px">
+    <div>
+      <h6>Bu Haftanın En Skorer İsmi</h6><div class="hr" style="margin:6px 0 4px"></div>
+      <p style="font-size:12px;line-height:1.5;margin:0 0 10px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">Bu haftayı en çok puanla kapatacağını düşündüğün menajeri seç. Doğru tahmin 5 bonus puan; kendini seçip başarmak 8 puan getirir.</p>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ predictOptions }}" as="o" hint-placeholder-count="5">
+          <button onClick="{{ o.pick }}" style="width:100%;display:flex;align-items:center;gap:10px;padding:12px;border:1px solid {{ o.border }};background:{{ o.bg }};cursor:pointer;text-align:left">
+            <div style="width:18px;height:18px;flex:none;border:1.5px solid {{ o.dotBorder }};background:{{ o.dotBg }}"></div>
+            <span style="flex:1;font-family:var(--font-heading);font-weight:800;font-size:13px;color:{{ o.color }}">{{ o.manager }}</span>
+            <span style="flex:none;font-size:11px;color:{{ o.oddsColor }}">{{ o.odds }}</span>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+
+    <div>
+      <h6>Skor Tahminleri</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ scoreCalls }}" as="sc" hint-placeholder-count="3">
+          <div style="border:1px solid var(--color-divider);background:var(--color-surface);padding:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+              <span style="font-family:var(--font-heading);font-weight:800;font-size:12px;flex:1">{{ sc.home }}</span>
+              <span style="font-size:10px;color:color-mix(in srgb, var(--color-text) 50%, transparent);font-family:var(--font-heading);font-weight:800">V</span>
+              <span style="font-family:var(--font-heading);font-weight:800;font-size:12px;flex:1;text-align:right">{{ sc.away }}</span>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:10px">
+              <sc-for list="{{ sc.options }}" as="op" hint-placeholder-count="3">
+                <button onClick="{{ op.pick }}" style="flex:1;padding:8px 0;border:1px solid {{ op.border }};background:{{ op.bg }};color:{{ op.color }};font-family:var(--font-heading);font-weight:800;font-size:11px;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer">{{ op.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div>
+      <h6>Tahmin Tablosu</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <table class="table">
+        <thead><tr><th>Menajer</th><th>İsabet</th><th>Iskala</th><th>Bonus</th></tr></thead>
+        <tbody>
+          <sc-for list="{{ predictTable }}" as="r" hint-placeholder-count="5">
+            <tr style="background:{{ r.rowBg }};font-weight:{{ r.rowWeight }}">
+              <td>{{ r.manager }}</td><td>{{ r.hit }}</td><td>{{ r.miss }}</td><td>{{ r.bonus }}</td>
+            </tr>
+          </sc-for>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- MANAGER PROFILE -->
+<sc-if value="{{ isProfile }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div class="nav" style="padding:14px 16px;flex:none;gap:10px">
+    <button onClick="{{ goHome }}" style="background:transparent;border:none;cursor:pointer;padding:0;display:flex;color:var(--color-text)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg></button>
+    <span class="nav-brand" style="font-size:16px;flex:1">MENAJER</span>
+  </div>
+
+  <div style="padding:20px 16px;border-bottom:2px solid var(--color-divider);display:flex;gap:14px;align-items:center;flex:none">
+    <div style="width:56px;height:56px;background:var(--color-accent);color:var(--color-bg);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:800;font-size:22px;flex:none">{{ coachInitial }}</div>
+    <div style="display:flex;flex-direction:column;gap:3px;flex:1">
+      <span style="font-family:var(--font-heading);font-weight:800;font-size:20px;line-height:1.1">{{ coachDisplay }}</span>
+      <span style="font-size:12px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ teamDisplay }} · {{ leagueName }}</span>
+      <span style="margin-top:4px;align-self:flex-start;background:var(--color-accent);color:var(--color-bg);padding:3px 8px;font-family:var(--font-heading);font-weight:800;font-size:10px;letter-spacing:0.06em;text-transform:uppercase">{{ profile.badge }}</span>
+    </div>
+  </div>
+
+  <div style="display:flex;border-bottom:2px solid var(--color-divider);flex:none">
+    <div style="flex:1;padding:12px 14px;border-right:1px solid var(--color-divider)"><h6 style="margin:0 0 2px">Kadro Değeri</h6><div style="font-family:var(--font-heading);font-weight:800;font-size:18px">£{{ profile.squadValue }}M</div></div>
+    <div style="flex:1;padding:12px 14px;border-right:1px solid var(--color-divider)"><h6 style="margin:0 0 2px">Transfer Sayısı</h6><div style="font-family:var(--font-heading);font-weight:800;font-size:18px">{{ profile.signings }}</div></div>
+    <div style="flex:1;padding:12px 14px"><h6 style="margin:0 0 2px">En İyi Hafta</h6><div style="font-family:var(--font-heading);font-weight:800;font-size:18px">{{ profile.bestGw }}</div></div>
+  </div>
+
+  <div style="flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:18px">
+    <div>
+      <h6>Sezon Formu</h6><div class="hr" style="margin:6px 0 12px"></div>
+      <div style="display:flex;align-items:flex-end;gap:6px;height:96px">
+        <sc-for list="{{ profile.form }}" as="g" hint-placeholder-count="6">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end">
+            <span style="font-size:10px;font-family:var(--font-heading);font-weight:800">{{ g.pts }}</span>
+            <div style="width:100%;height:{{ g.height }};background:{{ g.bg }}"></div>
+            <span style="font-size:9px;color:color-mix(in srgb, var(--color-text) 50%, transparent);font-family:var(--font-heading);font-weight:800">{{ g.label }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div>
+      <h6>Transfer Geçmişi</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <div style="display:flex;flex-direction:column">
+        <sc-for list="{{ profile.history }}" as="h" hint-placeholder-count="5">
+          <div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--color-divider)">
+            <div style="width:30px;height:30px;border-radius:50%;background:var(--color-surface);border:1px solid var(--color-divider);flex:none;display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:800;font-size:10px">{{ h.initials }}</div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:1px">
+              <span style="font-family:var(--font-heading);font-weight:800;font-size:13px">{{ h.name }}</span>
+              <span style="font-size:11px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ h.route }} · £{{ h.price }}M</span>
+            </div>
+            <span style="flex:none;font-family:var(--font-heading);font-weight:800;font-size:13px;color:{{ h.returnColor }}">{{ h.returnLabel }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div>
+      <h6>Kariyer</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <div style="display:flex;flex-direction:column">
+        <sc-for list="{{ profile.career }}" as="c" hint-placeholder-count="4">
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:9px 0;border-bottom:1px solid var(--color-divider)">
+            <span>{{ c.label }}</span><span style="font-family:var(--font-heading);font-weight:800">{{ c.value }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- HEAD TO HEAD -->
+<sc-if value="{{ isH2H }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div class="nav" style="padding:14px 16px;flex:none;gap:10px">
+    <button onClick="{{ goHome }}" style="background:transparent;border:none;cursor:pointer;padding:0;display:flex;color:var(--color-text)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg></button>
+    <span class="nav-brand" style="font-size:16px;flex:1">KAFA KAFAYA</span>
+    <span class="tag tag-outline" style="white-space:nowrap">GW 3</span>
+  </div>
+
+  <div style="padding:18px 16px;border-bottom:2px solid var(--color-divider);flex:none">
+    <div style="display:flex;align-items:stretch;gap:12px">
+      <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+        <span style="font-size:10px;letter-spacing:0.08em;text-transform:uppercase;font-family:var(--font-heading);font-weight:800;color:var(--color-accent-700)">Sen</span>
+        <span style="font-family:var(--font-heading);font-weight:800;font-size:13px;line-height:1.2">{{ teamDisplay }}</span>
+        <span style="font-family:var(--font-heading);font-weight:800;font-size:40px;line-height:1">{{ h2h.myScore }}</span>
+      </div>
+      <div style="width:1px;background:var(--color-divider);flex:none"></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:6px;text-align:right">
+        <span style="font-size:10px;letter-spacing:0.08em;text-transform:uppercase;font-family:var(--font-heading);font-weight:800;color:color-mix(in srgb, var(--color-text) 55%, transparent)">Rakip</span>
+        <span style="font-family:var(--font-heading);font-weight:800;font-size:13px;line-height:1.2">{{ h2h.oppTeam }}</span>
+        <span style="font-family:var(--font-heading);font-weight:800;font-size:40px;line-height:1">{{ h2h.oppScore }}</span>
+      </div>
+    </div>
+    <div style="margin-top:14px;height:6px;background:var(--color-divider);display:flex">
+      <div style="width:{{ h2h.barWidth }};background:var(--color-accent)"></div>
+    </div>
+    <div style="margin-top:8px;font-size:12px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ h2h.statusLine }}</div>
+  </div>
+
+  <div style="flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:18px">
+    <div>
+      <h6>Farklılıklar</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ h2h.diffs }}" as="df" hint-placeholder-count="4">
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--color-divider);background:{{ df.rowBg }}">
+            <span style="flex:none;width:44px;font-family:var(--font-heading);font-weight:800;font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:{{ df.sideColor }}">{{ df.side }}</span>
+            <span style="flex:1;font-family:var(--font-heading);font-weight:800;font-size:13px">{{ df.name }}</span>
+            <span style="flex:none;font-family:var(--font-heading);font-weight:800;font-size:14px;color:{{ df.ptsColor }}">{{ df.pts }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    <div>
+      <h6>Kafa Kafaya Tablosu</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <table class="table">
+        <thead><tr><th>Menajer</th><th>G</th><th>B</th><th>M</th><th>Puan</th></tr></thead>
+        <tbody>
+          <sc-for list="{{ h2hTable }}" as="r" hint-placeholder-count="6">
+            <tr style="background:{{ r.rowBg }};font-weight:{{ r.rowWeight }}">
+              <td>{{ r.manager }}</td><td>{{ r.w }}</td><td>{{ r.d }}</td><td>{{ r.l }}</td><td>{{ r.pts }}</td>
+            </tr>
+          </sc-for>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <h6>Gelecek Maçlar</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <div style="display:flex;flex-direction:column">
+        <sc-for list="{{ h2hSchedule }}" as="s" hint-placeholder-count="3">
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:10px 0;border-bottom:1px solid var(--color-divider)">
+            <span style="color:color-mix(in srgb, var(--color-text) 55%, transparent);font-size:11px;font-family:var(--font-heading);font-weight:800;letter-spacing:0.06em;text-transform:uppercase">GW {{ s.gw }}</span>
+            <span style="font-family:var(--font-heading);font-weight:800">rakip {{ s.opponent }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- HOME -->
+<sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div class="nav" style="padding:14px 16px;flex:none"><span class="nav-brand" style="font-size:16px">TOUCHLINE</span><span class="tag tag-outline" style="white-space:nowrap">GW 3</span></div>
+  <button onClick="{{ goProfile }}" style="display:flex;align-items:center;gap:10px;padding:12px 16px;border:none;border-bottom:2px solid var(--color-divider);background:var(--color-surface);flex:none;cursor:pointer;text-align:left;width:100%">
+    <div style="width:40px;height:40px;background:var(--color-accent);color:var(--color-bg);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:800;font-size:16px;flex:none">{{ coachInitial }}</div>
+    <div style="display:flex;flex-direction:column;line-height:1.25;flex:1">
+      <span style="font-family:var(--font-heading);font-weight:800;font-size:15px">{{ coachDisplay }}</span>
+      <span style="font-size:11px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ t.headCoach }} · {{ teamDisplay }}</span>
+    </div>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;color:var(--color-neutral-600)"><path d="M9 18l6-6-6-6"></path></svg>
+  </button>
+
+  <div style="flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:16px">
+    <div class="seg" style="align-self:flex-start;flex:none">
+      <label class="seg-opt"><input type="radio" name="phaseDemo" checked="{{ phaseIsWaiting }}" onChange="{{ setPhaseWaiting }}">{{ t.phaseLocked }}</label>
+      <label class="seg-opt"><input type="radio" name="phaseDemo" checked="{{ phaseIsOpen }}" onChange="{{ setPhaseOpen }}">{{ t.phaseOpen }}</label>
+      <label class="seg-opt"><input type="radio" name="phaseDemo" checked="{{ phaseIsClosed }}" onChange="{{ setPhaseClosed }}">{{ t.phaseClosed }}</label>
+    </div>
+
+    <div style="background:{{ hero.bg }};background-image:repeating-linear-gradient(90deg, color-mix(in srgb, {{ hero.color }} 8%, transparent) 0px, color-mix(in srgb, {{ hero.color }} 8%, transparent) 1px, transparent 1px, transparent 38px);color:{{ hero.color }};padding:18px;display:flex;flex-direction:column;gap:8px;position:relative;overflow:hidden">
+      <span style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;font-family:var(--font-heading);font-weight:800;opacity:0.85">{{ hero.kicker }}</span>
+      <svg width="120" height="120" viewBox="0 0 120 120" fill="none" style="position:absolute;right:-30px;top:-30px;opacity:0.12;pointer-events:none">
+        <circle cx="60" cy="60" r="40" stroke="{{ hero.color }}" stroke-width="2"></circle>
+        <circle cx="60" cy="60" r="3" fill="{{ hero.color }}"></circle>
+      </svg>
+      <span style="font-family:var(--font-heading);font-weight:800;font-size:22px;line-height:1.15">{{ hero.title }}</span>
+      <span style="font-size:13px;line-height:1.4;opacity:0.9">{{ hero.body }}</span>
+      <button onClick="{{ hero.action }}" style="margin-top:6px;width:100%;padding:12px 16px;border:1px solid {{ hero.btnBorder }};background:{{ hero.btnBg }};color:{{ hero.btnColor }};font-family:var(--font-heading);font-weight:800;font-size:13px;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer">{{ hero.cta }}</button>
+    </div>
+
+    <div style="display:flex;border:1px solid var(--color-divider)">
+      <div style="flex:1;padding:12px;border-right:1px solid var(--color-divider);text-align:left">
+        <h6 style="margin:0 0 2px">{{ t.rank }}</h6>
+        <div style="font-family:var(--font-heading);font-weight:800;font-size:20px;transition:opacity 0.3s">3rd</div>
+      </div>
+      <div style="flex:1;padding:12px;border-right:1px solid var(--color-divider)">
+        <h6 style="margin:0 0 2px">{{ t.totalPoints }}</h6>
+        <div style="font-family:var(--font-heading);font-weight:800;font-size:20px;transition:opacity 0.3s">{{ animatedPoints }}</div>
+      </div>
+      <div style="flex:1;padding:12px;display:flex;flex-direction:column;gap:4px">
+        <h6 style="margin:0 0 2px">{{ t.squadValue }}</h6>
+        <div style="font-family:var(--font-heading);font-weight:800;font-size:20px">£{{ squadValue }}M</div>
+        <div style="display:flex;align-items:flex-end;gap:2px;height:16px">
+          <sc-for list="{{ valueSparkline }}" as="sp" hint-placeholder-count="6">
+            <div style="flex:1;height:{{ sp.height }};background:{{ sp.bg }}"></div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h6>{{ t.seasonTimeline }}</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <div style="display:flex;align-items:center;gap:4px">
+        <sc-for list="{{ homeTimeline }}" as="ht" hint-placeholder-count="4">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px">
+            <div style="width:100%;height:4px;background:{{ ht.barBg }}"></div>
+            <span style="font-size:9px;text-align:center;line-height:1.2;font-family:var(--font-heading);font-weight:800;color:{{ ht.labelColor }}">{{ ht.label }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div>
+      <h6>{{ t.league }}</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <button onClick="{{ goLeagues }}" style="width:100%;text-align:left;background:var(--color-surface);border:1px solid var(--color-divider);padding:14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+        <span style="font-family:var(--font-heading);font-weight:800;font-size:13px">{{ leagueName }}</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
+      </button>
+      <button onClick="{{ goLeagueSetup }}" style="width:100%;text-align:left;background:transparent;border:1px dashed var(--color-divider);padding:12px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;margin-top:8px">
+        <span style="font-family:var(--font-heading);font-weight:800;font-size:12px;color:color-mix(in srgb, var(--color-text) 60%, transparent)">{{ t.newLeagueRow }}</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:color-mix(in srgb, var(--color-text) 60%, transparent)"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+      </button>
+    </div>
+
+    <div>
+      <h6>{{ t.catLive }}</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button onClick="{{ goLive }}" style="width:100%;text-align:left;background:var(--color-accent-100);border:1px solid var(--color-accent);padding:14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+          <span style="display:flex;align-items:center;gap:8px">
+            <span style="width:7px;height:7px;background:var(--color-accent);flex:none"></span>
+            <span style="font-family:var(--font-heading);font-weight:800;font-size:13px">{{ t.matchdayLive }}</span>
+          </span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
+        </button>
+        <button onClick="{{ goResults }}" style="width:100%;text-align:left;background:var(--color-surface);border:1px solid var(--color-divider);padding:14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+          <span style="font-family:var(--font-heading);font-weight:800;font-size:13px">{{ t.matchResults }}</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
+        </button>
+      </div>
+    </div>
+
+    <div>
+      <h6>{{ t.catAuction }}</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button onClick="{{ goAuction }}" style="width:100%;text-align:left;background:var(--color-surface);border:1px solid var(--color-divider);padding:14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+          <span style="font-family:var(--font-heading);font-weight:800;font-size:13px">{{ t.liveAuction }}</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
+        </button>
+        <button onClick="{{ goDraft }}" style="width:100%;text-align:left;background:var(--color-surface);border:1px solid var(--color-divider);padding:14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+          <span style="font-family:var(--font-heading);font-weight:800;font-size:13px">{{ t.draftFeed }}</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
+        </button>
+        <button onClick="{{ goReauction }}" style="width:100%;text-align:left;background:var(--color-surface);border:1px solid var(--color-divider);padding:14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+          <span style="font-family:var(--font-heading);font-weight:800;font-size:13px">{{ t.reauctionPrices }}</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
+        </button>
+      </div>
+    </div>
+
+    <div>
+      <h6>{{ t.catCompete }}</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button onClick="{{ goH2H }}" style="width:100%;text-align:left;background:var(--color-surface);border:1px solid var(--color-divider);padding:14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+          <span style="font-family:var(--font-heading);font-weight:800;font-size:13px">{{ t.headToHead }}</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
+        </button>
+        <button onClick="{{ goPredict }}" style="width:100%;text-align:left;background:var(--color-surface);border:1px solid var(--color-divider);padding:14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+          <span style="font-family:var(--font-heading);font-weight:800;font-size:13px">{{ t.predictions }}</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
+        </button>
+        <button onClick="{{ goChat }}" style="width:100%;text-align:left;background:var(--color-surface);border:1px solid var(--color-divider);padding:14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+          <span style="font-family:var(--font-heading);font-weight:800;font-size:13px">{{ t.leagueChat }}</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
+        </button>
+        <button onClick="{{ goRisk }}" style="width:100%;text-align:left;background:var(--color-surface);border:1px solid var(--color-divider);padding:14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+          <span style="font-family:var(--font-heading);font-weight:800;font-size:13px">{{ t.exposureRisk }}</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
+        </button>
+      </div>
+    </div>
+
+    <div>
+      <h6>{{ t.catInfo }}</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button onClick="{{ goRules }}" style="width:100%;text-align:left;background:var(--color-surface);border:1px solid var(--color-divider);padding:14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+          <span style="font-family:var(--font-heading);font-weight:800;font-size:13px">{{ t.rulesScoring }}</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
+        </button>
+        <button onClick="{{ goPaywall }}" style="width:100%;text-align:left;background:var(--color-surface);border:1px solid var(--color-divider);padding:14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+          <span style="display:flex;align-items:center;gap:8px">
+            <span style="font-family:var(--font-heading);font-weight:800;font-size:13px">{{ t.leaguePass }}</span>
+            <span style="background:{{ proChipBg }};color:{{ proChipColor }};border:1px solid var(--color-accent);padding:2px 6px;font-family:var(--font-heading);font-weight:800;font-size:9px;letter-spacing:0.06em;text-transform:uppercase">{{ proChipLabel }}</span>
+          </span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- RULES -->
+<sc-if value="{{ isRules }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div class="nav" style="padding:14px 16px;flex:none;gap:10px">
+    <button onClick="{{ goHome }}" style="background:transparent;border:none;cursor:pointer;padding:0;display:flex;color:var(--color-text)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg></button>
+    <span class="nav-brand" style="font-size:16px">KURALLAR VE PUANLAMA</span>
+  </div>
+  <div style="flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:18px">
+    <div>
+      <h6>Transfer Penceresi</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <p style="font-size:13px;line-height:1.6;margin:0">Her gerçek kullanıcı teknik direktör olarak bir kadro yönetir. Transferler pencere açılınca başlar, ilan edilen son tarihte kapanır. Pencere kapandığında transferlerini onaylamamış menajerlere kalan bütçeden otomatik kadro atanır.</p>
+    </div>
+    <div>
+      <h6>İhale</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <p style="font-size:13px;line-height:1.6;margin:0">Sezon başlamadan önce menajerler ihale penceresi içinde oyuncular için teklif verir. Teklifler serbest bakiyenden düşülür. Pencere kapandığında her oyuncu için en yüksek teklif kazanır ve o oyuncu teklif fiyatından kazanan kadroya katılır. Hiç teklif almayan oyuncular resmi transfer sezonu başladığında liste fiyatından açık satışa çıkar.</p>
+    </div>
+    <div>
+      <h6>Oyuncu Sahipliği</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <p style="font-size:13px;line-height:1.6;margin:0">Her Şampiyonlar Ligi oyuncusu bir ligde yalnızca bir menajer tarafından alınabilir. Bir oyuncu alındığında kilitlenir ve bir sonraki transfer penceresine kadar diğerleri için piyasadan kaldırılır.</p>
+    </div>
+    <div>
+      <h6>Kadro Kuralları</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--color-divider)"><span>Kadro büyüklüğü</span><span style="font-family:var(--font-heading);font-weight:800">15 oyuncu</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--color-divider)"><span>İlk 11</span><span style="font-family:var(--font-heading);font-weight:800">1 GK · 3-5 DEF · 3-5 MID · 1-3 FWD</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--color-divider)"><span>Yedek</span><span style="font-family:var(--font-heading);font-weight:800">4 oyuncu</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--color-divider)"><span>Bütçe</span><span style="font-family:var(--font-heading);font-weight:800">£120.0M</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0"><span>Kulüp başına en fazla</span><span style="font-family:var(--font-heading);font-weight:800">3 oyuncu</span></div>
+      </div>
+    </div>
+    <div>
+      <h6>Puanlama</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <table class="table">
+        <thead><tr><th>Hareket</th><th>Puan</th></tr></thead>
+        <tbody>
+          <tr><td>Gol (FWD/MID)</td><td>5 / 6</td></tr>
+          <tr><td>Gol (DEF/GK)</td><td>7 / 8</td></tr>
+          <tr><td>Asist</td><td>3</td></tr>
+          <tr><td>Kalesini gole kapatma (DEF/GK)</td><td>4</td></tr>
+          <tr><td>Kalesini gole kapatma (MID)</td><td>1</td></tr>
+          <tr><td>Sarı kart</td><td>-1</td></tr>
+          <tr><td>Kırmızı kart</td><td>-3</td></tr>
+          <tr><td>Kaptan</td><td>×2 puan</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- RESULTS -->
+<sc-if value="{{ isResults }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div class="nav" style="padding:14px 16px;flex:none;gap:10px">
+    <button onClick="{{ goHome }}" style="background:transparent;border:none;cursor:pointer;padding:0;display:flex;color:var(--color-text)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg></button>
+    <span class="nav-brand" style="font-size:16px">MAÇ SONUÇLARI</span>
+  </div>
+  <div style="padding:12px 16px 0;flex:none"><span class="tag tag-accent">3. HAFTA · MS</span></div>
+  <div style="flex:1;min-height:0;overflow-y:auto;padding:12px 16px 16px;display:flex;flex-direction:column;gap:10px">
+    <sc-for list="{{ fixtures }}" as="fx" hint-placeholder-count="6">
+      <div style="border:1px solid var(--color-divider)">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px">
+          <span style="font-family:var(--font-heading);font-weight:800;font-size:13px;flex:1">{{ fx.home }}</span>
+          <span style="font-family:var(--font-heading);font-weight:800;font-size:16px;padding:0 10px">{{ fx.score }}</span>
+          <span style="font-family:var(--font-heading);font-weight:800;font-size:13px;flex:1;text-align:right">{{ fx.away }}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 14px;background:var(--color-surface);border-top:1px solid var(--color-divider)">
+          <span style="font-size:11px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ fx.date }}</span>
+          <span style="font-size:11px;font-family:var(--font-heading);font-weight:800;color:var(--color-accent-700)">{{ fx.yourPts }} puan kadrondan</span>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<!-- SQUAD -->
+<sc-if value="{{ isSquad }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;flex:1;min-height:0;position:relative">
+  <div class="nav" style="padding:14px 16px;flex:none"><span class="nav-brand" style="font-size:16px">TOUCHLINE</span><span class="tag tag-outline" style="white-space:nowrap">3. HAFTA</span></div>
+  <div style="background:var(--color-accent);color:var(--color-bg);padding:12px 16px;display:flex;justify-content:space-between;align-items:baseline;flex:none">
+    <span style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;font-family:var(--font-heading);font-weight:800">Son Tarih</span>
+    <span style="font-family:var(--font-heading);font-weight:800;font-size:14px">{{ deadlineLabel }}</span>
+  </div>
+  <div style="display:flex;border-bottom:2px solid var(--color-divider);flex:none">
+    <div style="flex:1;padding:10px 16px;border-right:1px solid var(--color-divider)"><h6 style="margin:0 0 2px">Kalan Bütçe</h6><div style="font-family:var(--font-heading);font-weight:800;font-size:20px;color:var(--color-accent-700)">£{{ budgetRemaining }}M</div></div>
+    <div style="flex:1;padding:10px 16px"><h6 style="margin:0 0 2px">Ücretsiz Transfer</h6><div style="font-family:var(--font-heading);font-weight:800;font-size:20px">2</div></div>
+  </div>
+  <div style="flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px">
+    <div style="position:relative;width:100%;height:440px;background:var(--color-surface);border:2px solid var(--color-divider)">
+      <div style="position:absolute;left:0;right:0;top:50%;height:2px;background:var(--color-divider)"></div>
+      <div style="position:absolute;left:50%;top:50%;width:84px;height:84px;border:2px solid var(--color-divider);border-radius:50%;transform:translate(-50%,-50%)"></div>
+      <div style="position:absolute;left:50%;bottom:0;width:150px;height:60px;border:2px solid var(--color-divider);border-bottom:none;transform:translateX(-50%)"></div>
+      <div style="position:absolute;left:50%;top:0;width:150px;height:60px;border:2px solid var(--color-divider);border-top:none;transform:translateX(-50%)"></div>
+
+      <div style="position:absolute;{{ gk.posStyle }};transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer" onClick="{{ gk.openSheet }}">
+        <div style="position:relative;width:42px;height:42px;border-radius:50%;border:2px solid {{ gk.capBorder }};background:var(--color-bg);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:800;font-size:13px"><span style="position:absolute;top:-2px;right:-2px;width:10px;height:10px;border-radius:50%;background:{{ gk.clubDot }};border:1.5px solid var(--color-bg)"></span>{{ gk.initials }}</div>
+        <span style="font-size:9px;font-weight:800;letter-spacing:0.02em;background:var(--color-bg);padding:1px 4px;white-space:nowrap;font-family:var(--font-heading);color:{{ gk.capColor }}">{{ gk.shortName }}</span>
+      </div>
+
+      <sc-for list="{{ defMarkers }}" as="d" hint-placeholder-count="4">
+        <div style="position:absolute;{{ d.posStyle }};transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer" onClick="{{ d.openSheet }}">
+          <div style="position:relative;width:42px;height:42px;border-radius:50%;border:2px solid {{ d.capBorder }};background:var(--color-bg);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:800;font-size:13px"><span style="position:absolute;top:-2px;right:-2px;width:10px;height:10px;border-radius:50%;background:{{ d.clubDot }};border:1.5px solid var(--color-bg)"></span>{{ d.initials }}</div>
+          <span style="font-size:9px;font-weight:800;letter-spacing:0.02em;background:var(--color-bg);padding:1px 4px;white-space:nowrap;font-family:var(--font-heading);color:{{ d.capColor }}">{{ d.shortName }}</span>
+        </div>
+      </sc-for>
+
+      <sc-for list="{{ midMarkers }}" as="m" hint-placeholder-count="3">
+        <div style="position:absolute;{{ m.posStyle }};transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer" onClick="{{ m.openSheet }}">
+          <div style="position:relative;width:42px;height:42px;border-radius:50%;border:2px solid {{ m.capBorder }};background:var(--color-bg);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:800;font-size:13px"><span style="position:absolute;top:-2px;right:-2px;width:10px;height:10px;border-radius:50%;background:{{ m.clubDot }};border:1.5px solid var(--color-bg)"></span>{{ m.initials }}</div>
+          <span style="font-size:9px;font-weight:800;letter-spacing:0.02em;background:var(--color-bg);padding:1px 4px;white-space:nowrap;font-family:var(--font-heading);color:{{ m.capColor }}">{{ m.shortName }}</span>
+        </div>
+      </sc-for>
+
+      <sc-for list="{{ fwdMarkers }}" as="f" hint-placeholder-count="3">
+        <div style="position:absolute;{{ f.posStyle }};transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer" onClick="{{ f.openSheet }}">
+          <div style="position:relative;width:42px;height:42px;border-radius:50%;border:2px solid {{ f.capBorder }};background:var(--color-bg);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:800;font-size:13px"><span style="position:absolute;top:-2px;right:-2px;width:10px;height:10px;border-radius:50%;background:{{ f.clubDot }};border:1.5px solid var(--color-bg)"></span>{{ f.initials }}</div>
+          <span style="font-size:9px;font-weight:800;letter-spacing:0.02em;background:var(--color-bg);padding:1px 4px;white-space:nowrap;font-family:var(--font-heading);color:{{ f.capColor }}">{{ f.shortName }}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{ showBench }}" hint-placeholder-val="{{ true }}">
+    <div>
+      <h6>Yedek</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <div style="display:flex;gap:10px;padding:12px;background:var(--color-surface);border:1px solid var(--color-divider);justify-content:space-around">
+        <sc-for list="{{ benchTokens }}" as="b" hint-placeholder-count="4">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+            <div style="position:relative;width:38px;height:38px;border-radius:50%;border:2px solid var(--color-divider);background:var(--color-bg);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:800;font-size:12px"><span style="position:absolute;top:-2px;right:-2px;width:9px;height:9px;border-radius:50%;background:{{ b.clubDot }};border:1.5px solid var(--color-bg)"></span>{{ b.initials }}</div>
+            <span style="font-size:9px;font-weight:800;letter-spacing:0.02em;white-space:nowrap;font-family:var(--font-heading)">{{ b.shortName }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+
+    <button class="btn btn-primary btn-block" onClick="{{ saveSquad }}" style="margin-top:2px">{{ savedLabel }}</button>
+  </div>
+
+  <sc-if value="{{ hasSelectedPlayer }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;background:color-mix(in srgb, black 45%, transparent);display:flex;align-items:flex-end;flex:none" onClick="{{ closePlayerSheet }}">
+    <div style="width:100%;background:var(--color-bg);border-top:2px solid var(--color-divider);padding:16px;display:flex;flex-direction:column;gap:14px;max-height:70%;overflow-y:auto" onClick="{{ stopClick }}">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:40px;height:40px;border-radius:50%;border:2px solid var(--color-divider);background:var(--color-surface);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:800;font-size:13px;flex:none">{{ selPlayer.initials }}</div>
+        <div style="flex:1;display:flex;flex-direction:column">
+          <span style="font-family:var(--font-heading);font-weight:800;font-size:15px">{{ selPlayer.name }}</span>
+          <span style="font-size:11px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ selPlayer.club }} · {{ selPlayer.posLabel }} · £{{ selPlayer.priceLabel }}M</span>
+        </div>
+        <button onClick="{{ closePlayerSheet }}" style="flex:none;background:transparent;border:none;cursor:pointer;padding:0;display:flex;color:var(--color-text)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+      </div>
+      <button onClick="{{ selPlayer.toggleCaptain }}" style="width:100%;padding:12px 16px;border:1px solid {{ selPlayer.capBtnBorder }};background:{{ selPlayer.capBtnBg }};color:{{ selPlayer.capBtnColor }};font-family:var(--font-heading);font-weight:800;font-size:13px;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer">{{ selPlayer.capBtnLabel }}</button>
+      <div>
+        <h6>{{ t.swapWith }}</h6><div class="hr" style="margin:6px 0 10px"></div>
+        <sc-if value="{{ selPlayer.noBenchOptions }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px 0;text-align:center">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-neutral-500)"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="22" y1="11" x2="16" y2="11"></line></svg>
+            <p style="font-size:12px;line-height:1.5;margin:0;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ t.noBenchOptions }}</p>
+          </div>
+        </sc-if>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ selPlayer.benchOptions }}" as="bo" hint-placeholder-count="2">
+            <button onClick="{{ bo.swap }}" style="width:100%;display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--color-divider);background:var(--color-surface);cursor:pointer;text-align:left">
+              <div style="width:32px;height:32px;border-radius:50%;background:var(--color-bg);border:1px solid var(--color-divider);flex:none;display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:800;font-size:11px">{{ bo.initials }}</div>
+              <div style="flex:1;display:flex;flex-direction:column;gap:1px">
+                <span style="font-family:var(--font-heading);font-weight:800;font-size:13px">{{ bo.name }}</span>
+                <span style="font-size:11px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ bo.club }} · £{{ bo.priceLabel }}M</span>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;color:var(--color-accent-700)"><path d="m17 2 4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="m7 22-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path></svg>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<!-- TRANSFERS -->
+<sc-if value="{{ isTransfers }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div class="nav" style="padding:14px 16px;flex:none"><span class="nav-brand" style="font-size:16px">TOUCHLINE</span><span class="tag tag-outline" style="white-space:nowrap">{{ transferTag }}</span></div>
+
+  <sc-if value="{{ phaseIsWaiting }}" hint-placeholder-val="{{ false }}">
+  <div style="flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:32px;text-align:center">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-neutral-600)"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+    <span style="font-family:var(--font-heading);font-weight:800;font-size:16px">Transfer penceresi kapalı</span>
+    <span style="font-size:13px;color:color-mix(in srgb, var(--color-text) 55%, transparent);max-width:260px">Piyasa {{ deadlineLabel }} açılıyor. O zaman kadronu kurmak için tekrar gel.</span>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ phaseIsClosed }}" hint-placeholder-val="{{ false }}">
+  <div style="padding:14px 16px;background:var(--color-accent-100);border-bottom:2px solid var(--color-divider);flex:none">
+    <span style="font-family:var(--font-heading);font-weight:800;font-size:12px;color:var(--color-accent-700)">Pencere kapandı — kadrolar kilitlendi</span>
+    <div style="font-size:12px;margin-top:2px">Transferlerini onaylamayan menajerlere otomatik kadro atandı.</div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ phaseIsOpenOrClosed }}" hint-placeholder-val="{{ false }}">
+  <div style="display:flex;border-bottom:2px solid var(--color-divider);flex:none">
+    <div style="flex:1;padding:10px 16px;border-right:1px solid var(--color-divider)"><h6 style="margin:0 0 2px">Kalan Bütçe</h6><div style="font-family:var(--font-heading);font-weight:800;font-size:20px;color:var(--color-accent-700)">£{{ budgetRemaining }}M</div></div>
+    <div style="flex:1;padding:10px 16px"><h6 style="margin:0 0 2px">Kısa Liste</h6><div style="font-family:var(--font-heading);font-weight:800;font-size:20px">{{ shortlistCount }} · £{{ shortlistValueLabel }}M</div></div>
+  </div>
+  <div class="seg" style="margin:16px 16px 4px;align-self:flex-start;flex:none">
+    <label class="seg-opt"><input type="radio" name="posFilter" checked="{{ filterIsAll }}" onChange="{{ setFilterAll }}">Tümü</label>
+    <label class="seg-opt"><input type="radio" name="posFilter" checked="{{ filterIsGK }}" onChange="{{ setFilterGK }}">GK</label>
+    <label class="seg-opt"><input type="radio" name="posFilter" checked="{{ filterIsDEF }}" onChange="{{ setFilterDEF }}">DEF</label>
+    <label class="seg-opt"><input type="radio" name="posFilter" checked="{{ filterIsMID }}" onChange="{{ setFilterMID }}">MID</label>
+    <label class="seg-opt"><input type="radio" name="posFilter" checked="{{ filterIsFWD }}" onChange="{{ setFilterFWD }}">FWD</label>
+  </div>
+  <div style="flex:1;min-height:0;overflow-y:auto;padding:8px 16px 0">
+    <sc-for list="{{ filteredMarket }}" as="p" hint-placeholder-count="6">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--color-divider);opacity:{{ p.rowOpacity }}">
+        <div style="position:relative;width:34px;height:34px;border-radius:50%;background:var(--color-surface);border:1px solid var(--color-divider);flex:none;display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:800;font-size:11px"><span style="position:absolute;top:-2px;right:-2px;width:9px;height:9px;border-radius:50%;background:{{ p.clubDot }};border:1.5px solid var(--color-bg)"></span>{{ p.initials }}</div>
+        <div style="display:flex;flex-direction:column;gap:2px;flex:1">
+          <span style="font-family:var(--font-heading);font-weight:800;font-size:14px">{{ p.name }}</span>
+          <sc-if value="{{ p.available }}" hint-placeholder-val="{{ true }}"><span style="font-size:11px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ p.club }} · {{ p.posLabel }} · £{{ p.priceLabel }}M · Form {{ p.form }}</span></sc-if>
+          <sc-if value="{{ p.taken }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ p.takenBy }} tarafından alındı</span></sc-if>
+        </div>
+        <sc-if value="{{ p.canPick }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ p.toggle }}" style="width:32px;height:32px;flex:none;display:flex;align-items:center;justify-content:center;border:1px solid {{ p.btnBorder }};background:{{ p.btnBg }};color:{{ p.btnColor }};cursor:pointer;padding:0">
+          <sc-if value="{{ p.shortlisted }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></sc-if>
+          <sc-if value="{{ p.notShortlisted }}" hint-placeholder-val="{{ true }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg></sc-if>
+        </button>
+        </sc-if>
+        <sc-if value="{{ p.taken }}" hint-placeholder-val="{{ false }}">
+        <div style="width:32px;height:32px;flex:none;display:flex;align-items:center;justify-content:center;border:1px solid var(--color-divider);color:var(--color-neutral-500)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </div>
+        </sc-if>
+      </div>
+    </sc-for>
+  </div>
+  <div style="padding:12px 16px;border-top:2px solid var(--color-divider);display:flex;flex-direction:column;gap:8px;flex:none">
+    <button class="btn btn-primary btn-block" disabled="{{ confirmDisabled }}">{{ confirmLabel }}</button>
+  </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<!-- LEAGUES -->
+<sc-if value="{{ isLeagues }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div class="nav" style="padding:14px 16px;flex:none"><span class="nav-brand" style="font-size:16px">TOUCHLINE</span><span class="tag tag-outline" style="white-space:nowrap">{{ leagueName }}</span></div>
+  <div style="margin:16px;padding:16px;background:var(--color-surface);display:flex;justify-content:space-between;align-items:center;flex:none">
+    <div><h6 style="margin:0 0 2px">Sıralaman</h6><div style="font-family:var(--font-heading);font-weight:800;font-size:32px">3rd</div></div>
+    <div style="display:flex;align-items:center;gap:4px;color:var(--color-accent-700);font-size:13px;font-weight:800">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg>
+      Bu hafta +1
+    </div>
+  </div>
+  <div style="padding:0 16px 16px;flex:1;min-height:0;overflow-y:auto">
+    <table class="table">
+      <thead><tr><th>Sıra</th><th>Menajer</th><th>Hafta</th><th>Toplam</th></tr></thead>
+      <tbody>
+        <sc-for list="{{ standings }}" as="s" hint-placeholder-count="8">
+          <tr style="background:{{ s.rowBg }};font-weight:{{ s.rowWeight }}">
+            <td>{{ s.rank }}</td><td>{{ s.manager }}</td><td>{{ s.gw }}</td><td>{{ s.total }}</td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+  </div>
+</div>
+</sc-if>
+
+<!-- DRAFT FEED -->
+<sc-if value="{{ isDraft }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div class="nav" style="padding:14px 16px;flex:none;gap:10px">
+    <button onClick="{{ goHome }}" style="background:transparent;border:none;cursor:pointer;padding:0;display:flex;color:var(--color-text)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg></button>
+    <span class="nav-brand" style="font-size:16px">İHALE AKIŞI</span>
+  </div>
+  <div style="padding:16px 16px 0;flex:none">
+    <div style="font-size:11px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">Her oyuncu yalnızca bir menajer tarafından alınabilir</div>
+    <div class="hr" style="margin:10px 0 0"></div>
+  </div>
+  <div style="flex:1;min-height:0;overflow-y:auto;padding:0 16px">
+    <sc-for list="{{ draftFeed }}" as="ev" hint-placeholder-count="8">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--color-divider)">
+        <div style="width:32px;height:32px;border-radius:50%;flex:none;background:var(--color-surface);border:1px solid var(--color-divider);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:800;font-size:11px">{{ ev.initials }}</div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+          <span style="font-size:13px;line-height:1.3"><span style="font-family:var(--font-heading);font-weight:800;color:{{ ev.nameColor }}">{{ ev.manager }}</span> aldı: <span style="font-family:var(--font-heading);font-weight:800">{{ ev.player }}</span></span>
+          <span style="font-size:11px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ ev.posLabel }} · {{ ev.club }}</span>
+        </div>
+        <span style="font-size:10px;color:color-mix(in srgb, var(--color-text) 45%, transparent);flex:none">{{ ev.time }}</span>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<div style="display:flex;border-top:2px solid var(--color-divider);background:var(--color-bg);flex:none">
+  <button onClick="{{ goHome }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0 10px;background:transparent;border:none;cursor:pointer;font-family:var(--font-heading);font-weight:800;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:{{ homeColor }}">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+    {{ t.tabHome }}
+  </button>
+  <button onClick="{{ goSquad }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0 10px;background:transparent;border:none;cursor:pointer;font-family:var(--font-heading);font-weight:800;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:{{ squadColor }}">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+    {{ t.tabSquad }}
+  </button>
+  <button onClick="{{ goTransfers }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0 10px;background:transparent;border:none;cursor:pointer;font-family:var(--font-heading);font-weight:800;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:{{ transfersColor }}">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="m7 22-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path></svg>
+    {{ t.tabTransfers }}
+  </button>
+  <button onClick="{{ goLeagues }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0 10px;background:transparent;border:none;cursor:pointer;font-family:var(--font-heading);font-weight:800;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:{{ leaguesColor }}">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>
+    {{ t.tabLeagues }}
+  </button>
+</div>
+</sc-if>
+
+</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:420,&quot;height&quot;:900},&quot;leagueName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;THE OFFSIDE TRAP&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;deadlineLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;SAT 12 SEP · 18:30&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;showBench&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const SQUAD = [
+  {id:'ederson',name:'Ederson',club:'MCI',pos:'GK',price:5.0,bench:false},
+  {id:'taa',name:'Alexander-Arnold',club:'LIV',pos:'DEF',price:7.0,bench:false},
+  {id:'vandijk',name:'Van Dijk',club:'LIV',pos:'DEF',price:6.0,bench:false},
+  {id:'hakimi',name:'Hakimi',club:'PSG',pos:'DEF',price:5.5,bench:false},
+  {id:'rudiger',name:'Rüdiger',club:'RMA',pos:'DEF',price:5.0,bench:false},
+  {id:'bellingham',name:'Bellingham',club:'RMA',pos:'MID',price:9.5,bench:false},
+  {id:'pedri',name:'Pedri',club:'BAR',pos:'MID',price:6.5,bench:false},
+  {id:'musiala',name:'Musiala',club:'BAY',pos:'MID',price:8.0,bench:false},
+  {id:'mbappe',name:'Mbappé',club:'RMA',pos:'FWD',price:12.5,bench:false},
+  {id:'haaland',name:'Haaland',club:'MCI',pos:'FWD',price:12.0,bench:false},
+  {id:'vinicius',name:'Vinicius Jr',club:'RMA',pos:'FWD',price:10.5,bench:false},
+  {id:'courtois',name:'Courtois',club:'RMA',pos:'GK',price:4.5,bench:true},
+  {id:'saliba',name:'Saliba',club:'ARS',pos:'DEF',price:5.0,bench:true},
+  {id:'kimmich',name:'Kimmich',club:'BAY',pos:'MID',price:5.5,bench:true},
+  {id:'kane',name:'Kane',club:'BAY',pos:'FWD',price:8.5,bench:true},
+];
+const TOTAL_BUDGET = 120.0;
+const CLUB_COLORS = {
+  MCI:'#6CABDD', RMA:'#FEBE10', LIV:'#C8102E', BAY:'#DC052D', BAR:'#A50044',
+  PSG:'#004170', ARS:'#EF0107', LEV:'#E32219', GAL:'#FDB913', MIL:'#FB090B',
+};
+function clubColor(club) { return CLUB_COLORS[club] || 'var(--color-neutral-500)'; }
+function initialsOf(name) {
+  const parts = name.replace(/[^\p{L}\s-]/gu, '').split(/[\s-]+/).filter(Boolean);
+  if (!parts.length) return '';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+const FORMATION = {
+  gk: {left:50, top:90},
+  def: [{left:14,top:68},{left:38,top:74},{left:62,top:74},{left:86,top:68}],
+  mid: [{left:26,top:44},{left:50,top:48},{left:74,top:44}],
+  fwd: [{left:20,top:16},{left:50,top:12},{left:80,top:16}],
+};
+
+const MARKET = [
+  {id:'alisson',name:'Alisson',club:'LIV',pos:'GK',price:5.5,form:'6.8',takenBy:null},
+  {id:'dias',name:'Dias',club:'MCI',pos:'DEF',price:6.0,form:'6.1',takenBy:null},
+  {id:'gvardiol',name:'Gvardiol',club:'MCI',pos:'DEF',price:6.5,form:'6.2',takenBy:null},
+  {id:'konate',name:'Konaté',club:'LIV',pos:'DEF',price:5.5,form:'5.9',takenBy:null},
+  {id:'rice',name:'Rice',club:'ARS',pos:'MID',price:6.5,form:'7.1',takenBy:'Priya S.'},
+  {id:'wirtz',name:'Wirtz',club:'LEV',pos:'MID',price:8.5,form:'8.4',takenBy:'Elena R.'},
+  {id:'bsilva',name:'Bernardo Silva',club:'MCI',pos:'MID',price:7.0,form:'6.9',takenBy:null},
+  {id:'salah',name:'Salah',club:'LIV',pos:'FWD',price:12.5,form:'9.0',takenBy:null},
+  {id:'osimhen',name:'Osimhen',club:'GAL',pos:'FWD',price:9.0,form:'7.5',takenBy:null},
+  {id:'kvara',name:'Kvaratskhelia',club:'PSG',pos:'FWD',price:9.5,form:'7.8',takenBy:null},
+];
+
+const STANDINGS = [
+  {rank:1,manager:'Jamie K.',gw:78,total:612,me:false},
+  {rank:2,manager:'Priya S.',gw:65,total:598,me:false},
+  {rank:3,manager:'Sen',gw:82,total:585,me:true},
+  {rank:4,manager:'Marcus O.',gw:60,total:570,me:false},
+  {rank:5,manager:'Elena R.',gw:71,total:555,me:false},
+  {rank:6,manager:'Tom H.',gw:58,total:540,me:false},
+  {rank:7,manager:'Sofia M.',gw:66,total:522,me:false},
+  {rank:8,manager:'Dan B.',gw:54,total:501,me:false},
+];
+
+const DRAFT_FEED = [
+  {manager:'Sen',me:true,player:'Vinicius Jr',pos:'FWD',club:'RMA',time:'Az önce'},
+  {manager:'Elena R.',me:false,player:'Florian Wirtz',pos:'MID',club:'LEV',time:'2dk'},
+  {manager:'Marcus O.',me:false,player:'Lamine Yamal',pos:'FWD',club:'BAR',time:'4dk'},
+  {manager:'Sen',me:true,player:'Haaland',pos:'FWD',club:'MCI',time:'6dk'},
+  {manager:'Priya S.',me:false,player:'Declan Rice',pos:'MID',club:'ARS',time:'8dk'},
+  {manager:'Sen',me:true,player:'Mbappé',pos:'FWD',club:'RMA',time:'10dk'},
+  {manager:'Tom H.',me:false,player:'Frenkie de Jong',pos:'MID',club:'BAR',time:'13dk'},
+  {manager:'Sen',me:true,player:'Musiala',pos:'MID',club:'BAY',time:'15dk'},
+  {manager:'Sofia M.',me:false,player:'Ter Stegen',pos:'GK',club:'BAR',time:'18dk'},
+  {manager:'Sen',me:true,player:'Bellingham',pos:'MID',club:'RMA',time:'21dk'},
+  {manager:'Dan B.',me:false,player:'Frimpong',pos:'DEF',club:'LEV',time:'24dk'},
+  {manager:'Sen',me:true,player:'Alexander-Arnold',pos:'DEF',club:'LIV',time:'27dk'},
+];
+
+const FIXTURES = [
+  {home:'Real Madrid',away:'Bayern Munich',homeScore:3,awayScore:1,date:'Tue 16 Sep',yourPts:22},
+  {home:'Man City',away:'PSG',homeScore:2,awayScore:2,date:'Tue 16 Sep',yourPts:14},
+  {home:'Liverpool',away:'Barcelona',homeScore:1,awayScore:0,date:'Wed 17 Sep',yourPts:9},
+  {home:'Bayer Leverkusen',away:'Galatasaray',homeScore:2,awayScore:0,date:'Wed 17 Sep',yourPts:6},
+  {home:'Arsenal',away:'Inter Milan',homeScore:0,awayScore:0,date:'Wed 17 Sep',yourPts:5},
+  {home:'Juventus',away:'Atletico Madrid',homeScore:1,awayScore:2,date:'Wed 17 Sep',yourPts:3},
+];
+
+const STRINGS = {
+  en: {
+    tagline: 'Draft your Champions League squad and manage it like a Head Coach.',
+    teamNameLabel: 'Team Name', teamNamePh: 'e.g. FC Northbank',
+    coachNameLabel: 'Head Coach Name', coachNamePh: 'e.g. Alex Morgan',
+    enterLeague: 'Enter League', or: 'or', google: 'Continue with Google',
+    next: 'Next', startManaging: 'Start Managing', skip: 'Skip',
+    headCoach: 'Head Coach', rank: 'Rank', totalPoints: 'Total Points', squadValue: 'Squad Value',
+    league: 'League', more: 'More',
+    matchdayLive: 'Matchday Live', leaguePass: 'League Pass', reauctionPrices: 'Re-auction & Prices',
+    exposureRisk: 'Exposure & Risk', predictions: 'Predictions', headToHead: 'Head to Head',
+    liveAuction: 'Live Auction', rulesScoring: 'Rules & Scoring', matchResults: 'Match Results',
+    draftFeed: 'Draft Feed',
+    tabHome: 'Home', tabSquad: 'Squad', tabTransfers: 'Transfers', tabLeagues: 'Leagues',
+    phaseLocked: 'Locked', phaseOpen: 'Open', phaseClosed: 'Closed',
+    heroWaitingKicker: 'Draft window', heroWaitingTitle: 'Transfers open soon',
+    heroOpenKicker: 'Draft window · live', heroOpenTitle: 'Transfers are open',
+    heroClosedKicker: 'Draft window · closed', heroClosedTitle: 'Squads are locked',
+    heroClosedBody: 'The transfer window has closed. Managers who missed the deadline received an automatic squad. Real matches are underway.',
+    viewRules: 'View Rules', makeTransfers: 'Make Transfers', viewResults: 'View Results',
+    onboard: [
+      {num:'1',title:'One player, one manager',body:'Every Champions League player can be drafted by only one manager in your league. Move fast when the window opens.'},
+      {num:'2',title:'The window has a clock',body:'Transfers open at a set time and lock at the deadline. Miss it and an automatic squad is assigned to you.'},
+      {num:'3',title:'Real matches, real points',body:'Your squad scores from actual Champions League fixtures. Pick a captain each week to double their return.'},
+    ],
+    newLeagueRow: 'Set up a new league', setupTitle: 'SET UP A LEAGUE',
+    swapWith: 'Swap with', noBenchOptions: 'No bench players available in this position.',
+    makeCaptain: 'Make Captain', removeCaptain: 'Remove Captain',
+    leagueChat: 'League Chat', chatPlaceholder: 'Message the league…',
+    catLive: 'Matchday', catAuction: 'Auction', catCompete: 'Compete', catInfo: 'Info',
+  },
+  tr: {
+    tagline: 'Şampiyonlar Ligi kadronu kur ve teknik direktör gibi yönet.',
+    teamNameLabel: 'Takım Adı', teamNamePh: 'örn. FC Northbank',
+    coachNameLabel: 'Teknik Direktör Adı', coachNamePh: 'örn. Alex Morgan',
+    enterLeague: 'Lige Gir', or: 'veya', google: 'Google ile devam et',
+    next: 'İleri', startManaging: 'Yönetmeye Başla', skip: 'Atla',
+    headCoach: 'Teknik Direktör', rank: 'Sıra', totalPoints: 'Toplam Puan', squadValue: 'Kadro Değeri',
+    league: 'Lig', more: 'Diğer',
+    matchdayLive: 'Canlı Maç Günü', leaguePass: 'Lig Paketi', reauctionPrices: 'Yeniden İhale ve Fiyatlar',
+    exposureRisk: 'Risk Dağılımı', predictions: 'Tahminler', headToHead: 'Kafa Kafaya',
+    liveAuction: 'Canlı İhale', rulesScoring: 'Kurallar ve Puanlama', matchResults: 'Maç Sonuçları',
+    draftFeed: 'İhale Akışı',
+    tabHome: 'Ana Sayfa', tabSquad: 'Kadro', tabTransfers: 'Transfer', tabLeagues: 'Ligler',
+    phaseLocked: 'Kapalı', phaseOpen: 'Açık', phaseClosed: 'Bitti',
+    heroWaitingKicker: 'Transfer penceresi', heroWaitingTitle: 'Transferler yakında açılıyor',
+    heroOpenKicker: 'Transfer penceresi · canlı', heroOpenTitle: 'Transferler açık',
+    heroClosedKicker: 'Transfer penceresi · kapandı', heroClosedTitle: 'Kadrolar kilitlendi',
+    heroClosedBody: 'Transfer penceresi kapandı. Süreyi kaçıran teknik direktörlere otomatik kadro atandı. Gerçek maçlar oynanıyor.',
+    viewRules: 'Kuralları Gör', makeTransfers: 'Transfer Yap', viewResults: 'Sonuçları Gör',
+    onboard: [
+      {num:'1',title:'Bir oyuncu, bir teknik direktör',body:'Her Şampiyonlar Ligi oyuncusu ligindeki yalnızca bir teknik direktör tarafından alınabilir. Pencere açılınca hızlı ol.'},
+      {num:'2',title:'Pencerenin saati var',body:'Transferler belirli bir saatte açılır ve süre bitiminde kilitlenir. Kaçırırsan sana otomatik kadro atanır.'},
+      {num:'3',title:'Gerçek maçlar, gerçek puanlar',body:'Kadron gerçek Şampiyonlar Ligi maçlarından puan toplar. Her hafta bir kaptan seç, getirisi iki katına çıksın.'},
+    ],
+    newLeagueRow: 'Yeni lig kur', setupTitle: 'LİG KUR',
+    swapWith: 'Şununla değiştir', noBenchOptions: 'Bu pozisyonda yedekte oyuncu yok.',
+    makeCaptain: 'Kaptan Yap', removeCaptain: 'Kaptanlığı Kaldır',
+    leagueChat: 'Lig Sohbeti', chatPlaceholder: 'Lige mesaj yaz…',
+    catLive: 'Maç Günü', catAuction: 'İhale', catCompete: 'Rekabet', catInfo: 'Bilgi',
+  },
+};
+
+const ONBOARDING = [
+  {num:'1',title:'One player, one manager',body:'Every Champions League player can be drafted by only one manager in your league. Move fast when the window opens.'},
+  {num:'2',title:'The window has a clock',body:'Transfers open at a set time and lock at the deadline. Miss it and an automatic squad is assigned to you.'},
+  {num:'3',title:'Real matches, real points',body:'Your squad scores from actual Champions League fixtures. Pick a captain each week to double their return.'},
+];
+
+const LOTS = [
+  {id:'yamal',name:'Lamine Yamal',pos:'FWD',club:'BAR',list:11.0,topBid:14.5,topBidder:'Priya S.',mine:false,bidders:4},
+  {id:'wirtz2',name:'Florian Wirtz',pos:'MID',club:'LEV',list:8.5,topBid:10.0,topBidder:'You',mine:true,bidders:3},
+  {id:'salah2',name:'Mohamed Salah',pos:'FWD',club:'LIV',list:12.5,topBid:15.0,topBidder:'Jamie K.',mine:false,bidders:5},
+  {id:'rice2',name:'Declan Rice',pos:'MID',club:'ARS',list:6.5,topBid:7.0,topBidder:'You',mine:true,bidders:2},
+  {id:'dias2',name:'Rúben Dias',pos:'DEF',club:'MCI',list:6.0,topBid:6.0,topBidder:'Teklif yok',mine:false,bidders:0},
+  {id:'alisson2',name:'Alisson',pos:'GK',club:'LIV',list:5.5,topBid:6.5,topBidder:'Marcus O.',mine:false,bidders:2},
+];
+
+const PLANS = [
+  {id:'league',name:'Lig Paketi',price:'£24 / sezon',detail:'Komisyoncu bir kez öder, tüm menajerler ücretsiz oynar. Özel puanlama, 20 menajere kadar kapasite, özel ihale odaları ve her eleme turunda yeniden ihale.'},
+  {id:'club',name:'Kulüp Kimliği',price:'£4 tek seferlik',detail:'Arma ve forma tasarımcısı, menajer rozetleri ve lig şampiyonuna işlenmiş özel kupa.'},
+  {id:'annual',name:'Sezon Kitabı',price:'£12 sezon sonunda',detail:'Sezonun basılı kaydı — her ihale, her hafta, final tablosu, şampiyona postalanır.'},
+];
+
+const UNLOCKS = [
+  {title:'Özel puanlama',body:'Varsayılan yerine kendi puan tablonu ayarla'},
+  {title:'20 menajere kadar',body:'Ücretsiz ligler 8 koltukla sınırlı'},
+  {title:'Kör ihale turları',body:'Kapalı teklif ve 60 saniyelik uzatma'},
+  {title:'Eleme sonrası yeniden ihale',body:'Her tur arası yeni pencere, iadeler dahil'},
+  {title:'Kafa kafaya fikstür',body:'Sıralamanın yanında haftalık düellolar ve tablo'},
+  {title:'Sezon kitabı ve kupa',body:'Paylaşılabilir sezon özeti ve lig arması'},
+];
+
+const NEVER_FOR_SALE = [
+  {label:'Ekstra transfer veya bonus bütçe'},
+  {label:'Waiver önceliği veya sıra atlama'},
+  {label:'Son saniye teklif hakkı veya ihale uzatması'},
+  {label:'Rakip bütçeleri, fiyat tahmini veya başka gizli bilgi'},
+  {label:'Canlı maç günü reklamı'},
+];
+
+
+
+
+const LIVE_FEED = [
+  {minute:"78'",player:'Vinicius Jr',action:'scores — assisted by Bellingham',match:'Real Madrid 3-1 Arsenal',pts:'+5',mine:true},
+  {minute:"74'",player:'Lamine Yamal',action:'scores',match:'Barcelona 2-1 Inter',pts:'+5',mine:false,owner:'Marcus O.'},
+  {minute:"66'",player:'Bellingham',action:'assists',match:'Real Madrid 3-1 Arsenal',pts:'+6',mine:true,cap:true},
+  {minute:"61'",player:'Rüdiger',action:'booked',match:'Real Madrid 3-1 Arsenal',pts:'−1',mine:true},
+  {minute:"52'",player:'Alexander-Arnold',action:'assists',match:'Liverpool 2-0 Bayern',pts:'+3',mine:true},
+  {minute:"45'",player:'Declan Rice',action:'concedes a penalty',match:'Real Madrid 3-1 Arsenal',pts:'−2',mine:false,owner:'Priya S.'},
+  {minute:"33'",player:'Haaland',action:'scores',match:'Man City 1-1 PSG',pts:'+5',mine:true},
+  {minute:"18'",player:'Ederson',action:'saves a penalty',match:'Man City 1-1 PSG',pts:'+5',mine:true},
+];
+
+const LIVE_SQUAD = [
+  {name:'Bellingham',club:'RMA',pts:24,status:'played 66\' · 1 assist',state:'live',cap:true},
+  {name:'Vinicius Jr',club:'RMA',pts:11,status:'played 78\' · 1 goal',state:'live'},
+  {name:'Haaland',club:'MCI',pts:8,status:'played 33\' · 1 goal',state:'live'},
+  {name:'Ederson',club:'MCI',pts:7,status:'penalty saved',state:'live'},
+  {name:'Alexander-Arnold',club:'LIV',pts:6,status:'1 assist',state:'live'},
+  {name:'Van Dijk',club:'LIV',pts:4,status:'clean sheet so far',state:'live'},
+  {name:'Rüdiger',club:'RMA',pts:1,status:'booked',state:'live'},
+  {name:'Mbappé',club:'RMA',pts:0,status:'kicks off 21:00',state:'upcoming'},
+  {name:'Pedri',club:'BAR',pts:0,status:'unused substitute',state:'out'},
+];
+
+const LIVE_TABLE = [
+  {manager:'Sen',live:82,playing:'3 to play',me:true,move:'up'},
+  {manager:'Jamie K.',live:74,playing:'2 to play',me:false,move:'down'},
+  {manager:'Priya S.',live:61,playing:'4 to play',me:false,move:'same'},
+  {manager:'Elena R.',live:55,playing:'1 to play',me:false,move:'up'},
+  {manager:'Marcus O.',live:48,playing:'3 to play',me:false,move:'down'},
+  {manager:'Tom H.',live:37,playing:'5 to play',me:false,move:'same'},
+];
+
+const CLEARED = [
+  {name:'Jamal Musiala',club:'Bayern Munich',refund:8.0},
+  {name:'Joshua Kimmich',club:'Bayern Munich',refund:5.5},
+  {name:'Harry Kane',club:'Bayern Munich',refund:8.5},
+];
+
+const MOVERS = [
+  {name:'Lamine Yamal',pos:'FWD',club:'BAR',old:11.0,now:12.4,driver:'3 goals, 2 assists in R16'},
+  {name:'Vinicius Jr',pos:'FWD',club:'RMA',old:10.5,now:11.6,driver:'2 goals, 270 mins'},
+  {name:'Declan Rice',pos:'MID',club:'ARS',old:6.5,now:7.2,driver:'2 assists, clean sheet'},
+  {name:'Rúben Dias',pos:'DEF',club:'MCI',old:6.0,now:6.5,driver:'2 clean sheets'},
+  {name:'Alisson',pos:'GK',club:'LIV',old:5.5,now:5.9,driver:'Clean sheet, 7 saves'},
+  {name:'Mohamed Salah',pos:'FWD',club:'LIV',old:12.5,now:11.7,driver:'0 returns in 2 games'},
+  {name:'Achraf Hakimi',pos:'DEF',club:'PSG',old:5.5,now:4.9,driver:'Suspended one leg'},
+  {name:'Ederson',pos:'GK',club:'MCI',old:5.0,now:4.6,driver:'Benched in R16 2nd leg'},
+  {name:'Antonio Rüdiger',pos:'DEF',club:'RMA',old:5.0,now:4.7,driver:'Yellow card, 3 goals conceded'},
+];
+
+const CLUB_EXPOSURE = [
+  {club:'Real Madrid',count:4,pts:214,tie:'vs Arsenal · 2-1 up',risk:'low'},
+  {club:'Man City',count:2,pts:96,tie:'vs Inter Milan · level',risk:'medium'},
+  {club:'Bayern Munich',count:2,pts:71,tie:'vs Liverpool · 0-2 down',risk:'high'},
+  {club:'Liverpool',count:2,pts:64,tie:'vs Bayern · 2-0 up',risk:'low'},
+  {club:'Barcelona',count:1,pts:38,tie:'vs PSG · 1-1',risk:'medium'},
+];
+
+const RISK_TIMELINE = [
+  {round:'Lig aşaması',note:'Tamamlandı',state:'done'},
+  {round:'Son 16',note:'Bu hafta rövanşlar',state:'live'},
+  {round:'Çeyrek final',note:'Sonrasında yeniden ihale açılır',state:'next'},
+  {round:'Yarı final',note:'Nis 2027',state:'future'},
+];
+
+const PREDICT_OPTIONS = [
+  {id:'jamie',manager:'Jamie K.',odds:'Form 78 avg'},
+  {id:'priya',manager:'Priya S.',odds:'Form 65 avg'},
+  {id:'me',manager:'You',odds:'Form 82 avg · 8 pts'},
+  {id:'marcus',manager:'Marcus O.',odds:'Form 60 avg'},
+  {id:'elena',manager:'Elena R.',odds:'Form 71 avg'},
+];
+
+const SCORE_CALLS = [
+  {id:'sc1',home:'Real Madrid',away:'Arsenal'},
+  {id:'sc2',home:'Bayern Munich',away:'Liverpool'},
+  {id:'sc3',home:'Barcelona',away:'Inter Milan'},
+];
+
+const PREDICT_TABLE = [
+  {manager:'Priya S.',hit:7,miss:2,bonus:38,me:false},
+  {manager:'Sen',hit:6,miss:3,bonus:34,me:true},
+  {manager:'Jamie K.',hit:5,miss:4,bonus:27,me:false},
+  {manager:'Elena R.',hit:4,miss:5,bonus:21,me:false},
+  {manager:'Marcus O.',hit:3,miss:6,bonus:15,me:false},
+];
+
+const PROFILE_FORM = [
+  {label:'GW1',pts:54},{label:'GW2',pts:71},{label:'GW3',pts:82},
+  {label:'GW4',pts:63},{label:'GW5',pts:78},{label:'GW6',pts:66},
+];
+
+const SIGNING_HISTORY = [
+  {name:'Jude Bellingham',route:'İhale',price:11.5,ret:'+96'},
+  {name:'Vinicius Jr',route:'İhale',price:10.5,ret:'+81'},
+  {name:'Erling Haaland',route:'Açık satış',price:12.0,ret:'+74'},
+  {name:'Jamal Musiala',route:'İhale',price:9.0,ret:'+42'},
+  {name:'Achraf Hakimi',route:'Waiver',price:5.5,ret:'-6'},
+];
+
+const CAREER = [
+  {label:'Oynanan sezon',value:'3'},
+  {label:'Lig şampiyonluğu',value:'1'},
+  {label:'Kazanılan ihale',value:'19'},
+  {label:'En iyi derece',value:'1. · 2024-25'},
+];
+
+const INITIAL_MESSAGES = [
+  {id:1,sender:'Jamie K.',time:'10:02',text:"Transfer window in 2 days. Who's your captain?",me:false},
+  {id:2,sender:'Priya S.',time:'10:04',text:'Bellingham. No debate.',me:false},
+  {id:3,sender:'Marcus O.',time:'10:06',text:'Haaland scored 4 last week, going with him again.',me:false},
+  {id:4,sender:'Sen',time:'10:07',text:'Vinicius has been unreal the last three gameweeks, watch this space.',me:true},
+  {id:5,sender:'Elena R.',time:'10:09',text:'Whoever bids on Mbappé against Bayern is brave.',me:false},
+  {id:6,sender:'Tom H.',time:'10:11',text:'Brave or right. He is on a run.',me:false},
+];
+
+const H2H = {
+  myScore: 82, oppTeam: 'Red Card Rovers', oppCoach: 'Marcus O.', oppScore: 60,
+  diffs: [
+    {side:'Sen', name:'Vinicius Jr', pts:'+18', mine:true},
+    {side:'Sen', name:'Bellingham (C)', pts:'+24', mine:true},
+    {side:'Marcus', name:'Lamine Yamal', pts:'+15', mine:false},
+    {side:'Marcus', name:'Osimhen', pts:'+9', mine:false},
+  ],
+};
+
+const H2H_TABLE = [
+  {manager:'Jamie K.',w:3,d:0,l:0,pts:9,me:false},
+  {manager:'Sen',w:2,d:1,l:0,pts:7,me:true},
+  {manager:'Priya S.',w:2,d:0,l:1,pts:6,me:false},
+  {manager:'Elena R.',w:1,d:1,l:1,pts:4,me:false},
+  {manager:'Marcus O.',w:1,d:0,l:2,pts:3,me:false},
+  {manager:'Tom H.',w:0,d:0,l:3,pts:0,me:false},
+];
+
+const H2H_SCHEDULE = [
+  {gw:4,opponent:'Priya S.'},
+  {gw:5,opponent:'Jamie K.'},
+  {gw:6,opponent:'Elena R.'},
+];
+
+const OUTBID_ALERTS = [
+  {id:'wirtz2',name:'Florian Wirtz',bidder:'Elena R.',amount:10.5},
+  {id:'rice2',name:'Declan Rice',bidder:'Priya S.',amount:7.5},
+];
+
+const WAIVERS = [
+  {id:'w1',name:'Nico Williams',pos:'FWD',club:'BAR',reason:'Released — hamstring, 3 weeks'},
+  {id:'w2',name:'Dominik Szoboszlai',pos:'MID',club:'LIV',reason:'Released by Tom H.'},
+  {id:'w3',name:'Mike Maignan',pos:'GK',club:'MIL',reason:'Club eliminated'},
+];
+
+const OPEN_LEAGUES = [
+  {id:'l1',name:'Sunday Sofa Managers',seats:'7/10 seats',opens:'Fri 18:00',budget:120},
+  {id:'l2',name:'Group Stage Grinders',seats:'4/8 seats',opens:'Sat 12:00',budget:100},
+  {id:'l3',name:'Anfield Away Days',seats:'9/12 seats',opens:'Sun 20:00',budget:150},
+];
+
+class Component extends DCLogic {
+  state = {
+    lang: 'en',
+    screen: 'login',
+    teamName: '',
+    coachName: '',
+    onboardIndex: 0,
+    setupMode: 'create',
+    newLeagueName: '',
+    leagueSize: 8,
+    budgetSetting: 120,
+    auctionOpens: 'Thu 10 Sep · 20:00',
+    auctionCloses: 'Fri 11 Sep · 22:00',
+    joinCode: '',
+    bids: {},
+    pending: {},
+    lotQuery: '',
+    lotPos: 'ALL',
+    blindRound: true,
+    moverSort: 'risers',
+    liveTab: 'feed',
+    squadOverrides: {},
+    selectedPlayerId: null,
+    chatInput: '',
+    messages: INITIAL_MESSAGES,
+    animatedPoints: 585,
+    flashCaptainId: null,
+    flashLotId: null,
+    pro: false,
+    planPick: 'league',
+    topScorerPick: null,
+    scorePicks: {},
+    claims: {},
+    dismissed: {},
+    tab: 'home',
+    phase: 'open',
+    captainId: 'bellingham',
+    shortlist: {},
+    filter: 'ALL',
+    saved: false,
+  };
+
+  setLang = (l) => this.setState({ lang: l });
+  setTeamName = (e) => this.setState({ teamName: e.target.value });
+  setCoachName = (e) => this.setState({ coachName: e.target.value });
+  startOnboarding = () => this.setState({ screen: 'onboarding', onboardIndex: 0 });
+  signInGoogle = () => this.setState({ screen: 'onboarding', onboardIndex: 0, teamName: this.state.teamName || 'FC Northbank', coachName: this.state.coachName || 'Alex Morgan' });
+  onboardNext = () => this.setState((s) => (s.onboardIndex >= STRINGS[s.lang].onboard.length - 1 ? { screen: 'app' } : { onboardIndex: s.onboardIndex + 1 }));
+  skipOnboarding = () => this.setState({ screen: 'app' });
+  setSetupMode = (m) => this.setState({ setupMode: m });
+  setNewLeagueName = (e) => this.setState({ newLeagueName: e.target.value });
+  setLeagueSize = (e) => {
+    const raw = e.target.value;
+    if (raw === '') return this.setState({ leagueSize: '' });
+    this.setState({ leagueSize: Math.min(20, Math.max(4, Number(raw))) });
+  };
+  bumpSize = (d) => this.setState((s) => ({ leagueSize: Math.min(20, Math.max(4, (Number(s.leagueSize) || 8) + d)) }));
+  setBudgetSetting = (e) => this.setState({ budgetSetting: Number(e.target.value) });
+  setAuctionOpens = (e) => this.setState({ auctionOpens: e.target.value });
+  setAuctionCloses = (e) => this.setState({ auctionCloses: e.target.value });
+  setJoinCode = (e) => this.setState({ joinCode: e.target.value });
+  confirmLeague = () => this.setState({ screen: 'app', tab: 'auction' });
+  bumpBid = (id, delta, floor) => this.setState((s) => {
+    const cur = s.pending[id] != null ? s.pending[id] : floor;
+    return { pending: { ...s.pending, [id]: Math.max(floor, Math.round((cur + delta) * 10) / 10) } };
+  });
+  setMoverSort = (m) => this.setState({ moverSort: m });
+  setLiveTab = (t) => this.setState({ liveTab: t });
+  pickPlan = (id) => this.setState({ planPick: id });
+  purchase = () => this.setState({ pro: true, tab: 'home' });
+  pickTopScorer = (id) => this.setState({ topScorerPick: id });
+  pickScore = (matchId, choice) => this.setState((s) => ({ scorePicks: { ...s.scorePicks, [matchId]: choice } }));
+  toggleBlind = () => this.setState((s) => ({ blindRound: !s.blindRound }));
+  claimWaiver = (id) => this.setState((s) => ({ claims: { ...s.claims, [id]: true } }));
+  counterBid = (id, floor) => this.setState((s) => ({
+    pending: { ...s.pending, [id]: floor },
+    dismissed: { ...s.dismissed, [id]: true },
+  }));
+  setLotQuery = (e) => this.setState({ lotQuery: e.target.value });
+  clearLotQuery = () => this.setState({ lotQuery: '' });
+  setLotPos = (p) => this.setState({ lotPos: p });
+  placeBid = (id, floor) => this.setState((s) => {
+    const amount = s.pending[id] != null ? s.pending[id] : floor;
+    return { bids: { ...s.bids, [id]: amount } };
+  });
+  setTab = (t) => this.setState({ tab: t });
+  setPhase = (p) => this.setState({ phase: p });
+  toggleCaptain = (id) => {
+    this.setState({ captainId: id, flashCaptainId: id });
+    clearTimeout(this._capFlashTimer);
+    this._capFlashTimer = setTimeout(() => this.setState({ flashCaptainId: null }), 700);
+  };
+  componentDidMount() {
+    this.setState({ animatedPoints: 0 });
+    this._pointsTimer = setInterval(() => {
+      this.setState((s) => {
+        const target = 585;
+        if (s.animatedPoints >= target) { clearInterval(this._pointsTimer); return null; }
+        return { animatedPoints: Math.min(target, s.animatedPoints + Math.ceil((target - s.animatedPoints) / 6)) };
+      });
+    }, 40);
+  }
+  componentWillUnmount() {
+    clearInterval(this._pointsTimer);
+    clearTimeout(this._capFlashTimer);
+    clearTimeout(this._lotFlashTimer);
+  }
+  openPlayerSheet = (id) => this.setState({ selectedPlayerId: id });
+  closePlayerSheet = () => this.setState({ selectedPlayerId: null });
+  swapPlayer = (starterId, benchId) => this.setState((s) => ({
+    squadOverrides: { ...s.squadOverrides, [starterId]: true, [benchId]: false },
+    selectedPlayerId: null,
+  }));
+  setChatInput = (e) => this.setState({ chatInput: e.target.value });
+  handleChatKey = (e) => { if (e.key === 'Enter') { e.preventDefault(); this.sendMessage(); } };
+  sendMessage = () => {
+    const text = this.state.chatInput.trim();
+    if (!text) return;
+    this.setState((s) => ({
+      messages: [...s.messages, { id: Date.now(), sender: 'Sen', time: 'Şimdi', text, me: true }],
+      chatInput: '',
+    }));
+  };
+  toggleShort = (id) => this.setState((s) => {
+    const sl = { ...s.shortlist };
+    if (sl[id]) delete sl[id]; else sl[id] = true;
+    return { shortlist: sl };
+  });
+  setFilter = (f) => this.setState({ filter: f });
+  saveSquad = () => {
+    this.setState({ saved: true });
+    setTimeout(() => this.setState({ saved: false }), 2000);
+  };
+
+  markerVM(p, coord) {
+    const isCap = p.id === this.state.captainId;
+    return {
+      id: p.id, photoId: 'photo-' + p.id, shortName: p.name, initials: initialsOf(p.name),
+      posStyle: `left:${coord.left}%;top:${coord.top}%`,
+      clubDot: clubColor(p.club),
+      capBorder: isCap ? 'var(--color-accent)' : 'var(--color-divider)',
+      capColor: isCap ? 'var(--color-accent-700)' : 'var(--color-text)',
+      openSheet: () => this.openPlayerSheet(p.id),
+    };
+  }
+
+  renderVals() {
+    const t = STRINGS[this.state.lang] || STRINGS.en;
+    const { lang, screen, teamName, coachName, onboardIndex, setupMode, newLeagueName, leagueSize, budgetSetting,
+      auctionOpens, auctionCloses, joinCode, bids, pending, lotQuery, lotPos,
+      blindRound, claims, dismissed, moverSort, liveTab, pro, planPick, topScorerPick, scorePicks,
+      squadOverrides, selectedPlayerId, chatInput, messages,
+      tab, phase, captainId, shortlist, filter, saved } = this.state;
+    const spent = SQUAD.reduce((sum, p) => sum + p.price, 0);
+    const remaining = TOTAL_BUDGET - spent;
+
+    const isBench = (p) => squadOverrides[p.id] ?? p.bench;
+    const gkP = SQUAD.find((p) => p.pos === 'GK' && !isBench(p));
+    const defP = SQUAD.filter((p) => p.pos === 'DEF' && !isBench(p));
+    const midP = SQUAD.filter((p) => p.pos === 'MID' && !isBench(p));
+    const fwdP = SQUAD.filter((p) => p.pos === 'FWD' && !isBench(p));
+    const benchP = SQUAD.filter((p) => isBench(p));
+
+    const gk = this.markerVM(gkP, FORMATION.gk);
+    const defMarkers = defP.map((p, i) => this.markerVM(p, FORMATION.def[i]));
+    const midMarkers = midP.map((p, i) => this.markerVM(p, FORMATION.mid[i]));
+    const fwdMarkers = fwdP.map((p, i) => this.markerVM(p, FORMATION.fwd[i]));
+    const benchTokens = benchP.map((p) => ({ id: p.id, photoId: 'photo-' + p.id, shortName: p.name, initials: initialsOf(p.name), clubDot: clubColor(p.club) }));
+
+    const isOpen = phase === 'open';
+    const isClosed = phase === 'closed';
+    const filteredMarket = MARKET.filter((p) => filter === 'ALL' || p.pos === filter).map((p) => {
+      const sl = !!shortlist[p.id];
+      const taken = !!p.takenBy;
+      return {
+        id: p.id, photoId: 'photo-market-' + p.id, name: p.name, initials: initialsOf(p.name), clubDot: clubColor(p.club), club: p.club, posLabel: p.pos, priceLabel: p.price.toFixed(1), form: p.form,
+        available: !taken, taken, takenBy: p.takenBy, rowOpacity: taken ? 0.55 : 1,
+        canPick: !taken && isOpen,
+        shortlisted: sl, notShortlisted: !sl,
+        toggle: () => this.toggleShort(p.id),
+        btnBg: sl ? 'var(--color-accent)' : 'transparent',
+        btnBorder: sl ? 'var(--color-accent)' : 'var(--color-divider)',
+        btnColor: sl ? 'var(--color-bg)' : 'var(--color-text)',
+      };
+    });
+    const shortlistIds = Object.keys(shortlist);
+    const shortlistValue = MARKET.filter((p) => shortlist[p.id]).reduce((s, p) => s + p.price, 0);
+
+    const standings = STANDINGS.map((s) => ({
+      ...s,
+      rowBg: s.me ? 'var(--color-accent-100)' : 'transparent',
+      rowWeight: s.me ? 800 : 400,
+    }));
+
+    const draftFeed = DRAFT_FEED.map((ev) => ({
+      ...ev,
+      photoId: 'photo-draft-' + ev.player.replace(/\s+/g, '-').toLowerCase(),
+      initials: initialsOf(ev.player),
+      posLabel: ev.pos,
+      nameColor: ev.me ? 'var(--color-accent-700)' : 'var(--color-text)',
+    }));
+
+    const fixtures = FIXTURES.map((fx) => ({
+      ...fx,
+      score: `${fx.homeScore} – ${fx.awayScore}`,
+    }));
+
+    const active = 'var(--color-accent-700)';
+    const inactive = 'var(--color-neutral-600)';
+
+    let hero;
+    if (phase === 'waiting') {
+      hero = {
+        bg: 'var(--color-surface)', color: 'var(--color-text)',
+        kicker: t.heroWaitingKicker, title: t.heroWaitingTitle,
+        body: lang === 'tr'
+          ? `Pazar açılışı: ${this.props.deadlineLabel ?? 'SAT 12 SEP · 18:30'}. O ana kadar mevcut kadron kilitli kalır.`
+          : `The market opens ${this.props.deadlineLabel ?? 'SAT 12 SEP · 18:30'}. Your current squad stays locked until then.`,
+        cta: t.viewRules, btnBg: 'var(--color-bg)', btnColor: 'var(--color-text)', btnBorder: 'var(--color-text)', action: () => this.setTab('rules'),
+      };
+    } else if (phase === 'open') {
+      hero = {
+        bg: 'var(--color-accent)', color: 'var(--color-bg)',
+        kicker: t.heroOpenKicker, title: t.heroOpenTitle,
+        body: lang === 'tr'
+          ? `2 ücretsiz transfer hakkın var. Pencere ${this.props.deadlineLabel ?? 'SAT 12 SEP · 18:30'} kapanıyor — kilitlenmeden seç.`
+          : `2 free transfers left. Window closes ${this.props.deadlineLabel ?? 'SAT 12 SEP · 18:30'} — pick before it locks.`,
+        cta: t.makeTransfers, btnBg: 'var(--color-bg)', btnColor: 'var(--color-accent-700)', btnBorder: 'var(--color-bg)', action: () => this.setTab('transfers'),
+      };
+    } else {
+      hero = {
+        bg: 'var(--color-surface)', color: 'var(--color-text)',
+        kicker: t.heroClosedKicker, title: t.heroClosedTitle,
+        body: t.heroClosedBody,
+        cta: t.viewResults, btnBg: 'var(--color-accent)', btnColor: 'var(--color-bg)', btnBorder: 'var(--color-accent)', action: () => this.setTab('results'),
+      };
+    }
+
+    const refundTotal = CLEARED.reduce((s, c) => s + c.refund, 0);
+    const totalExposurePts = CLUB_EXPOSURE.reduce((s, c) => s + c.pts, 0);
+    const atRiskPts = CLUB_EXPOSURE.filter((c) => c.risk !== 'low').reduce((s, c) => s + c.pts, 0);
+    const riskPct = Math.round((atRiskPts / totalExposurePts) * 100);
+    const bayernPct = Math.round((71 / totalExposurePts) * 100);
+
+    const coach = coachName.trim() || 'Alex Morgan';
+    const team = teamName.trim() || 'FC Northbank';
+    const step = t.onboard[Math.min(onboardIndex, t.onboard.length - 1)];
+
+    const committedTotal = LOTS.reduce((sum, l) => {
+      const b = bids[l.id];
+      const leading = b != null ? b >= l.topBid : l.mine;
+      return sum + (leading ? (b != null ? b : l.topBid) : 0);
+    }, 0);
+    const myLeading = LOTS.filter((l) => {
+      const b = bids[l.id];
+      return b != null ? b >= l.topBid : l.mine;
+    }).length;
+    const myBidCount = LOTS.filter((l) => bids[l.id] != null || l.mine).length;
+
+    const q = lotQuery.trim().toLowerCase();
+    const lots = LOTS.filter((l) => {
+      if (lotPos !== 'ALL' && l.pos !== lotPos) return false;
+      if (!q) return true;
+      return l.name.toLowerCase().includes(q) || l.club.toLowerCase().includes(q);
+    }).map((l) => {
+      const b = bids[l.id];
+      const effective = b != null ? Math.max(b, l.topBid) : l.topBid;
+      const leading = b != null ? b >= l.topBid : l.mine;
+      const floor = Math.max(l.list, Math.round((l.topBid + 0.5) * 10) / 10);
+      const draft = pending[l.id] != null ? pending[l.id] : floor;
+      const submitted = b != null && Math.abs(b - draft) < 0.001;
+      return {
+        id: l.id, name: l.name, initials: initialsOf(l.name), clubDot: clubColor(l.club), pos: l.pos, club: l.club,
+        listPrice: l.list.toFixed(1),
+        topLabel: blindRound ? 'Kapalı' : 'En Yüksek Teklif',
+        topBidDisplay: blindRound && !leading ? '——' : `£${effective.toFixed(1)}M`,
+        topBidder: blindRound ? (leading ? 'Teklifin' : `${l.bidders} teklif`) : (leading ? 'Sen' : l.topBidder),
+        myBidLabel: draft.toFixed(1),
+        leading, notLeading: !leading,
+        statusLabel: blindRound ? (bids[l.id] != null ? 'Teklif Verildi' : 'Kapalı') : leading ? 'Önde' : l.topBidder === 'Teklif yok' ? 'Açık' : 'Geçildin',
+        chipBg: leading ? 'var(--color-accent)' : 'transparent',
+        chipColor: leading ? 'var(--color-bg)' : 'var(--color-text)',
+        chipBorder: leading ? 'var(--color-accent)' : 'var(--color-text)',
+        cardBorder: leading ? 'var(--color-accent)' : 'var(--color-divider)',
+        cardBg: leading ? 'var(--color-accent-100)' : 'var(--color-surface)',
+        closed: false, bidDisabled: submitted,
+        btnLabel: submitted ? 'Verildi' : 'Teklif Ver',
+        btnBorder: submitted ? 'var(--color-divider)' : 'var(--color-accent)',
+        btnBg: submitted ? 'transparent' : 'var(--color-accent)',
+        btnColor: submitted ? 'var(--color-neutral-600)' : 'var(--color-bg)',
+        dec: () => this.bumpBid(l.id, -0.5, floor),
+        inc: () => this.bumpBid(l.id, 0.5, floor),
+        placeBid: () => this.placeBid(l.id, floor),
+      };
+    });
+
+    const sizeNum = Number(leagueSize) || 0;
+
+    return {
+      isLogin: screen === 'login', isOnboarding: screen === 'onboarding',
+      isLeagueSetup: screen === 'leagueSetup', isApp: screen === 'app',
+      goLeagueSetup: () => this.setState({ screen: 'leagueSetup' }),
+      setupIsCreate: setupMode === 'create', setupIsJoin: setupMode === 'join',
+      setSetupCreate: () => this.setSetupMode('create'), setSetupJoin: () => this.setSetupMode('join'),
+      newLeagueName, setNewLeagueName: this.setNewLeagueName,
+      leagueSize, setLeagueSize: this.setLeagueSize,
+      incSize: () => this.bumpSize(1), decSize: () => this.bumpSize(-1),
+      sizeHint: sizeNum >= 4
+        ? `${sizeNum} managers · ${sizeNum % 2 === 0 ? 'even, head-to-head weeks pair cleanly' : 'odd, one manager sits out each head-to-head week'} · 4-20 allowed`
+        : 'Enter between 4 and 20 managers',
+      budgetSetting, setBudgetSetting: this.setBudgetSetting,
+      auctionOpens, setAuctionOpens: this.setAuctionOpens,
+      auctionCloses, setAuctionCloses: this.setAuctionCloses,
+      inviteCode: 'TCH-4Q2X', createDisabled: !newLeagueName.trim() || sizeNum < 4 || sizeNum > 20,
+      joinCode, setJoinCode: this.setJoinCode, joinDisabled: joinCode.trim().length < 4,
+      confirmLeague: this.confirmLeague,
+      openLeagues: OPEN_LEAGUES.map((lg) => ({ ...lg, join: this.confirmLeague })),
+      isAuction: tab === 'auction', goAuction: () => this.setTab('auction'),
+      auctionColor: tab === 'auction' ? active : inactive,
+      auctionTag: 'Live', auctionClock: '04:12:38',
+      freeFunds: (budgetSetting - committedTotal).toFixed(1),
+      committed: committedTotal.toFixed(1),
+      isChat: tab === 'chat', goChat: () => this.setTab('chat'),
+      chatInput, setChatInput: this.setChatInput, handleChatKey: this.handleChatKey, sendMessage: this.sendMessage,
+      messages: messages.map((m) => ({
+        ...m,
+        align: m.me ? 'flex-end' : 'flex-start',
+        bg: m.me ? 'var(--color-surface)' : 'transparent',
+        pad: m.me ? '10px 12px' : '0',
+        nameColor: m.me ? 'var(--color-accent-700)' : 'color-mix(in srgb, var(--color-text) 60%, transparent)',
+      })),
+      isPaywall: tab === 'paywall', goPaywall: () => this.setTab('paywall'),
+      locked: !pro, pro,
+      proChipLabel: pro ? 'League Pass' : 'Locked',
+      proChipBg: pro ? 'var(--color-accent)' : 'transparent',
+      proChipColor: pro ? 'var(--color-bg)' : 'var(--color-accent-700)',
+      purchase: this.purchase,
+      purchaseLabel: planPick === 'league' ? 'Ligi Aç — £24' : planPick === 'club' ? 'Kulüp Kimliği Al — £4' : 'Sezon Kitabını Ayırt — £12',
+      plans: PLANS.map((p) => {
+        const on = planPick === p.id;
+        return {
+          name: p.name, price: p.price, detail: p.detail,
+          bg: on ? 'var(--color-accent-100)' : 'var(--color-surface)',
+          border: on ? 'var(--color-accent)' : 'var(--color-divider)',
+          color: on ? 'var(--color-accent-700)' : 'var(--color-text)',
+          subColor: 'color-mix(in srgb, var(--color-text) 55%, transparent)',
+          pick: () => this.pickPlan(p.id),
+        };
+      }),
+      unlockRows: UNLOCKS, neverRows: NEVER_FOR_SALE,
+      isLive: tab === 'live', goLive: () => this.setTab('live'),
+      livePoints: LIVE_TABLE[0].live,
+      liveRankLine: '1st in league · +1 since kick-off',
+      livePlayingLine: '3 players still to play',
+      liveTabIsFeed: liveTab === 'feed', liveTabIsSquad: liveTab === 'squad', liveTabIsTable: liveTab === 'table',
+      setLiveTabFeed: () => this.setLiveTab('feed'), setLiveTabSquad: () => this.setLiveTab('squad'),
+      setLiveTabTable: () => this.setLiveTab('table'),
+      liveFeedBg: liveTab === 'feed' ? 'var(--color-accent-100)' : 'transparent',
+      liveFeedColor: liveTab === 'feed' ? 'var(--color-accent-700)' : 'var(--color-neutral-600)',
+      liveSquadBg: liveTab === 'squad' ? 'var(--color-accent-100)' : 'transparent',
+      liveSquadColor: liveTab === 'squad' ? 'var(--color-accent-700)' : 'var(--color-neutral-600)',
+      liveTableBg: liveTab === 'table' ? 'var(--color-accent-100)' : 'transparent',
+      liveTableColor: liveTab === 'table' ? 'var(--color-accent-700)' : 'var(--color-neutral-600)',
+      liveFeed: LIVE_FEED.map((ev) => ({
+        minute: ev.minute, player: ev.player + (ev.cap ? ' (C)' : ''), action: ev.action, match: ev.match,
+        ownerNote: ev.mine ? '' : ` · ${ev.owner}`,
+        pts: ev.pts,
+        ptsColor: ev.pts.startsWith('−') ? 'var(--color-neutral-600)'
+          : ev.mine ? 'var(--color-accent-700)' : 'color-mix(in srgb, var(--color-text) 45%, transparent)',
+      })),
+      liveSquad: LIVE_SQUAD.map((p) => ({
+        name: p.name, capMark: p.cap ? ' (C)' : '', club: p.club,
+        statusLabel: p.status, pts: p.pts,
+        statusDot: p.state === 'live' ? 'var(--color-accent)' : p.state === 'upcoming' ? 'var(--color-neutral-500)' : 'var(--color-divider)',
+        ptsColor: p.state === 'live' && p.pts > 0 ? 'var(--color-accent-700)' : 'var(--color-text)',
+      })),
+      liveTable: LIVE_TABLE.map((r, i) => ({
+        manager: r.manager, live: r.live, playing: r.playing,
+        posLabel: (i + 1) + (r.move === 'up' ? ' ↑' : r.move === 'down' ? ' ↓' : ''),
+        rowBg: r.me ? 'var(--color-accent-100)' : 'transparent',
+        rowWeight: r.me ? 800 : 400,
+      })),
+      isReauction: tab === 'reauction', goReauction: () => this.setTab('reauction'),
+      refundTotal: refundTotal.toFixed(1),
+      reBudget: (remaining + refundTotal).toFixed(1),
+      openSlots: CLEARED.length,
+      clearedPlayers: CLEARED.map((c) => ({ ...c, initials: initialsOf(c.name), refund: c.refund.toFixed(1) })),
+      moverIsRisers: moverSort === 'risers', moverIsFallers: moverSort === 'fallers',
+      setMoverRisers: () => this.setMoverSort('risers'), setMoverFallers: () => this.setMoverSort('fallers'),
+      movers: MOVERS
+        .filter((m) => (moverSort === 'risers' ? m.now > m.old : m.now < m.old))
+        .sort((a, b) => Math.abs(b.now - b.old) - Math.abs(a.now - a.old))
+        .map((m) => {
+          const d = m.now - m.old;
+          return {
+            name: m.name, initials: initialsOf(m.name), pos: m.pos, club: m.club, driver: m.driver,
+            newPrice: m.now.toFixed(1),
+            delta: (d > 0 ? '+' : '−') + '£' + Math.abs(d).toFixed(1) + 'M',
+            deltaColor: d > 0 ? 'var(--color-accent-700)' : 'var(--color-neutral-600)',
+          };
+        }),
+      isRisk: tab === 'risk', goRisk: () => this.setTab('risk'),
+      riskRound: 'Round of 16',
+      riskPct: riskPct,
+      riskHeaderBg: riskPct >= 30 ? 'var(--color-accent)' : 'var(--color-surface)',
+      riskHeaderColor: riskPct >= 30 ? 'var(--color-bg)' : 'var(--color-text)',
+      riskSummary: `Sezon puanının %${riskPct}'i bu turda elenme riski orta veya yüksek kulüplerde. Bayern tek başına %${bayernPct} taşıyor.`,
+      clubExposure: CLUB_EXPOSURE.map((c) => {
+        const high = c.risk === 'high';
+        const med = c.risk === 'medium';
+        return {
+          club: c.club, count: c.count, pts: c.pts, tie: c.tie,
+          barWidth: Math.round((c.pts / totalExposurePts) * 100) + '%',
+          barColor: high ? 'var(--color-accent)' : med ? 'var(--color-accent-400)' : 'var(--color-neutral-500)',
+          cardBorder: high ? 'var(--color-accent)' : 'var(--color-divider)',
+          cardBg: high ? 'var(--color-accent-100)' : 'var(--color-surface)',
+          riskLabel: high ? 'Yüksek risk' : med ? 'Orta' : 'Düşük risk',
+          chipBg: high ? 'var(--color-accent)' : 'transparent',
+          chipColor: high ? 'var(--color-bg)' : 'var(--color-text)',
+          chipBorder: high ? 'var(--color-accent)' : 'var(--color-text)',
+        };
+      }),
+      riskTimeline: RISK_TIMELINE.map((t) => ({
+        round: t.round, note: t.note,
+        dotBg: t.state === 'live' ? 'var(--color-accent)' : t.state === 'done' ? 'var(--color-text)' : 'var(--color-divider)',
+        nameColor: t.state === 'future' ? 'color-mix(in srgb, var(--color-text) 50%, transparent)' : 'var(--color-text)',
+      })),
+      isPredict: tab === 'predict', goPredict: () => this.setTab('predict'),
+      predictAccuracy: 67, predictStreak: '3 in a row', predictBonus: 34,
+      predictOptions: PREDICT_OPTIONS.map((o) => {
+        const on = topScorerPick === o.id;
+        return {
+          manager: o.manager, odds: o.odds,
+          bg: on ? 'var(--color-accent)' : 'var(--color-surface)',
+          border: on ? 'var(--color-accent)' : 'var(--color-divider)',
+          color: on ? 'var(--color-bg)' : 'var(--color-text)',
+          oddsColor: on ? 'var(--color-bg)' : 'color-mix(in srgb, var(--color-text) 55%, transparent)',
+          dotBg: on ? 'var(--color-bg)' : 'transparent',
+          dotBorder: on ? 'var(--color-bg)' : 'var(--color-divider)',
+          pick: () => this.pickTopScorer(o.id),
+        };
+      }),
+      scoreCalls: SCORE_CALLS.map((m) => ({
+        home: m.home, away: m.away,
+        options: [
+          { key: 'home', label: 'Ev' },
+          { key: 'draw', label: 'Berabere' },
+          { key: 'away', label: 'Dep' },
+        ].map((c) => {
+          const on = scorePicks[m.id] === c.key;
+          return {
+            label: c.label,
+            bg: on ? 'var(--color-accent)' : 'transparent',
+            border: on ? 'var(--color-accent)' : 'var(--color-divider)',
+            color: on ? 'var(--color-bg)' : 'var(--color-text)',
+            pick: () => this.pickScore(m.id, c.key),
+          };
+        }),
+      })),
+      predictTable: PREDICT_TABLE.map((r) => ({
+        ...r,
+        rowBg: r.me ? 'var(--color-accent-100)' : 'transparent',
+        rowWeight: r.me ? 800 : 400,
+      })),
+      isProfile: tab === 'profile', goProfile: () => this.setTab('profile'),
+      profile: {
+        badge: 'Kupanın sahibi',
+        squadValue: spent.toFixed(1),
+        signings: SIGNING_HISTORY.length,
+        bestGw: Math.max(...PROFILE_FORM.map((g) => g.pts)),
+        form: PROFILE_FORM.map((g) => ({
+          label: g.label, pts: g.pts,
+          height: Math.round((g.pts / 90) * 100) + '%',
+          bg: g.pts === Math.max(...PROFILE_FORM.map((x) => x.pts)) ? 'var(--color-accent)' : 'var(--color-neutral-400)',
+        })),
+        history: SIGNING_HISTORY.map((h) => ({
+          name: h.name, initials: initialsOf(h.name), route: h.route, price: h.price.toFixed(1),
+          returnLabel: h.ret + ' puan',
+          returnColor: h.ret.startsWith('-') ? 'var(--color-neutral-600)' : 'var(--color-accent-700)',
+        })),
+        career: CAREER,
+      },
+      isH2H: tab === 'h2h', goH2H: () => this.setTab('h2h'),
+      h2h: {
+        myScore: H2H.myScore, oppTeam: H2H.oppTeam, oppScore: H2H.oppScore,
+        barWidth: Math.round((H2H.myScore / (H2H.myScore + H2H.oppScore)) * 100) + '%',
+        statusLine: H2H.myScore > H2H.oppScore
+          ? `Leading ${H2H.oppCoach} by ${H2H.myScore - H2H.oppScore} points — 3 players still to play.`
+          : `Trailing ${H2H.oppCoach} by ${H2H.oppScore - H2H.myScore} points — 3 players still to play.`,
+        diffs: H2H.diffs.map((d) => ({
+          ...d,
+          rowBg: d.mine ? 'var(--color-accent-100)' : 'var(--color-surface)',
+          sideColor: d.mine ? 'var(--color-accent-700)' : 'color-mix(in srgb, var(--color-text) 55%, transparent)',
+          ptsColor: d.mine ? 'var(--color-accent-700)' : 'var(--color-text)',
+        })),
+      },
+      h2hTable: H2H_TABLE.map((r) => ({
+        ...r,
+        rowBg: r.me ? 'var(--color-accent-100)' : 'transparent',
+        rowWeight: r.me ? 800 : 400,
+      })),
+      h2hSchedule: H2H_SCHEDULE,
+      leadingCount: myLeading, bidCount: myBidCount, lots,
+      clockLabel: blindRound ? 'Blind round closes in' : 'Closes in',
+      extensionActive: !blindRound,
+      blindRound, toggleBlind: this.toggleBlind,
+      blindHint: blindRound ? 'Rival bids stay hidden until the round closes' : 'Live bidding — every bid is public',
+      outbidAlerts: OUTBID_ALERTS.filter((a) => !dismissed[a.id] && !blindRound).map((a) => ({
+        ...a, amount: a.amount.toFixed(1),
+        counter: () => this.counterBid(a.id, Math.round((a.amount + 0.5) * 10) / 10),
+      })),
+      hasOutbidAlerts: !blindRound && OUTBID_ALERTS.some((a) => !dismissed[a.id]),
+      waiverPriority: '3rd',
+      waivers: WAIVERS.map((w) => {
+        const done = !!claims[w.id];
+        return {
+          ...w, initials: initialsOf(w.name), claimed: done,
+          btnLabel: done ? 'Alındı' : 'Talep Et',
+          btnBg: done ? 'transparent' : 'var(--color-accent)',
+          btnBorder: done ? 'var(--color-divider)' : 'var(--color-accent)',
+          btnColor: done ? 'var(--color-neutral-600)' : 'var(--color-bg)',
+          claim: () => this.claimWaiver(w.id),
+        };
+      }),
+      lotQuery, setLotQuery: this.setLotQuery, clearLotQuery: this.clearLotQuery,
+      hasLotQuery: lotQuery.trim().length > 0, lotsEmpty: lots.length === 0,
+      lotPosIsAll: lotPos === 'ALL', lotPosIsGK: lotPos === 'GK', lotPosIsDEF: lotPos === 'DEF',
+      lotPosIsMID: lotPos === 'MID', lotPosIsFWD: lotPos === 'FWD',
+      setLotPosAll: () => this.setLotPos('ALL'), setLotPosGK: () => this.setLotPos('GK'),
+      setLotPosDEF: () => this.setLotPos('DEF'), setLotPosMID: () => this.setLotPos('MID'),
+      setLotPosFWD: () => this.setLotPos('FWD'),
+      teamName, coachName, setTeamName: this.setTeamName, setCoachName: this.setCoachName,
+      loginDisabled: !teamName.trim() || !coachName.trim(),
+      startOnboarding: this.startOnboarding, signInGoogle: this.signInGoogle,
+      t,
+      langIsEn: lang === 'en', langIsTr: lang === 'tr',
+      langEnBg: lang === 'en' ? 'var(--color-accent)' : 'transparent',
+      langEnBorder: lang === 'en' ? 'var(--color-accent)' : 'var(--color-divider)',
+      langEnColor: lang === 'en' ? 'var(--color-bg)' : 'var(--color-text)',
+      langTrBg: lang === 'tr' ? 'var(--color-accent)' : 'transparent',
+      langTrBorder: lang === 'tr' ? 'var(--color-accent)' : 'var(--color-divider)',
+      langTrColor: lang === 'tr' ? 'var(--color-bg)' : 'var(--color-text)',
+      setLangEn: () => this.setLang('en'), setLangTr: () => this.setLang('tr'),
+      onboardStep: step, onboardCta: onboardIndex >= t.onboard.length - 1 ? t.startManaging : t.next,
+      onboardNext: this.onboardNext, skipOnboarding: this.skipOnboarding,
+      onboardDots: t.onboard.map((_, i) => ({
+        size: i === onboardIndex ? '20px' : '6px',
+        bg: i === onboardIndex ? 'var(--color-accent)' : 'var(--color-divider)',
+      })),
+      coachDisplay: coach, teamDisplay: team, coachInitial: coach[0].toUpperCase(),
+      isHome: tab === 'home', isRules: tab === 'rules', isResults: tab === 'results',
+      isSquad: tab === 'squad', isTransfers: tab === 'transfers', isLeagues: tab === 'leagues', isDraft: tab === 'draft',
+      goHome: () => this.setTab('home'), goRules: () => this.setTab('rules'), goResults: () => this.setTab('results'),
+      goSquad: () => this.setTab('squad'), goTransfers: () => this.setTab('transfers'),
+      goLeagues: () => this.setTab('leagues'), goDraft: () => this.setTab('draft'),
+      homeColor: tab === 'home' ? active : inactive,
+      squadColor: tab === 'squad' ? active : inactive,
+      transfersColor: tab === 'transfers' ? active : inactive,
+      leaguesColor: tab === 'leagues' ? active : inactive,
+      phaseIsWaiting: phase === 'waiting', phaseIsOpen: isOpen, phaseIsClosed: isClosed,
+      phaseIsOpenOrClosed: isOpen || isClosed,
+      setPhaseWaiting: () => this.setPhase('waiting'), setPhaseOpen: () => this.setPhase('open'), setPhaseClosed: () => this.setPhase('closed'),
+      transferTag: phase === 'waiting' ? 'Locked' : phase === 'open' ? 'Free: 2' : 'Closed',
+      hero, squadValue: (spent + benchP.reduce((s) => s, 0)).toFixed(1),
+      leagueName: this.props.leagueName ?? 'THE OFFSIDE TRAP',
+      deadlineLabel: this.props.deadlineLabel ?? 'SAT 12 SEP · 18:30',
+      showBench: this.props.showBench ?? true,
+      budgetRemaining: remaining.toFixed(1),
+      gk, defMarkers, midMarkers, fwdMarkers, benchTokens,
+      savedLabel: saved ? 'Saved' : 'Save Squad',
+      saveSquad: this.saveSquad,
+      hasSelectedPlayer: !!selectedPlayerId, closePlayerSheet: this.closePlayerSheet, stopClick: (e) => e.stopPropagation(),
+      selPlayer: (() => {
+        const sel = SQUAD.find((p) => p.id === selectedPlayerId);
+        if (!sel) return {};
+        const isCap = sel.id === captainId;
+        const benchOptions = SQUAD.filter((p) => p.pos === sel.pos && isBench(p)).map((b) => ({
+          id: b.id, initials: initialsOf(b.name), name: b.name, club: b.club, priceLabel: b.price.toFixed(1),
+          swap: () => this.swapPlayer(sel.id, b.id),
+        }));
+        return {
+          initials: initialsOf(sel.name), name: sel.name, club: sel.club, posLabel: sel.pos, priceLabel: sel.price.toFixed(1),
+          capBtnLabel: isCap ? t.removeCaptain : t.makeCaptain,
+          capBtnBg: isCap ? 'transparent' : 'var(--color-accent)',
+          capBtnColor: isCap ? 'var(--color-text)' : 'var(--color-bg)',
+          capBtnBorder: isCap ? 'var(--color-divider)' : 'var(--color-accent)',
+          toggleCaptain: () => this.toggleCaptain(isCap ? null : sel.id),
+          benchOptions, noBenchOptions: benchOptions.length === 0,
+        };
+      })(),
+      filterIsAll: filter === 'ALL', filterIsGK: filter === 'GK', filterIsDEF: filter === 'DEF',
+      filterIsMID: filter === 'MID', filterIsFWD: filter === 'FWD',
+      setFilterAll: () => this.setFilter('ALL'), setFilterGK: () => this.setFilter('GK'),
+      setFilterDEF: () => this.setFilter('DEF'), setFilterMID: () => this.setFilter('MID'),
+      setFilterFWD: () => this.setFilter('FWD'),
+      filteredMarket, shortlistCount: shortlistIds.length, shortlistValueLabel: shortlistValue.toFixed(1),
+      confirmDisabled: shortlistIds.length === 0 || !isOpen,
+      confirmLabel: isClosed ? 'Window Closed' : 'Confirm Transfers',
+      standings, draftFeed, fixtures,
+    };
+  }
+}
+</script>
+</body>
+</html>
