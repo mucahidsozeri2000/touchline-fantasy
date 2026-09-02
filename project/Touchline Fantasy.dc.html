@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="stylesheet" href="_ds/modernist-bb859f29-ea22-4a65-a2ab-5126da7b8670/styles.css">
+</helmet>
+<div style="min-height:100vh;background:var(--color-neutral-300);display:flex;align-items:center;justify-content:center;padding:32px;font-family:var(--font-body)">
+<div style="width:400px;height:844px;background:var(--color-bg);box-shadow:var(--shadow-lg);display:flex;flex-direction:column;overflow:hidden;position:relative">
+
+<!-- LOGIN -->
+<sc-if value="{{ isLogin }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;flex:1;min-height:0;padding:32px 24px;justify-content:center;gap:28px">
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <span style="font-family:var(--font-heading);font-weight:800;font-size:26px;letter-spacing:0.02em">TOUCHLINE</span>
+    <span style="font-size:13px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">Draft your Champions League squad and manage it like a Head Coach.</span>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <div class="field">
+      <label>Team Name</label>
+      <input class="input" placeholder="e.g. FC Northbank" value="{{ teamName }}" onChange="{{ setTeamName }}">
+    </div>
+    <div class="field">
+      <label>Head Coach Name</label>
+      <input class="input" placeholder="e.g. Alex Morgan" value="{{ coachName }}" onChange="{{ setCoachName }}">
+    </div>
+    <button class="btn btn-primary btn-block" disabled="{{ loginDisabled }}" onClick="{{ startOnboarding }}">Enter League</button>
+    <div style="display:flex;align-items:center;gap:10px;margin:4px 0">
+      <div style="flex:1;height:1px;background:var(--color-divider)"></div>
+      <span style="font-size:11px;color:color-mix(in srgb, var(--color-text) 50%, transparent)">or</span>
+      <div style="flex:1;height:1px;background:var(--color-divider)"></div>
+    </div>
+    <button class="btn btn-secondary btn-block" onClick="{{ signInGoogle }}" style="display:flex;align-items:center;gap:10px">
+      <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.63h6.47c-.28 1.5-1.13 2.77-2.4 3.62v3.01h3.86c2.26-2.08 3.59-5.16 3.59-8.81z"></path><path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.94-2.92l-3.86-3.01c-1.07.72-2.45 1.15-4.08 1.15-3.14 0-5.8-2.12-6.75-4.97H1.24v3.11C3.2 21.3 7.26 24 12 24z"></path><path fill="#FBBC05" d="M5.25 14.25a7.19 7.19 0 0 1 0-4.5V6.64H1.24a11.98 11.98 0 0 0 0 10.72l4.01-3.11z"></path><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.43-3.43C17.95 1.19 15.24 0 12 0 7.26 0 3.2 2.7 1.24 6.64l4.01 3.11C6.2 6.9 8.86 4.75 12 4.75z"></path></svg>
+      Continue with Google
+    </button>
+  </div>
+</div>
+</sc-if>
+
+<!-- ONBOARDING -->
+<sc-if value="{{ isOnboarding }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div style="flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:32px;text-align:center">
+    <div style="width:64px;height:64px;border:2px solid var(--color-accent);display:flex;align-items:center;justify-content:center;color:var(--color-accent-700);font-family:var(--font-heading);font-weight:800;font-size:24px">{{ onboardStep.num }}</div>
+    <span style="font-family:var(--font-heading);font-weight:800;font-size:20px">{{ onboardStep.title }}</span>
+    <span style="font-size:13px;line-height:1.5;color:color-mix(in srgb, var(--color-text) 55%, transparent);max-width:280px">{{ onboardStep.body }}</span>
+    <div style="display:flex;gap:6px;margin-top:8px">
+      <sc-for list="{{ onboardDots }}" as="dot" hint-placeholder-count="3">
+        <div style="width:{{ dot.size }};height:6px;background:{{ dot.bg }}"></div>
+      </sc-for>
+    </div>
+  </div>
+  <div style="padding:16px 24px 24px;display:flex;flex-direction:column;gap:8px;flex:none">
+    <button class="btn btn-primary btn-block" onClick="{{ onboardNext }}">{{ onboardCta }}</button>
+    <button class="btn btn-ghost btn-block" onClick="{{ skipOnboarding }}">Skip</button>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isApp }}" hint-placeholder-val="{{ false }}">
+<!-- HOME -->
+<sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div class="nav" style="padding:14px 16px;flex:none"><span class="nav-brand" style="font-size:16px">TOUCHLINE</span><span class="tag tag-outline" style="white-space:nowrap">GW 3</span></div>
+  <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:2px solid var(--color-divider);background:var(--color-surface);flex:none">
+    <div style="width:40px;height:40px;background:var(--color-accent);color:var(--color-bg);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:800;font-size:16px;flex:none">{{ coachInitial }}</div>
+    <div style="display:flex;flex-direction:column;line-height:1.25">
+      <span style="font-family:var(--font-heading);font-weight:800;font-size:15px">{{ coachDisplay }}</span>
+      <span style="font-size:11px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">Head Coach · {{ teamDisplay }}</span>
+    </div>
+  </div>
+
+  <div style="flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:16px">
+    <div class="seg" style="align-self:flex-start">
+      <label class="seg-opt"><input type="radio" name="phaseDemo" checked="{{ phaseIsWaiting }}" onChange="{{ setPhaseWaiting }}">Locked</label>
+      <label class="seg-opt"><input type="radio" name="phaseDemo" checked="{{ phaseIsOpen }}" onChange="{{ setPhaseOpen }}">Open</label>
+      <label class="seg-opt"><input type="radio" name="phaseDemo" checked="{{ phaseIsClosed }}" onChange="{{ setPhaseClosed }}">Closed</label>
+    </div>
+
+    <div style="background:{{ hero.bg }};color:{{ hero.color }};padding:18px;display:flex;flex-direction:column;gap:8px">
+      <span style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;font-family:var(--font-heading);font-weight:800;opacity:0.85">{{ hero.kicker }}</span>
+      <span style="font-family:var(--font-heading);font-weight:800;font-size:22px;line-height:1.15">{{ hero.title }}</span>
+      <span style="font-size:13px;line-height:1.4;opacity:0.9">{{ hero.body }}</span>
+      <button onClick="{{ hero.action }}" style="margin-top:6px;width:100%;padding:12px 16px;border:1px solid {{ hero.btnBorder }};background:{{ hero.btnBg }};color:{{ hero.btnColor }};font-family:var(--font-heading);font-weight:800;font-size:13px;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer">{{ hero.cta }}</button>
+    </div>
+
+    <div style="display:flex;border:1px solid var(--color-divider)">
+      <div style="flex:1;padding:12px;border-right:1px solid var(--color-divider);text-align:left">
+        <h6 style="margin:0 0 2px">Rank</h6>
+        <div style="font-family:var(--font-heading);font-weight:800;font-size:20px">3rd</div>
+      </div>
+      <div style="flex:1;padding:12px;border-right:1px solid var(--color-divider)">
+        <h6 style="margin:0 0 2px">Total Points</h6>
+        <div style="font-family:var(--font-heading);font-weight:800;font-size:20px">585</div>
+      </div>
+      <div style="flex:1;padding:12px">
+        <h6 style="margin:0 0 2px">Squad Value</h6>
+        <div style="font-family:var(--font-heading);font-weight:800;font-size:20px">£{{ squadValue }}M</div>
+      </div>
+    </div>
+
+    <div>
+      <h6>League</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <button onClick="{{ goLeagues }}" style="width:100%;text-align:left;background:var(--color-surface);border:1px solid var(--color-divider);padding:14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+        <span style="font-family:var(--font-heading);font-weight:800;font-size:13px">{{ leagueName }}</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
+      </button>
+    </div>
+
+    <div>
+      <h6>More</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button onClick="{{ goRules }}" style="width:100%;text-align:left;background:var(--color-surface);border:1px solid var(--color-divider);padding:14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+          <span style="font-family:var(--font-heading);font-weight:800;font-size:13px">Rules & Scoring</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
+        </button>
+        <button onClick="{{ goResults }}" style="width:100%;text-align:left;background:var(--color-surface);border:1px solid var(--color-divider);padding:14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+          <span style="font-family:var(--font-heading);font-weight:800;font-size:13px">Match Results</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
+        </button>
+        <button onClick="{{ goDraft }}" style="width:100%;text-align:left;background:var(--color-surface);border:1px solid var(--color-divider);padding:14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+          <span style="font-family:var(--font-heading);font-weight:800;font-size:13px">Draft Feed</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- RULES -->
+<sc-if value="{{ isRules }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div class="nav" style="padding:14px 16px;flex:none;gap:10px">
+    <button onClick="{{ goHome }}" style="background:transparent;border:none;cursor:pointer;padding:0;display:flex;color:var(--color-text)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg></button>
+    <span class="nav-brand" style="font-size:16px">RULES & SCORING</span>
+  </div>
+  <div style="flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:18px">
+    <div>
+      <h6>Draft Window</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <p style="font-size:13px;line-height:1.6;margin:0">Every real user manages one squad as Head Coach. Transfers open when the window opens and close at the published deadline. Any manager who has not confirmed transfers when the window closes is assigned an automatic squad from remaining budget.</p>
+    </div>
+    <div>
+      <h6>Player Ownership</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <p style="font-size:13px;line-height:1.6;margin:0">Each Champions League player can be drafted by only one manager per league. Once drafted, a player is locked and removed from the market for everyone else until the next transfer window.</p>
+    </div>
+    <div>
+      <h6>Squad Rules</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--color-divider)"><span>Squad size</span><span style="font-family:var(--font-heading);font-weight:800">15 players</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--color-divider)"><span>Starting XI</span><span style="font-family:var(--font-heading);font-weight:800">1 GK · 3-5 DEF · 3-5 MID · 1-3 FWD</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--color-divider)"><span>Bench</span><span style="font-family:var(--font-heading);font-weight:800">4 players</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--color-divider)"><span>Budget</span><span style="font-family:var(--font-heading);font-weight:800">£120.0M</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0"><span>Max per club</span><span style="font-family:var(--font-heading);font-weight:800">3 players</span></div>
+      </div>
+    </div>
+    <div>
+      <h6>Scoring</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <table class="table">
+        <thead><tr><th>Action</th><th>Points</th></tr></thead>
+        <tbody>
+          <tr><td>Goal (FWD/MID)</td><td>5 / 6</td></tr>
+          <tr><td>Goal (DEF/GK)</td><td>7 / 8</td></tr>
+          <tr><td>Assist</td><td>3</td></tr>
+          <tr><td>Clean sheet (DEF/GK)</td><td>4</td></tr>
+          <tr><td>Clean sheet (MID)</td><td>1</td></tr>
+          <tr><td>Yellow card</td><td>-1</td></tr>
+          <tr><td>Red card</td><td>-3</td></tr>
+          <tr><td>Captain</td><td>×2 points</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- RESULTS -->
+<sc-if value="{{ isResults }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div class="nav" style="padding:14px 16px;flex:none;gap:10px">
+    <button onClick="{{ goHome }}" style="background:transparent;border:none;cursor:pointer;padding:0;display:flex;color:var(--color-text)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg></button>
+    <span class="nav-brand" style="font-size:16px">MATCH RESULTS</span>
+  </div>
+  <div style="padding:12px 16px 0;flex:none"><span class="tag tag-accent">GAMEWEEK 3 · FT</span></div>
+  <div style="flex:1;min-height:0;overflow-y:auto;padding:12px 16px 16px;display:flex;flex-direction:column;gap:10px">
+    <sc-for list="{{ fixtures }}" as="fx" hint-placeholder-count="6">
+      <div style="border:1px solid var(--color-divider)">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px">
+          <span style="font-family:var(--font-heading);font-weight:800;font-size:13px;flex:1">{{ fx.home }}</span>
+          <span style="font-family:var(--font-heading);font-weight:800;font-size:16px;padding:0 10px">{{ fx.score }}</span>
+          <span style="font-family:var(--font-heading);font-weight:800;font-size:13px;flex:1;text-align:right">{{ fx.away }}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 14px;background:var(--color-surface);border-top:1px solid var(--color-divider)">
+          <span style="font-size:11px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ fx.date }}</span>
+          <span style="font-size:11px;font-family:var(--font-heading);font-weight:800;color:var(--color-accent-700)">{{ fx.yourPts }} pts from your squad</span>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<!-- SQUAD -->
+<sc-if value="{{ isSquad }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div class="nav" style="padding:14px 16px;flex:none"><span class="nav-brand" style="font-size:16px">TOUCHLINE</span><span class="tag tag-outline" style="white-space:nowrap">GW 3</span></div>
+  <div style="background:var(--color-accent);color:var(--color-bg);padding:12px 16px;display:flex;justify-content:space-between;align-items:baseline;flex:none">
+    <span style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;font-family:var(--font-heading);font-weight:800">Deadline</span>
+    <span style="font-family:var(--font-heading);font-weight:800;font-size:14px">{{ deadlineLabel }}</span>
+  </div>
+  <div style="display:flex;border-bottom:2px solid var(--color-divider);flex:none">
+    <div style="flex:1;padding:10px 16px;border-right:1px solid var(--color-divider)"><h6 style="margin:0 0 2px">Budget Left</h6><div style="font-family:var(--font-heading);font-weight:800;font-size:20px;color:var(--color-accent-700)">£{{ budgetRemaining }}M</div></div>
+    <div style="flex:1;padding:10px 16px"><h6 style="margin:0 0 2px">Free Transfers</h6><div style="font-family:var(--font-heading);font-weight:800;font-size:20px">2</div></div>
+  </div>
+  <div style="flex:1;min-height:0;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px">
+    <div style="position:relative;width:100%;height:440px;background:var(--color-surface);border:2px solid var(--color-divider)">
+      <div style="position:absolute;left:0;right:0;top:50%;height:2px;background:var(--color-divider)"></div>
+      <div style="position:absolute;left:50%;top:50%;width:84px;height:84px;border:2px solid var(--color-divider);border-radius:50%;transform:translate(-50%,-50%)"></div>
+      <div style="position:absolute;left:50%;bottom:0;width:150px;height:60px;border:2px solid var(--color-divider);border-bottom:none;transform:translateX(-50%)"></div>
+      <div style="position:absolute;left:50%;top:0;width:150px;height:60px;border:2px solid var(--color-divider);border-top:none;transform:translateX(-50%)"></div>
+
+      <div style="position:absolute;{{ gk.posStyle }};transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer" onClick="{{ gk.toggleCaptain }}">
+        <div style="width:42px;height:42px;border-radius:50%;border:2px solid {{ gk.capBorder }};background:var(--color-bg);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:800;font-size:13px">{{ gk.initials }}</div>
+        <span style="font-size:9px;font-weight:800;letter-spacing:0.02em;background:var(--color-bg);padding:1px 4px;white-space:nowrap;font-family:var(--font-heading);color:{{ gk.capColor }}">{{ gk.shortName }}</span>
+      </div>
+
+      <sc-for list="{{ defMarkers }}" as="d" hint-placeholder-count="4">
+        <div style="position:absolute;{{ d.posStyle }};transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer" onClick="{{ d.toggleCaptain }}">
+          <div style="width:42px;height:42px;border-radius:50%;border:2px solid {{ d.capBorder }};background:var(--color-bg);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:800;font-size:13px">{{ d.initials }}</div>
+          <span style="font-size:9px;font-weight:800;letter-spacing:0.02em;background:var(--color-bg);padding:1px 4px;white-space:nowrap;font-family:var(--font-heading);color:{{ d.capColor }}">{{ d.shortName }}</span>
+        </div>
+      </sc-for>
+
+      <sc-for list="{{ midMarkers }}" as="m" hint-placeholder-count="3">
+        <div style="position:absolute;{{ m.posStyle }};transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer" onClick="{{ m.toggleCaptain }}">
+          <div style="width:42px;height:42px;border-radius:50%;border:2px solid {{ m.capBorder }};background:var(--color-bg);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:800;font-size:13px">{{ m.initials }}</div>
+          <span style="font-size:9px;font-weight:800;letter-spacing:0.02em;background:var(--color-bg);padding:1px 4px;white-space:nowrap;font-family:var(--font-heading);color:{{ m.capColor }}">{{ m.shortName }}</span>
+        </div>
+      </sc-for>
+
+      <sc-for list="{{ fwdMarkers }}" as="f" hint-placeholder-count="3">
+        <div style="position:absolute;{{ f.posStyle }};transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer" onClick="{{ f.toggleCaptain }}">
+          <div style="width:42px;height:42px;border-radius:50%;border:2px solid {{ f.capBorder }};background:var(--color-bg);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:800;font-size:13px">{{ f.initials }}</div>
+          <span style="font-size:9px;font-weight:800;letter-spacing:0.02em;background:var(--color-bg);padding:1px 4px;white-space:nowrap;font-family:var(--font-heading);color:{{ f.capColor }}">{{ f.shortName }}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{ showBench }}" hint-placeholder-val="{{ true }}">
+    <div>
+      <h6>Bench</h6><div class="hr" style="margin:6px 0 10px"></div>
+      <div style="display:flex;gap:10px;padding:12px;background:var(--color-surface);border:1px solid var(--color-divider);justify-content:space-around">
+        <sc-for list="{{ benchTokens }}" as="b" hint-placeholder-count="4">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+            <div style="width:38px;height:38px;border-radius:50%;border:2px solid var(--color-divider);background:var(--color-bg);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:800;font-size:12px">{{ b.initials }}</div>
+            <span style="font-size:9px;font-weight:800;letter-spacing:0.02em;white-space:nowrap;font-family:var(--font-heading)">{{ b.shortName }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+
+    <button class="btn btn-primary btn-block" onClick="{{ saveSquad }}" style="margin-top:2px">{{ savedLabel }}</button>
+  </div>
+</div>
+</sc-if>
+
+<!-- TRANSFERS -->
+<sc-if value="{{ isTransfers }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div class="nav" style="padding:14px 16px;flex:none"><span class="nav-brand" style="font-size:16px">TOUCHLINE</span><span class="tag tag-outline" style="white-space:nowrap">{{ transferTag }}</span></div>
+
+  <sc-if value="{{ phaseIsWaiting }}" hint-placeholder-val="{{ false }}">
+  <div style="flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:32px;text-align:center">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-neutral-600)"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+    <span style="font-family:var(--font-heading);font-weight:800;font-size:16px">Transfer window locked</span>
+    <span style="font-size:13px;color:color-mix(in srgb, var(--color-text) 55%, transparent);max-width:260px">The market opens {{ deadlineLabel }}. Check back then to draft your squad.</span>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ phaseIsClosed }}" hint-placeholder-val="{{ false }}">
+  <div style="padding:14px 16px;background:var(--color-accent-100);border-bottom:2px solid var(--color-divider);flex:none">
+    <span style="font-family:var(--font-heading);font-weight:800;font-size:12px;color:var(--color-accent-700)">Window closed — squads locked</span>
+    <div style="font-size:12px;margin-top:2px">Managers who didn't confirm transfers received an automatic squad.</div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ phaseIsOpenOrClosed }}" hint-placeholder-val="{{ false }}">
+  <div style="display:flex;border-bottom:2px solid var(--color-divider);flex:none">
+    <div style="flex:1;padding:10px 16px;border-right:1px solid var(--color-divider)"><h6 style="margin:0 0 2px">Budget Left</h6><div style="font-family:var(--font-heading);font-weight:800;font-size:20px;color:var(--color-accent-700)">£{{ budgetRemaining }}M</div></div>
+    <div style="flex:1;padding:10px 16px"><h6 style="margin:0 0 2px">Shortlisted</h6><div style="font-family:var(--font-heading);font-weight:800;font-size:20px">{{ shortlistCount }} · £{{ shortlistValueLabel }}M</div></div>
+  </div>
+  <div class="seg" style="margin:16px 16px 4px;align-self:flex-start;flex:none">
+    <label class="seg-opt"><input type="radio" name="posFilter" checked="{{ filterIsAll }}" onChange="{{ setFilterAll }}">All</label>
+    <label class="seg-opt"><input type="radio" name="posFilter" checked="{{ filterIsGK }}" onChange="{{ setFilterGK }}">GK</label>
+    <label class="seg-opt"><input type="radio" name="posFilter" checked="{{ filterIsDEF }}" onChange="{{ setFilterDEF }}">DEF</label>
+    <label class="seg-opt"><input type="radio" name="posFilter" checked="{{ filterIsMID }}" onChange="{{ setFilterMID }}">MID</label>
+    <label class="seg-opt"><input type="radio" name="posFilter" checked="{{ filterIsFWD }}" onChange="{{ setFilterFWD }}">FWD</label>
+  </div>
+  <div style="flex:1;min-height:0;overflow-y:auto;padding:8px 16px 0">
+    <sc-for list="{{ filteredMarket }}" as="p" hint-placeholder-count="6">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--color-divider);opacity:{{ p.rowOpacity }}">
+        <div style="width:34px;height:34px;border-radius:50%;background:var(--color-surface);border:1px solid var(--color-divider);flex:none;display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:800;font-size:11px">{{ p.initials }}</div>
+        <div style="display:flex;flex-direction:column;gap:2px;flex:1">
+          <span style="font-family:var(--font-heading);font-weight:800;font-size:14px">{{ p.name }}</span>
+          <sc-if value="{{ p.available }}" hint-placeholder-val="{{ true }}"><span style="font-size:11px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ p.club }} · {{ p.posLabel }} · £{{ p.priceLabel }}M · Form {{ p.form }}</span></sc-if>
+          <sc-if value="{{ p.taken }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">Drafted by {{ p.takenBy }}</span></sc-if>
+        </div>
+        <sc-if value="{{ p.canPick }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ p.toggle }}" style="width:32px;height:32px;flex:none;display:flex;align-items:center;justify-content:center;border:1px solid {{ p.btnBorder }};background:{{ p.btnBg }};color:{{ p.btnColor }};cursor:pointer;padding:0">
+          <sc-if value="{{ p.shortlisted }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></sc-if>
+          <sc-if value="{{ p.notShortlisted }}" hint-placeholder-val="{{ true }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg></sc-if>
+        </button>
+        </sc-if>
+        <sc-if value="{{ p.taken }}" hint-placeholder-val="{{ false }}">
+        <div style="width:32px;height:32px;flex:none;display:flex;align-items:center;justify-content:center;border:1px solid var(--color-divider);color:var(--color-neutral-500)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </div>
+        </sc-if>
+      </div>
+    </sc-for>
+  </div>
+  <div style="padding:12px 16px;border-top:2px solid var(--color-divider);display:flex;flex-direction:column;gap:8px;flex:none">
+    <button class="btn btn-primary btn-block" disabled="{{ confirmDisabled }}">{{ confirmLabel }}</button>
+  </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<!-- LEAGUES -->
+<sc-if value="{{ isLeagues }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div class="nav" style="padding:14px 16px;flex:none"><span class="nav-brand" style="font-size:16px">TOUCHLINE</span><span class="tag tag-outline" style="white-space:nowrap">{{ leagueName }}</span></div>
+  <div style="margin:16px;padding:16px;background:var(--color-surface);display:flex;justify-content:space-between;align-items:center;flex:none">
+    <div><h6 style="margin:0 0 2px">Your Rank</h6><div style="font-family:var(--font-heading);font-weight:800;font-size:32px">3rd</div></div>
+    <div style="display:flex;align-items:center;gap:4px;color:var(--color-accent-700);font-size:13px;font-weight:800">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg>
+      +1 this GW
+    </div>
+  </div>
+  <div style="padding:0 16px 16px;flex:1;min-height:0;overflow-y:auto">
+    <table class="table">
+      <thead><tr><th>Pos</th><th>Manager</th><th>GW</th><th>Total</th></tr></thead>
+      <tbody>
+        <sc-for list="{{ standings }}" as="s" hint-placeholder-count="8">
+          <tr style="background:{{ s.rowBg }};font-weight:{{ s.rowWeight }}">
+            <td>{{ s.rank }}</td><td>{{ s.manager }}</td><td>{{ s.gw }}</td><td>{{ s.total }}</td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+  </div>
+</div>
+</sc-if>
+
+<!-- DRAFT FEED -->
+<sc-if value="{{ isDraft }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;flex:1;min-height:0">
+  <div class="nav" style="padding:14px 16px;flex:none;gap:10px">
+    <button onClick="{{ goHome }}" style="background:transparent;border:none;cursor:pointer;padding:0;display:flex;color:var(--color-text)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg></button>
+    <span class="nav-brand" style="font-size:16px">DRAFT FEED</span>
+  </div>
+  <div style="padding:16px 16px 0;flex:none">
+    <div style="font-size:11px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">Every player can be drafted by one manager only</div>
+    <div class="hr" style="margin:10px 0 0"></div>
+  </div>
+  <div style="flex:1;min-height:0;overflow-y:auto;padding:0 16px">
+    <sc-for list="{{ draftFeed }}" as="ev" hint-placeholder-count="8">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--color-divider)">
+        <div style="width:32px;height:32px;border-radius:50%;flex:none;background:var(--color-surface);border:1px solid var(--color-divider);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading);font-weight:800;font-size:11px">{{ ev.initials }}</div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+          <span style="font-size:13px;line-height:1.3"><span style="font-family:var(--font-heading);font-weight:800;color:{{ ev.nameColor }}">{{ ev.manager }}</span> drafted <span style="font-family:var(--font-heading);font-weight:800">{{ ev.player }}</span></span>
+          <span style="font-size:11px;color:color-mix(in srgb, var(--color-text) 55%, transparent)">{{ ev.posLabel }} · {{ ev.club }}</span>
+        </div>
+        <span style="font-size:10px;color:color-mix(in srgb, var(--color-text) 45%, transparent);flex:none">{{ ev.time }}</span>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<div style="display:flex;border-top:2px solid var(--color-divider);background:var(--color-bg);flex:none">
+  <button onClick="{{ goHome }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0 10px;background:transparent;border:none;cursor:pointer;font-family:var(--font-heading);font-weight:800;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:{{ homeColor }}">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+    Home
+  </button>
+  <button onClick="{{ goSquad }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0 10px;background:transparent;border:none;cursor:pointer;font-family:var(--font-heading);font-weight:800;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:{{ squadColor }}">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+    Squad
+  </button>
+  <button onClick="{{ goTransfers }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0 10px;background:transparent;border:none;cursor:pointer;font-family:var(--font-heading);font-weight:800;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:{{ transfersColor }}">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="m7 22-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path></svg>
+    Transfers
+  </button>
+  <button onClick="{{ goLeagues }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0 10px;background:transparent;border:none;cursor:pointer;font-family:var(--font-heading);font-weight:800;font-size:10px;letter-spacing:0.04em;text-transform:uppercase;color:{{ leaguesColor }}">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>
+    Leagues
+  </button>
+</div>
+</sc-if>
+
+</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:420,&quot;height&quot;:900},&quot;leagueName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;THE OFFSIDE TRAP&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;deadlineLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;SAT 12 SEP · 18:30&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;showBench&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const SQUAD = [
+  {id:'ederson',name:'Ederson',club:'MCI',pos:'GK',price:5.0,bench:false},
+  {id:'taa',name:'Alexander-Arnold',club:'LIV',pos:'DEF',price:7.0,bench:false},
+  {id:'vandijk',name:'Van Dijk',club:'LIV',pos:'DEF',price:6.0,bench:false},
+  {id:'hakimi',name:'Hakimi',club:'PSG',pos:'DEF',price:5.5,bench:false},
+  {id:'rudiger',name:'Rüdiger',club:'RMA',pos:'DEF',price:5.0,bench:false},
+  {id:'bellingham',name:'Bellingham',club:'RMA',pos:'MID',price:9.5,bench:false},
+  {id:'pedri',name:'Pedri',club:'BAR',pos:'MID',price:6.5,bench:false},
+  {id:'musiala',name:'Musiala',club:'BAY',pos:'MID',price:8.0,bench:false},
+  {id:'mbappe',name:'Mbappé',club:'RMA',pos:'FWD',price:12.5,bench:false},
+  {id:'haaland',name:'Haaland',club:'MCI',pos:'FWD',price:12.0,bench:false},
+  {id:'vinicius',name:'Vinicius Jr',club:'RMA',pos:'FWD',price:10.5,bench:false},
+  {id:'courtois',name:'Courtois',club:'RMA',pos:'GK',price:4.5,bench:true},
+  {id:'saliba',name:'Saliba',club:'ARS',pos:'DEF',price:5.0,bench:true},
+  {id:'kimmich',name:'Kimmich',club:'BAY',pos:'MID',price:5.5,bench:true},
+  {id:'kane',name:'Kane',club:'BAY',pos:'FWD',price:8.5,bench:true},
+];
+const TOTAL_BUDGET = 120.0;
+function initialsOf(name) {
+  const parts = name.replace(/[^\p{L}\s-]/gu, '').split(/[\s-]+/).filter(Boolean);
+  if (!parts.length) return '';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+const FORMATION = {
+  gk: {left:50, top:90},
+  def: [{left:14,top:68},{left:38,top:74},{left:62,top:74},{left:86,top:68}],
+  mid: [{left:26,top:44},{left:50,top:48},{left:74,top:44}],
+  fwd: [{left:20,top:16},{left:50,top:12},{left:80,top:16}],
+};
+
+const MARKET = [
+  {id:'alisson',name:'Alisson',club:'LIV',pos:'GK',price:5.5,form:'6.8',takenBy:null},
+  {id:'dias',name:'Dias',club:'MCI',pos:'DEF',price:6.0,form:'6.1',takenBy:null},
+  {id:'gvardiol',name:'Gvardiol',club:'MCI',pos:'DEF',price:6.5,form:'6.2',takenBy:null},
+  {id:'konate',name:'Konaté',club:'LIV',pos:'DEF',price:5.5,form:'5.9',takenBy:null},
+  {id:'rice',name:'Rice',club:'ARS',pos:'MID',price:6.5,form:'7.1',takenBy:'Priya S.'},
+  {id:'wirtz',name:'Wirtz',club:'LEV',pos:'MID',price:8.5,form:'8.4',takenBy:'Elena R.'},
+  {id:'bsilva',name:'Bernardo Silva',club:'MCI',pos:'MID',price:7.0,form:'6.9',takenBy:null},
+  {id:'salah',name:'Salah',club:'LIV',pos:'FWD',price:12.5,form:'9.0',takenBy:null},
+  {id:'osimhen',name:'Osimhen',club:'GAL',pos:'FWD',price:9.0,form:'7.5',takenBy:null},
+  {id:'kvara',name:'Kvaratskhelia',club:'PSG',pos:'FWD',price:9.5,form:'7.8',takenBy:null},
+];
+
+const STANDINGS = [
+  {rank:1,manager:'Jamie K.',gw:78,total:612,me:false},
+  {rank:2,manager:'Priya S.',gw:65,total:598,me:false},
+  {rank:3,manager:'You',gw:82,total:585,me:true},
+  {rank:4,manager:'Marcus O.',gw:60,total:570,me:false},
+  {rank:5,manager:'Elena R.',gw:71,total:555,me:false},
+  {rank:6,manager:'Tom H.',gw:58,total:540,me:false},
+  {rank:7,manager:'Sofia M.',gw:66,total:522,me:false},
+  {rank:8,manager:'Dan B.',gw:54,total:501,me:false},
+];
+
+const DRAFT_FEED = [
+  {manager:'You',me:true,player:'Vinicius Jr',pos:'FWD',club:'RMA',time:'Just now'},
+  {manager:'Elena R.',me:false,player:'Florian Wirtz',pos:'MID',club:'LEV',time:'2m'},
+  {manager:'Marcus O.',me:false,player:'Lamine Yamal',pos:'FWD',club:'BAR',time:'4m'},
+  {manager:'You',me:true,player:'Haaland',pos:'FWD',club:'MCI',time:'6m'},
+  {manager:'Priya S.',me:false,player:'Declan Rice',pos:'MID',club:'ARS',time:'8m'},
+  {manager:'You',me:true,player:'Mbappé',pos:'FWD',club:'RMA',time:'10m'},
+  {manager:'Tom H.',me:false,player:'Frenkie de Jong',pos:'MID',club:'BAR',time:'13m'},
+  {manager:'You',me:true,player:'Musiala',pos:'MID',club:'BAY',time:'15m'},
+  {manager:'Sofia M.',me:false,player:'Ter Stegen',pos:'GK',club:'BAR',time:'18m'},
+  {manager:'You',me:true,player:'Bellingham',pos:'MID',club:'RMA',time:'21m'},
+  {manager:'Dan B.',me:false,player:'Frimpong',pos:'DEF',club:'LEV',time:'24m'},
+  {manager:'You',me:true,player:'Alexander-Arnold',pos:'DEF',club:'LIV',time:'27m'},
+];
+
+const FIXTURES = [
+  {home:'Real Madrid',away:'Bayern Munich',homeScore:3,awayScore:1,date:'Tue 16 Sep',yourPts:22},
+  {home:'Man City',away:'PSG',homeScore:2,awayScore:2,date:'Tue 16 Sep',yourPts:14},
+  {home:'Liverpool',away:'Barcelona',homeScore:1,awayScore:0,date:'Wed 17 Sep',yourPts:9},
+  {home:'Bayer Leverkusen',away:'Galatasaray',homeScore:2,awayScore:0,date:'Wed 17 Sep',yourPts:6},
+  {home:'Arsenal',away:'Inter Milan',homeScore:0,awayScore:0,date:'Wed 17 Sep',yourPts:5},
+  {home:'Juventus',away:'Atletico Madrid',homeScore:1,awayScore:2,date:'Wed 17 Sep',yourPts:3},
+];
+
+const ONBOARDING = [
+  {num:'1',title:'One player, one manager',body:'Every Champions League player can be drafted by only one manager in your league. Move fast when the window opens.'},
+  {num:'2',title:'The window has a clock',body:'Transfers open at a set time and lock at the deadline. Miss it and an automatic squad is assigned to you.'},
+  {num:'3',title:'Real matches, real points',body:'Your squad scores from actual Champions League fixtures. Pick a captain each week to double their return.'},
+];
+
+class Component extends DCLogic {
+  state = {
+    screen: 'login',
+    teamName: '',
+    coachName: '',
+    onboardIndex: 0,
+    tab: 'home',
+    phase: 'open',
+    captainId: 'bellingham',
+    shortlist: {},
+    filter: 'ALL',
+    saved: false,
+  };
+
+  setTeamName = (e) => this.setState({ teamName: e.target.value });
+  setCoachName = (e) => this.setState({ coachName: e.target.value });
+  startOnboarding = () => this.setState({ screen: 'onboarding', onboardIndex: 0 });
+  signInGoogle = () => this.setState({ screen: 'onboarding', onboardIndex: 0, teamName: this.state.teamName || 'FC Northbank', coachName: this.state.coachName || 'Alex Morgan' });
+  onboardNext = () => this.setState((s) => (s.onboardIndex >= ONBOARDING.length - 1 ? { screen: 'app' } : { onboardIndex: s.onboardIndex + 1 }));
+  skipOnboarding = () => this.setState({ screen: 'app' });
+  setTab = (t) => this.setState({ tab: t });
+  setPhase = (p) => this.setState({ phase: p });
+  toggleCaptain = (id) => this.setState({ captainId: id });
+  toggleShort = (id) => this.setState((s) => {
+    const sl = { ...s.shortlist };
+    if (sl[id]) delete sl[id]; else sl[id] = true;
+    return { shortlist: sl };
+  });
+  setFilter = (f) => this.setState({ filter: f });
+  saveSquad = () => {
+    this.setState({ saved: true });
+    setTimeout(() => this.setState({ saved: false }), 2000);
+  };
+
+  markerVM(p, coord) {
+    const isCap = p.id === this.state.captainId;
+    return {
+      id: p.id, photoId: 'photo-' + p.id, shortName: p.name, initials: initialsOf(p.name),
+      posStyle: `left:${coord.left}%;top:${coord.top}%`,
+      capBorder: isCap ? 'var(--color-accent)' : 'var(--color-divider)',
+      capColor: isCap ? 'var(--color-accent-700)' : 'var(--color-text)',
+      toggleCaptain: () => this.toggleCaptain(p.id),
+    };
+  }
+
+  renderVals() {
+    const { screen, teamName, coachName, onboardIndex, tab, phase, captainId, shortlist, filter, saved } = this.state;
+    const spent = SQUAD.reduce((sum, p) => sum + p.price, 0);
+    const remaining = TOTAL_BUDGET - spent;
+
+    const gkP = SQUAD.find((p) => p.pos === 'GK' && !p.bench);
+    const defP = SQUAD.filter((p) => p.pos === 'DEF' && !p.bench);
+    const midP = SQUAD.filter((p) => p.pos === 'MID' && !p.bench);
+    const fwdP = SQUAD.filter((p) => p.pos === 'FWD' && !p.bench);
+    const benchP = SQUAD.filter((p) => p.bench);
+
+    const gk = this.markerVM(gkP, FORMATION.gk);
+    const defMarkers = defP.map((p, i) => this.markerVM(p, FORMATION.def[i]));
+    const midMarkers = midP.map((p, i) => this.markerVM(p, FORMATION.mid[i]));
+    const fwdMarkers = fwdP.map((p, i) => this.markerVM(p, FORMATION.fwd[i]));
+    const benchTokens = benchP.map((p) => ({ id: p.id, photoId: 'photo-' + p.id, shortName: p.name, initials: initialsOf(p.name) }));
+
+    const isOpen = phase === 'open';
+    const isClosed = phase === 'closed';
+    const filteredMarket = MARKET.filter((p) => filter === 'ALL' || p.pos === filter).map((p) => {
+      const sl = !!shortlist[p.id];
+      const taken = !!p.takenBy;
+      return {
+        id: p.id, photoId: 'photo-market-' + p.id, name: p.name, initials: initialsOf(p.name), club: p.club, posLabel: p.pos, priceLabel: p.price.toFixed(1), form: p.form,
+        available: !taken, taken, takenBy: p.takenBy, rowOpacity: taken ? 0.55 : 1,
+        canPick: !taken && isOpen,
+        shortlisted: sl, notShortlisted: !sl,
+        toggle: () => this.toggleShort(p.id),
+        btnBg: sl ? 'var(--color-accent)' : 'transparent',
+        btnBorder: sl ? 'var(--color-accent)' : 'var(--color-divider)',
+        btnColor: sl ? 'var(--color-bg)' : 'var(--color-text)',
+      };
+    });
+    const shortlistIds = Object.keys(shortlist);
+    const shortlistValue = MARKET.filter((p) => shortlist[p.id]).reduce((s, p) => s + p.price, 0);
+
+    const standings = STANDINGS.map((s) => ({
+      ...s,
+      rowBg: s.me ? 'var(--color-accent-100)' : 'transparent',
+      rowWeight: s.me ? 800 : 400,
+    }));
+
+    const draftFeed = DRAFT_FEED.map((ev) => ({
+      ...ev,
+      photoId: 'photo-draft-' + ev.player.replace(/\s+/g, '-').toLowerCase(),
+      initials: initialsOf(ev.player),
+      posLabel: ev.pos,
+      nameColor: ev.me ? 'var(--color-accent-700)' : 'var(--color-text)',
+    }));
+
+    const fixtures = FIXTURES.map((fx) => ({
+      ...fx,
+      score: `${fx.homeScore} – ${fx.awayScore}`,
+    }));
+
+    const active = 'var(--color-accent-700)';
+    const inactive = 'var(--color-neutral-600)';
+
+    let hero;
+    if (phase === 'waiting') {
+      hero = {
+        bg: 'var(--color-surface)', color: 'var(--color-text)',
+        kicker: 'Draft window', title: 'Transfers open soon',
+        body: `The market opens ${this.props.deadlineLabel ?? 'SAT 12 SEP · 18:30'}. Your current squad stays locked until then.`,
+        cta: 'View Rules', btnBg: 'var(--color-bg)', btnColor: 'var(--color-text)', btnBorder: 'var(--color-text)', action: () => this.setTab('rules'),
+      };
+    } else if (phase === 'open') {
+      hero = {
+        bg: 'var(--color-accent)', color: 'var(--color-bg)',
+        kicker: 'Draft window · live', title: 'Transfers are open',
+        body: `2 free transfers left. Window closes ${this.props.deadlineLabel ?? 'SAT 12 SEP · 18:30'} — pick before it locks.`,
+        cta: 'Make Transfers', btnBg: 'var(--color-bg)', btnColor: 'var(--color-accent-700)', btnBorder: 'var(--color-bg)', action: () => this.setTab('transfers'),
+      };
+    } else {
+      hero = {
+        bg: 'var(--color-surface)', color: 'var(--color-text)',
+        kicker: 'Draft window · closed', title: 'Squads are locked',
+        body: 'The transfer window has closed. Managers who missed the deadline received an automatic squad. Real matches are underway.',
+        cta: 'View Results', btnBg: 'var(--color-accent)', btnColor: 'var(--color-bg)', btnBorder: 'var(--color-accent)', action: () => this.setTab('results'),
+      };
+    }
+
+    const coach = coachName.trim() || 'Alex Morgan';
+    const team = teamName.trim() || 'FC Northbank';
+    const step = ONBOARDING[Math.min(onboardIndex, ONBOARDING.length - 1)];
+
+    return {
+      isLogin: screen === 'login', isOnboarding: screen === 'onboarding', isApp: screen === 'app',
+      teamName, coachName, setTeamName: this.setTeamName, setCoachName: this.setCoachName,
+      loginDisabled: !teamName.trim() || !coachName.trim(),
+      startOnboarding: this.startOnboarding, signInGoogle: this.signInGoogle,
+      onboardStep: step, onboardCta: onboardIndex >= ONBOARDING.length - 1 ? 'Start Managing' : 'Next',
+      onboardNext: this.onboardNext, skipOnboarding: this.skipOnboarding,
+      onboardDots: ONBOARDING.map((_, i) => ({
+        size: i === onboardIndex ? '20px' : '6px',
+        bg: i === onboardIndex ? 'var(--color-accent)' : 'var(--color-divider)',
+      })),
+      coachDisplay: coach, teamDisplay: team, coachInitial: coach[0].toUpperCase(),
+      isHome: tab === 'home', isRules: tab === 'rules', isResults: tab === 'results',
+      isSquad: tab === 'squad', isTransfers: tab === 'transfers', isLeagues: tab === 'leagues', isDraft: tab === 'draft',
+      goHome: () => this.setTab('home'), goRules: () => this.setTab('rules'), goResults: () => this.setTab('results'),
+      goSquad: () => this.setTab('squad'), goTransfers: () => this.setTab('transfers'),
+      goLeagues: () => this.setTab('leagues'), goDraft: () => this.setTab('draft'),
+      homeColor: tab === 'home' ? active : inactive,
+      squadColor: tab === 'squad' ? active : inactive,
+      transfersColor: tab === 'transfers' ? active : inactive,
+      leaguesColor: tab === 'leagues' ? active : inactive,
+      phaseIsWaiting: phase === 'waiting', phaseIsOpen: isOpen, phaseIsClosed: isClosed,
+      phaseIsOpenOrClosed: isOpen || isClosed,
+      setPhaseWaiting: () => this.setPhase('waiting'), setPhaseOpen: () => this.setPhase('open'), setPhaseClosed: () => this.setPhase('closed'),
+      transferTag: phase === 'waiting' ? 'Locked' : phase === 'open' ? 'Free: 2' : 'Closed',
+      hero, squadValue: (spent + benchP.reduce((s) => s, 0)).toFixed(1),
+      leagueName: this.props.leagueName ?? 'THE OFFSIDE TRAP',
+      deadlineLabel: this.props.deadlineLabel ?? 'SAT 12 SEP · 18:30',
+      showBench: this.props.showBench ?? true,
+      budgetRemaining: remaining.toFixed(1),
+      gk, defMarkers, midMarkers, fwdMarkers, benchTokens,
+      savedLabel: saved ? 'Saved' : 'Save Squad',
+      saveSquad: this.saveSquad,
+      filterIsAll: filter === 'ALL', filterIsGK: filter === 'GK', filterIsDEF: filter === 'DEF',
+      filterIsMID: filter === 'MID', filterIsFWD: filter === 'FWD',
+      setFilterAll: () => this.setFilter('ALL'), setFilterGK: () => this.setFilter('GK'),
+      setFilterDEF: () => this.setFilter('DEF'), setFilterMID: () => this.setFilter('MID'),
+      setFilterFWD: () => this.setFilter('FWD'),
+      filteredMarket, shortlistCount: shortlistIds.length, shortlistValueLabel: shortlistValue.toFixed(1),
+      confirmDisabled: shortlistIds.length === 0 || !isOpen,
+      confirmLabel: isClosed ? 'Window Closed' : 'Confirm Transfers',
+      standings, draftFeed, fixtures,
+    };
+  }
+}
+</script>
+</body>
+</html>
