@@ -1,11 +1,8 @@
 import React, { useState } from "react";
 import { View, StyleSheet } from "react-native";
 import { useTranslation } from "react-i18next";
-import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Screen, H, Body, Button } from "../components/ui";
 import { colors, space } from "../theme";
-import { RootStackParamList } from "../navigation/types";
 import { useApp } from "../store/AppContext";
 
 const STEPS = [
@@ -16,14 +13,14 @@ const STEPS = [
 
 export default function OnboardingScreen() {
   const { t } = useTranslation();
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { completeOnboarding } = useApp();
   const [step, setStep] = useState(0);
   const isLast = step === STEPS.length - 1;
 
   function finish() {
+    // Clearing the flag swaps RootNavigator to the app's screens, which lands on
+    // Main on its own — navigating here would target a route that isn't mounted yet.
     completeOnboarding();
-    navigation.reset({ index: 0, routes: [{ name: "Main" }] });
   }
 
   function next() {

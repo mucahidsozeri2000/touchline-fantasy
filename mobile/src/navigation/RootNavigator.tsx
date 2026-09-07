@@ -38,19 +38,19 @@ export default function RootNavigator() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator
-        screenOptions={{ headerShown: false }}
-        initialRouteName={!manager ? "Login" : needsOnboarding ? "Onboarding" : "Main"}
-      >
+      {/* Which screens are mounted *is* the routing state. `initialRouteName` is
+          only consulted when the navigator first mounts, so it can't drive this:
+          it would leave a fresh sign-up on whatever screen happens to be first.
+          Rendering one branch at a time means sign-up can only land on
+          Onboarding, and finishing it can only land on Main. */}
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!manager ? (
-          <>
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-          </>
+          <Stack.Screen name="Login" component={LoginScreen} />
+        ) : needsOnboarding ? (
+          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         ) : (
           <>
             <Stack.Screen name="Main" component={TabNavigator} />
-            <Stack.Screen name="Onboarding" component={OnboardingScreen} />
             <Stack.Screen name="LeagueSetup" component={LeagueSetupScreen} />
             <Stack.Screen name="LiveAuction" component={LiveAuctionScreen} />
             <Stack.Screen name="DraftFeed" component={DraftFeedScreen} />
