@@ -1,0 +1,39 @@
+# One-click deploy of the Touchline API + its database.
+# On render.com: New → Blueprint → point it at this repo. Render reads this file,
+# provisions Postgres, builds server/Dockerfile, and injects DATABASE_URL and a
+# generated JWT_SECRET. The container runs `prisma migrate deploy` on start.
+#
+# After the first deploy, seed the demo league once from the service's Shell:
+#   npx tsx prisma/seed.ts
+#
+# Then set CORS_ORIGINS to the origin(s) your app is served from, and build the
+# app with EXPO_PUBLIC_API_BASE_URL=https://<your-service>.onrender.com/api
+databases:
+  - name: touchline-db
+    databaseName: touchline
+    user: touchline
+    plan: free
+
+services:
+  - type: web
+    name: touchline-api
+    runtime: docker
+    dockerfilePath: ./server/Dockerfile
+    dockerContext: ./server
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: touchline-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      # Comma-separated list of allowed origins. Left unset here on purpose —
+      # set it in the dashboard once you know where the app is served from.
+      - key: CORS_ORIGINS
+        sync: false

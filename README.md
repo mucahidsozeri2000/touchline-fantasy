@@ -93,4 +93,18 @@ screen says so.
 The API is a standard container (`server/Dockerfile`) plus a Postgres database.
 Set `DATABASE_URL`, `JWT_SECRET` and `CORS_ORIGINS` (comma-separated allowed
 origins) in the host's environment; the container runs `prisma migrate deploy`
-on start. The Expo app builds for web, iOS and Android from `mobile/`.
+on start.
+
+`render.yaml` is a ready blueprint: on [Render](https://render.com), pick
+**New → Blueprint** and point it at this repo — it provisions Postgres, builds
+the API and generates a `JWT_SECRET`. Seed once from the service shell with
+`npx tsx prisma/seed.ts`, then set `CORS_ORIGINS`. Any other container host
+(Railway, Fly.io, a VPS running `docker compose`) works the same way.
+
+The app builds for web, iOS and Android from `mobile/`. Point it at the deployed
+API at build time:
+
+```bash
+cd mobile
+EXPO_PUBLIC_API_BASE_URL=https://your-api.onrender.com/api npx expo export --platform web
+```
