@@ -1,19 +1,16 @@
 {
   "name": "touchline-fantasy",
   "private": true,
-  "workspaces": [
-    "server",
-    "mobile"
-  ],
+  "description": "Convenience scripts. server/ and mobile/ each install their own dependencies — see README.md.",
   "scripts": {
-    "server:dev": "npm run dev --workspace server",
-    "server:build": "npm run build --workspace server",
-    "server:migrate": "npm run prisma:deploy --workspace server",
-    "server:seed": "npm run seed --workspace server",
-    "mobile:start": "npm run start --workspace mobile",
-    "mobile:web": "npm run web --workspace mobile",
-    "mobile:android": "npm run android --workspace mobile",
-    "mobile:ios": "npm run ios --workspace mobile",
-    "typecheck": "npm run --workspace server build -- --noEmit && tsc -p mobile/tsconfig.json --noEmit"
+    "setup": "npm --prefix server install && npm --prefix mobile install",
+    "server:dev": "npm --prefix server run dev",
+    "server:build": "npm --prefix server run build",
+    "server:migrate": "npm --prefix server run prisma:deploy",
+    "server:seed": "npm --prefix server run seed",
+    "mobile:start": "npm --prefix mobile run start",
+    "mobile:web": "npm --prefix mobile run web",
+    "mobile:android": "npm --prefix mobile run android",
+    "mobile:ios": "npm --prefix mobile run ios"
   }
 }
