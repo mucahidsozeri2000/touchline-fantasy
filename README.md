@@ -1,25 +1,96 @@
-# CODING AGENTS: READ THIS FIRST
+# Touchline Fantasy
 
-This is a **handoff bundle** from Claude Design (claude.ai/design).
+A Champions League fantasy football app for the 2026/27 season, built from the
+Claude Design handoff in [`HANDOFF.md`](./HANDOFF.md) and the full screen-by-screen
+spec in [`project/CLAUDE_CODE_PROMPT.md`](./project/CLAUDE_CODE_PROMPT.md).
 
-A user mocked up designs in HTML/CSS/JS using an AI design tool, then exported this bundle so a coding agent can implement the designs for real.
+What makes it different from FPL-style fantasy: **every player can be owned by only
+one manager per league.** Squads are built through a live auction (sealed or open
+bidding, with anti-snipe extensions), and the league runs against real Champions
+League fixtures, eliminations and a transfer-window clock.
 
-## What you should do — IMPORTANT
+## Stack
 
-**Read the chat transcripts first.** There are 1 chat transcript(s) in `chats/`. The transcripts show the full back-and-forth between the user and the design assistant — they tell you **what the user actually wants** and **where they landed** after iterating. Don't skip them. The final HTML files are the output, but the chat is where the intent lives.
+| Part | Tech |
+| --- | --- |
+| `server/` | Node + TypeScript, Express, Prisma, PostgreSQL |
+| `mobile/` | React Native (Expo), TypeScript, React Navigation, React Query, i18next (EN/TR) |
 
-**Read `project/Touchline Fantasy.dc.html` in full.** The user had this file open when they triggered the handoff, so it's almost certainly the primary design they want built. Read it top to bottom — don't skim. Then **follow its imports**: open every file it pulls in (shared components, CSS, scripts) so you understand how the pieces fit together before you start implementing.
+## Run it locally
 
-**If anything is ambiguous, ask the user to confirm before you start implementing.** It's much cheaper to clarify scope up front than to build the wrong thing.
+**1. Backend + database** (needs Docker):
 
-## About the design files
+```bash
+export JWT_SECRET="$(openssl rand -base64 32)"
+docker compose up --build            # Postgres + API on :4000
+docker compose exec api npx tsx prisma/seed.ts   # seed the demo league, once
+curl localhost:4000/health           # {"ok":true}
+```
 
-The design medium is **HTML/CSS/JS** — these are prototypes, not production code. Your job is to **recreate them pixel-perfectly** in whatever technology makes sense for the target codebase (React, Vue, native, whatever fits). Match the visual output; don't copy the prototype's internal structure unless it happens to fit.
+Or without Docker, against your own Postgres:
 
-**Don't render these files in a browser or take screenshots unless the user asks you to.** Everything you need — dimensions, colors, layout rules — is spelled out in the source. Read the HTML and CSS directly; a screenshot won't tell you anything they don't.
+```bash
+cd server
+cp .env.example .env                 # then edit DATABASE_URL + JWT_SECRET
+npm install
+npx prisma migrate deploy
+npm run seed
+npm run dev
+```
 
-## Bundle contents
+**2. The app:**
 
-- `README.md` — this file
-- `chats/` — conversation transcripts (read these!)
-- `project/` — the `Champions League Fantasy App` project files (HTML prototypes, assets, components)
+```bash
+cd mobile
+npm install
+npm run web        # or: npm run ios / npm run android
+```
+
+The app talks to `http://localhost:4000/api` by default. Point a real build at a
+deployed API with `EXPO_PUBLIC_API_BASE_URL=https://your-api.example.com/api`.
+
+## Demo data
+
+`npm run server:seed` creates the league **THE OFFSIDE TRAP** (invite code
+`TRAP-2027`) with 8 managers, real clubs and players, a 15-man squad, live auction
+lots, a waiver pool from Bayern's elimination, fixtures, chat and standings.
+
+To sign in as the seeded manager, use team **FC Northbank** / coach **Sen**
+(the seed's email is `you@touchline.dev`). A brand-new name creates a fresh
+manager instead, who can then create or join a league from the Home screen.
+
+## Screens
+
+Login · Onboarding · Home · League Setup · Squad (pitch + swap sheet) · Transfers ·
+Leagues · Live Auction · Draft Feed · Re-auction & Prices · Exposure & Risk ·
+Predictions · Head to Head · League Chat · Rules & Scoring · Match Results ·
+Matchday Live · Manager Profile · League Pass
+
+## Backend systems
+
+- **Ownership** — `PlayerOwnership` is the single source of truth per league; a player
+  owned by another manager is never selectable anywhere.
+- **Auction** — blind (sealed) or live rounds, bid floors in 0.5M steps, anti-snipe
+  extension on late bids, lot resolution to the highest bid at window close.
+- **Waivers** — released players are claimed in strict reverse-standings priority.
+- **Re-auction & pricing** — elimination sweeps clear a club's players from every
+  squad and refund their owners; weekly re-rating moves prices from real match stats.
+- **Auto-squad** — a deterministic job fills a legal squad from remaining budget for
+  any manager who misses the deadline (`POST /api/leagues/:id/close-window`).
+- **Scoring** — goals by position (GK 8 / DEF 7 / MID 6 / FWD 5), assists, clean
+  sheets, cards, captain ×2; feeds live matchday points, standings and head-to-head.
+
+## Monetization guardrail
+
+The League Pass sells *capacity and presentation* — league size, custom scoring,
+blind rounds, re-auctions, cosmetics — and never competitive advantage. Extra
+transfers, waiver-priority jumps, last-second bid rights and hidden information
+(rival budgets, price forecasts) are explicitly not for sale, and the paywall
+screen says so.
+
+## Deploying
+
+The API is a standard container (`server/Dockerfile`) plus a Postgres database.
+Set `DATABASE_URL`, `JWT_SECRET` and `CORS_ORIGINS` (comma-separated allowed
+origins) in the host's environment; the container runs `prisma migrate deploy`
+on start. The Expo app builds for web, iOS and Android from `mobile/`.

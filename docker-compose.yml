@@ -1,0 +1,37 @@
+# Brings up the whole backend — Postgres + the Touchline API — with one command:
+#   docker compose up --build
+# Then seed the demo league once:  docker compose exec api npx tsx prisma/seed.ts
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: touchline
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-touchline_dev_pw}
+      POSTGRES_DB: touchline
+    ports:
+      - "5432:5432"
+    volumes:
+      - touchline_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U touchline -d touchline"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./server
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://touchline:${POSTGRES_PASSWORD:-touchline_dev_pw}@db:5432/touchline
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in your environment or .env file}
+      PORT: 4000
+    ports:
+      - "4000:4000"
+
+volumes:
+  touchline_pgdata:

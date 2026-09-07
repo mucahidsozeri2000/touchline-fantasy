@@ -1,0 +1,127 @@
+export const en = {
+  brand: "TOUCHLINE",
+  tagline: "Draft your Champions League squad and manage it like a Head Coach.",
+  teamNameLabel: "Team Name", teamNamePh: "e.g. FC Northbank",
+  coachNameLabel: "Head Coach Name", coachNamePh: "e.g. Alex Morgan",
+  enterLeague: "Enter League", or: "or", google: "Continue with Google",
+  next: "Next", startManaging: "Start Managing", skip: "Skip", back: "Back", close: "Close", save: "Save", saved: "Saved",
+  headCoach: "Head Coach", rank: "Rank", totalPoints: "Total Points", squadValue: "Squad Value",
+  league: "League", more: "More",
+  matchdayLive: "Matchday Live", leaguePass: "League Pass", reauctionPrices: "Re-auction & Prices",
+  exposureRisk: "Exposure & Risk", predictions: "Predictions", headToHead: "Head to Head",
+  liveAuction: "Live Auction", rulesScoring: "Rules & Scoring", matchResults: "Match Results",
+  draftFeed: "Draft Feed", leagueChat: "League Chat",
+  tabHome: "Home", tabSquad: "Squad", tabTransfers: "Transfers", tabLeagues: "Leagues",
+  phaseLocked: "Locked", phaseOpen: "Open", phaseClosed: "Closed",
+  heroWaitingKicker: "Draft window", heroWaitingTitle: "Transfers open soon",
+  heroWaitingBody: "The window opens soon. Come back once it's live to draft your squad.",
+  heroOpenKicker: "Draft window · live", heroOpenTitle: "Transfers are open",
+  heroOpenBody: "free transfers left · closes",
+  heroClosedKicker: "Draft window · closed", heroClosedTitle: "Squads are locked",
+  heroClosedBody: "The transfer window has closed. Managers who missed the deadline received an automatic squad. Real matches are underway.",
+  viewRules: "View Rules", makeTransfers: "Make Transfers", viewResults: "View Results",
+  onboardTitle1: "One player, one manager",
+  onboardBody1: "Every Champions League player can be drafted by only one manager in your league. Move fast when the window opens.",
+  onboardTitle2: "The window has a clock",
+  onboardBody2: "Transfers open at a set time and lock at the deadline. Miss it and an automatic squad is assigned to you.",
+  onboardTitle3: "Real matches, real points",
+  onboardBody3: "Your squad scores from actual Champions League fixtures. Pick a captain each week to double their return.",
+  newLeagueRow: "Set up a new league", setupTitle: "SET UP A LEAGUE",
+  swapWith: "Swap with", noBenchOptions: "No bench players available in this position.",
+  makeCaptain: "Make Captain", removeCaptain: "Remove Captain",
+  chatPlaceholder: "Message the league…", you: "You",
+  catLive: "Matchday", catAuction: "Auction", catCompete: "Compete", catInfo: "Info",
+
+  create: "Create", join: "Join",
+  leagueNameLabel: "League Name", leagueNamePh: "e.g. The Offside Trap",
+  managers: "Managers", budgetPerManager: "Budget per manager",
+  auctionWindow: "Auction Window", opens: "Opens", closes: "Closes",
+  openSaleNote: "Unsold players go to open sale at list price once the window closes.",
+  createLeague: "Create League", inviteCode: "Invite Code", share: "Share",
+  joinWithCode: "Enter invite code", openLeagues: "Open leagues", seatsFilled: "seats filled",
+  evenHint: "managers · even, head-to-head weeks pair cleanly",
+  oddHint: "managers · odd, one manager sits out each head-to-head week",
+
+  deadline: "Deadline", budgetLeft: "Budget Left", freeTransfers: "Free Transfers",
+  saveSquad: "Save Squad", bench: "Bench",
+
+  shortlisted: "Shortlisted", confirmTransfers: "Confirm Transfers",
+  draftedBy: "Drafted by", all: "All",
+
+  blindRound: "Blind round", blindHintOn: "Rival bids stay hidden until the round closes",
+  blindHintOff: "Live bidding — every bid is public",
+  closesInBlind: "Blind round closes in", closesIn: "Closes in",
+  extensionBanner: "Going, going… a late bid extended this lot by 60 seconds",
+  freeFunds: "Free Funds", committed: "Committed", leadingCount: "Leading",
+  searchPlaceholder: "Search player or club", noLotsMatch: "No lots match",
+  leading: "Leading", outbid: "Outbid", open: "Open", sealed: "Sealed", bidIn: "Bid In",
+  bid: "Bid", counter: "Counter", outbidAlert: "outbid you on",
+  waiverPool: "Waiver Pool", claim: "Claim", claimed: "Claimed",
+  claimOrder: "You claim {{n}} in the order",
+
+  everyPlayerOnce: "Every player can be drafted by one manager only.",
+
+  refunded: "Refunded", newBudget: "New Budget", openSlots: "Open Slots",
+  clearedFromSquad: "Cleared From Your Squad", weeklyRerating: "Weekly Re-rating",
+  risers: "Risers", fallers: "Fallers", enterReauction: "Enter Re-auction",
+
+  pointsAtRisk: "% of points at risk", clubExposure: "Club Exposure", roundTimeline: "Round Timeline",
+
+  accuracy: "Accuracy", streak: "Streak", bonusPoints: "Bonus Points",
+  topScorerThisWeek: "Top Scorer This Week", scoreCalls: "Score Calls",
+  predictionTable: "Prediction Table", home: "Home", draw: "Draw", away: "Away",
+  hit: "Hit", miss: "Miss", bonus: "Bonus",
+
+  differentials: "Differentials", h2hTable: "H2H Table", nextFixtures: "Next Fixtures",
+  leadingBy: "Leading {{opponent}} by {{n}} points", trailingBy: "Trailing {{opponent}} by {{n}} points",
+  stillToPlay: "{{n}} players still to play",
+
+  transferWindowRule: "Transfer Window", auctionRule: "Auction", ownershipRule: "Player Ownership",
+  squadRulesTitle: "Squad Rules", scoringTable: "Scoring",
+
+  gameweek: "GAMEWEEK", ft: "FT", ptsFromSquad: "{{n}} pts from your squad",
+
+  feed: "Feed", myXi: "My XI", leagueTab: "League",
+  playing: "playing", unused: "Unused substitute", upcoming: "Kicks off soon",
+
+  manager: "Manager", reigningChampion: "Reigning champion",
+  signings: "Signings", bestGameweek: "Best Gameweek", seasonForm: "Season Form",
+  signingHistory: "Signing History", career: "Career",
+
+  upgrade: "UPGRADE", onePayment: "One payment, whole league", runSeasonUnlocked: "Run the season unlocked",
+  whatUnlocks: "What Unlocks", neverForSale: "Never For Sale", stayOnFree: "Stay on free",
+
+  livePoints: "Live Points", sinceKickoff: "since kickoff", playersLeftToPlay: "still to play",
+
+  routeAuction: "Auction", routeOpenSale: "Open Sale", routeWaiver: "Waiver", routeAutoAssign: "Auto-Assigned",
+  noSeasonForm: "No gameweeks played yet.", noSigningHistory: "No signings yet.",
+
+  getPlan: "Get {{name}}", purchased: "Purchased", proActive: "League Pass is active for this league.",
+
+  loading: "Loading…", retry: "Retry", errorGeneric: "Something went wrong.",
+  captain: "Captain", price: "Price", club: "Club", position: "Position", form: "Form",
+
+  exposureTitle: "EXPOSURE", predictionsTitle: "PREDICTIONS", headToHeadTitle: "HEAD TO HEAD", leagueChatTitle: "League Chat",
+  riskLow: "Low", riskMedium: "Medium", riskHigh: "High",
+  noClubExposure: "No club exposure yet.", playerSingular: "player", playerPlural: "players", ptsShort: "pts",
+  vs: "VS", noOpponentThisWeek: "No head-to-head opponent this gameweek — you have a bye.",
+  noDifferentials: "No differentials yet.", noPredictionOptions: "No options available yet.",
+  submitPredictions: "Submit Predictions", predictionsSaved: "Predictions saved.",
+  justNow: "Just now", minutesShort: "{{n}}m", hoursShort: "{{n}}h", daysShort: "{{n}}d",
+  noMessagesYet: "No messages yet. Say hello.", send: "Send", opponent: "Opponent",
+
+  notInLeagueYet: "You're not in a league yet.",
+  yourRoster: "Your squad",
+  trendThisGw: "{{delta}} this GW",
+  yourRank: "Your Rank",
+  transferLockedTitle: "Transfer window locked",
+  transferLockedBody: "The market opens {{when}}. Come back then to build your squad.",
+  transferClosedBanner: "Window closed — squads locked",
+  transferClosedNote: "Managers who didn't confirm transfers received an automatic squad.",
+  opensAt: "Opens {{when}}", closesAt: "Closes {{when}}",
+
+  auctionNavTitle: "AUCTION", reauctionNavTitle: "RE-AUCTION", liveTag: "Live",
+  reauctionExplainer: "Eliminated clubs' players are cleared from every squad and refunded to their manager's budget. Prices are then re-rated on recent real-world form.",
+  draftedMiddle: "drafted",
+};
+export type Dict = typeof en;

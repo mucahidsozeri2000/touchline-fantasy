@@ -1,0 +1,128 @@
+import { Dict } from "./en";
+
+export const tr: Dict = {
+  brand: "TOUCHLINE",
+  tagline: "Şampiyonlar Ligi kadronu kur ve teknik direktör gibi yönet.",
+  teamNameLabel: "Takım Adı", teamNamePh: "örn. FC Northbank",
+  coachNameLabel: "Teknik Direktör Adı", coachNamePh: "örn. Alex Morgan",
+  enterLeague: "Lige Gir", or: "veya", google: "Google ile devam et",
+  next: "İleri", startManaging: "Yönetmeye Başla", skip: "Atla", back: "Geri", close: "Kapat", save: "Kaydet", saved: "Kaydedildi",
+  headCoach: "Teknik Direktör", rank: "Sıra", totalPoints: "Toplam Puan", squadValue: "Kadro Değeri",
+  league: "Lig", more: "Diğer",
+  matchdayLive: "Canlı Maç Günü", leaguePass: "Lig Paketi", reauctionPrices: "Yeniden İhale ve Fiyatlar",
+  exposureRisk: "Risk Dağılımı", predictions: "Tahminler", headToHead: "Kafa Kafaya",
+  liveAuction: "Canlı İhale", rulesScoring: "Kurallar ve Puanlama", matchResults: "Maç Sonuçları",
+  draftFeed: "İhale Akışı", leagueChat: "Lig Sohbeti",
+  tabHome: "Ana Sayfa", tabSquad: "Kadro", tabTransfers: "Transfer", tabLeagues: "Ligler",
+  phaseLocked: "Kapalı", phaseOpen: "Açık", phaseClosed: "Bitti",
+  heroWaitingKicker: "Transfer penceresi", heroWaitingTitle: "Transferler yakında açılıyor",
+  heroWaitingBody: "Pencere yakında açılacak. Kadronu kurmak için açıldığında geri dön.",
+  heroOpenKicker: "Transfer penceresi · canlı", heroOpenTitle: "Transferler açık",
+  heroOpenBody: "serbest transfer kaldı · kapanış",
+  heroClosedKicker: "Transfer penceresi · kapandı", heroClosedTitle: "Kadrolar kilitlendi",
+  heroClosedBody: "Transfer penceresi kapandı. Süreyi kaçıran teknik direktörlere otomatik kadro atandı. Gerçek maçlar oynanıyor.",
+  viewRules: "Kuralları Gör", makeTransfers: "Transfer Yap", viewResults: "Sonuçları Gör",
+  onboardTitle1: "Bir oyuncu, bir teknik direktör",
+  onboardBody1: "Her Şampiyonlar Ligi oyuncusu ligindeki yalnızca bir teknik direktör tarafından alınabilir. Pencere açılınca hızlı ol.",
+  onboardTitle2: "Pencerenin saati var",
+  onboardBody2: "Transferler belirli bir saatte açılır ve süre bitiminde kilitlenir. Kaçırırsan sana otomatik kadro atanır.",
+  onboardTitle3: "Gerçek maçlar, gerçek puanlar",
+  onboardBody3: "Kadron gerçek Şampiyonlar Ligi maçlarından puan toplar. Her hafta bir kaptan seç, getirisi iki katına çıksın.",
+  newLeagueRow: "Yeni lig kur", setupTitle: "LİG KUR",
+  swapWith: "Şununla değiştir", noBenchOptions: "Bu pozisyonda yedekte oyuncu yok.",
+  makeCaptain: "Kaptan Yap", removeCaptain: "Kaptanlığı Kaldır",
+  chatPlaceholder: "Lige mesaj yaz…", you: "Sen",
+  catLive: "Maç Günü", catAuction: "İhale", catCompete: "Rekabet", catInfo: "Bilgi",
+
+  create: "Kur", join: "Katıl",
+  leagueNameLabel: "Lig Adı", leagueNamePh: "örn. The Offside Trap",
+  managers: "Menajer", budgetPerManager: "Kişi başı bütçe",
+  auctionWindow: "İhale Penceresi", opens: "Açılış", closes: "Kapanış",
+  openSaleNote: "Pencere kapanınca satılmayan oyuncular liste fiyatından açık satışa çıkar.",
+  createLeague: "Lig Kur", inviteCode: "Davet Kodu", share: "Paylaş",
+  joinWithCode: "Davet kodu gir", openLeagues: "Açık ligler", seatsFilled: "koltuk dolu",
+  evenHint: "menajer · çift, kafa kafaya haftalar düzgün eşleşir",
+  oddHint: "menajer · tek, her hafta bir menajer kafa kafaya dışında kalır",
+
+  deadline: "Son Tarih", budgetLeft: "Kalan Bütçe", freeTransfers: "Serbest Transfer",
+  saveSquad: "Kadroyu Kaydet", bench: "Yedek",
+
+  shortlisted: "Kısa Liste", confirmTransfers: "Transferleri Onayla",
+  draftedBy: "Alan", all: "Tümü",
+
+  blindRound: "Kör tur", blindHintOn: "Rakip teklifler tur kapanana kadar gizli kalır",
+  blindHintOff: "Canlı ihale — her teklif herkese açık",
+  closesInBlind: "Kör tur kapanışına", closesIn: "Kapanışa",
+  extensionBanner: "Az kaldı… son anda gelen bir teklif bu lotu 60 saniye uzattı",
+  freeFunds: "Serbest Bakiye", committed: "Bağlanan Tutar", leadingCount: "Önde",
+  searchPlaceholder: "Oyuncu veya kulüp ara", noLotsMatch: "Şuna uyan lot yok",
+  leading: "Önde", outbid: "Geçildi", open: "Açık", sealed: "Kapalı", bidIn: "Teklif Verildi",
+  bid: "Teklif Ver", counter: "Karşı Teklif", outbidAlert: "sizi geçti —",
+  waiverPool: "Waiver Havuzu", claim: "Talep Et", claimed: "Talep Edildi",
+  claimOrder: "Sırada {{n}}. sırasın",
+
+  everyPlayerOnce: "Her oyuncu yalnızca bir menajer tarafından alınabilir.",
+
+  refunded: "İade Edilen", newBudget: "Yeni Bütçe", openSlots: "Boş Slot",
+  clearedFromSquad: "Kadrondan Çıkarılanlar", weeklyRerating: "Haftalık Yeniden Değerleme",
+  risers: "Yükselenler", fallers: "Düşenler", enterReauction: "İhaleye Gir",
+
+  pointsAtRisk: "riskteki puan yüzdesi", clubExposure: "Kulüp Maruziyeti", roundTimeline: "Tur Takvimi",
+
+  accuracy: "Doğruluk", streak: "Seri", bonusPoints: "Bonus Puan",
+  topScorerThisWeek: "Haftanın En Golcüsü", scoreCalls: "Skor Tahminleri",
+  predictionTable: "Tahmin Tablosu", home: "Ev Sahibi", draw: "Beraberlik", away: "Deplasman",
+  hit: "İsabet", miss: "Iska", bonus: "Bonus",
+
+  differentials: "Farklar", h2hTable: "Kafa Kafaya Tablosu", nextFixtures: "Gelecek Maçlar",
+  leadingBy: "{{opponent}} karşısında {{n}} puan önde", trailingBy: "{{opponent}} karşısında {{n}} puan geride",
+  stillToPlay: "{{n}} oyuncu henüz oynamadı",
+
+  transferWindowRule: "Transfer Penceresi", auctionRule: "İhale", ownershipRule: "Oyuncu Sahipliği",
+  squadRulesTitle: "Kadro Kuralları", scoringTable: "Puanlama",
+
+  gameweek: "HAFTA", ft: "MS", ptsFromSquad: "Kadrondan {{n}} puan",
+
+  feed: "Akış", myXi: "İlk 11'im", leagueTab: "Lig",
+  playing: "oynuyor", unused: "Yedekte kaldı", upcoming: "Yakında başlıyor",
+
+  manager: "MENAJER", reigningChampion: "Mevcut şampiyon",
+  signings: "Transfer Sayısı", bestGameweek: "En İyi Hafta", seasonForm: "Sezon Formu",
+  signingHistory: "İmza Geçmişi", career: "Kariyer",
+
+  upgrade: "YÜKSELT", onePayment: "Tek ödeme, tüm lig", runSeasonUnlocked: "Sezonu kilidi açık oynat",
+  whatUnlocks: "Neler Açılıyor", neverForSale: "Asla Satılmaz", stayOnFree: "Ücretsizde kal",
+
+  livePoints: "Canlı Puan", sinceKickoff: "başlangıçtan bu yana", playersLeftToPlay: "oynamadı",
+
+  routeAuction: "İhale", routeOpenSale: "Açık Satış", routeWaiver: "Waiver", routeAutoAssign: "Otomatik Atama",
+  noSeasonForm: "Henüz hafta oynanmadı.", noSigningHistory: "Henüz transfer yok.",
+
+  getPlan: "{{name}} Al", purchased: "Satın Alındı", proActive: "Lig Paketi bu lig için aktif.",
+
+  loading: "Yükleniyor…", retry: "Tekrar dene", errorGeneric: "Bir şeyler ters gitti.",
+  captain: "Kaptan", price: "Fiyat", club: "Kulüp", position: "Pozisyon", form: "Form",
+
+  exposureTitle: "RİSK", predictionsTitle: "TAHMİNLER", headToHeadTitle: "KAFA KAFAYA", leagueChatTitle: "Lig Sohbeti",
+  riskLow: "Düşük", riskMedium: "Orta", riskHigh: "Yüksek",
+  noClubExposure: "Henüz kulüp maruziyeti yok.", playerSingular: "oyuncu", playerPlural: "oyuncu", ptsShort: "puan",
+  vs: "VS", noOpponentThisWeek: "Bu hafta kafa kafaya rakibin yok — boş geçiyorsun.",
+  noDifferentials: "Henüz fark yok.", noPredictionOptions: "Henüz seçenek yok.",
+  submitPredictions: "Tahminleri Gönder", predictionsSaved: "Tahminler kaydedildi.",
+  justNow: "Az önce", minutesShort: "{{n}}dk", hoursShort: "{{n}}sa", daysShort: "{{n}}g",
+  noMessagesYet: "Henüz mesaj yok. Merhaba de.", send: "Gönder", opponent: "Rakip",
+
+  notInLeagueYet: "Henüz bir lige katılmadın.",
+  yourRoster: "Kadronda",
+  trendThisGw: "Bu hafta {{delta}}",
+  yourRank: "Sıralaman",
+  transferLockedTitle: "Transfer penceresi kilitli",
+  transferLockedBody: "Piyasa {{when}} açılıyor. Kadronu kurmak için o zaman tekrar gel.",
+  transferClosedBanner: "Pencere kapandı — kadrolar kilitlendi",
+  transferClosedNote: "Transferlerini onaylamayan menajerlere otomatik kadro atandı.",
+  opensAt: "Açılış {{when}}", closesAt: "Kapanış {{when}}",
+
+  auctionNavTitle: "İHALE", reauctionNavTitle: "YENİDEN İHALE", liveTag: "Canlı",
+  reauctionExplainer: "Elenen kulüplerin oyuncuları tüm kadrolardan çıkarılır ve bedeli menajerin bütçesine iade edilir. Fiyatlar ardından güncel gerçek performansa göre yeniden değerlendirilir.",
+  draftedMiddle: "draft etti",
+};

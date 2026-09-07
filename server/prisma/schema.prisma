@@ -1,0 +1,365 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Identity ─────────────────────────────────────────────────────────────
+
+model Manager {
+  id            String   @id @default(cuid())
+  email         String?  @unique
+  teamName      String
+  coachName     String
+  avatarInitial String
+  authProvider  String   @default("local") // local | google
+  createdAt     DateTime @default(now())
+
+  memberships     LeagueMembership[]
+  commissioned    League[]           @relation("commissioner")
+  bids            Bid[]
+  waiverClaims    WaiverClaim[]
+  chatMessages    ChatMessage[]
+  purchases       Purchase[]
+  predictions     Prediction[]
+  ownerships      PlayerOwnership[]
+}
+
+// ── League ───────────────────────────────────────────────────────────────
+
+model League {
+  id               String   @id @default(cuid())
+  name             String
+  inviteCode       String   @unique
+  managerCap       Int      @default(8)
+  budgetPerManager Float    @default(120.0)
+  auctionOpensAt   DateTime
+  auctionClosesAt  DateTime
+  blindRound       Boolean  @default(true)
+  antiSnipeSeconds Int      @default(60)
+  isPro            Boolean  @default(false)
+  scoringConfig    Json     @default("{}")
+  commissionerId   String
+  commissioner     Manager  @relation("commissioner", fields: [commissionerId], references: [id])
+  createdAt        DateTime @default(now())
+
+  memberships   LeagueMembership[]
+  ownerships    PlayerOwnership[]
+  bids          Bid[]
+  waiverClaims  WaiverClaim[]
+  chatMessages  ChatMessage[]
+  predictions   Prediction[]
+  h2hFixtures   HeadToHeadFixture[]
+  purchases     Purchase[]
+  priceChanges  PlayerPriceChange[]
+  auctionLots   AuctionLot[]
+  clearances    PlayerClearance[]
+}
+
+model LeagueMembership {
+  id               String   @id @default(cuid())
+  leagueId         String
+  league           League   @relation(fields: [leagueId], references: [id])
+  managerId        String
+  manager          Manager  @relation(fields: [managerId], references: [id])
+  budgetRemaining  Float
+  isCommissioner   Boolean  @default(false)
+  joinedAt         DateTime @default(now())
+  autoSquadApplied Boolean  @default(false)
+
+  squadSlots    SquadSlot[]
+  gameweekScores GameweekScore[]
+
+  @@unique([leagueId, managerId])
+}
+
+// ── Football data catalog (shared across leagues) ──────────────────────────
+
+enum Position {
+  GK
+  DEF
+  MID
+  FWD
+}
+
+model Club {
+  id         String  @id @default(cuid())
+  name       String
+  shortCode  String  @unique
+  colorHex   String
+  eliminated Boolean @default(false)
+  eliminatedRound String?
+
+  players  Player[]
+  homeFixtures Fixture[] @relation("homeClub")
+  awayFixtures Fixture[] @relation("awayClub")
+}
+
+model Player {
+  id           String   @id @default(cuid())
+  name         String
+  clubId       String
+  club         Club     @relation(fields: [clubId], references: [id])
+  position     Position
+  basePrice    Float
+  initials     String
+
+  ownerships    PlayerOwnership[]
+  bids          Bid[]
+  waiverClaims  WaiverClaim[]
+  squadSlots    SquadSlot[]
+  matchEvents   MatchEvent[]
+  priceChanges  PlayerPriceChange[]
+  auctionLots   AuctionLot[]
+  clearances    PlayerClearance[]
+}
+
+// ── Ownership (per-league single-owner economy) ────────────────────────────
+
+enum AcquisitionRoute {
+  AUCTION
+  OPEN_SALE
+  WAIVER
+  AUTO_ASSIGN
+}
+
+model PlayerOwnership {
+  id           String            @id @default(cuid())
+  leagueId     String
+  league       League            @relation(fields: [leagueId], references: [id])
+  playerId     String
+  player       Player            @relation(fields: [playerId], references: [id])
+  managerId    String?
+  manager      Manager?          @relation(fields: [managerId], references: [id])
+  currentPrice Float
+  acquiredVia  AcquisitionRoute?
+  acquiredAt   DateTime?
+
+  @@unique([leagueId, playerId])
+}
+
+model SquadSlot {
+  id                 String           @id @default(cuid())
+  leagueMembershipId String
+  leagueMembership   LeagueMembership @relation(fields: [leagueMembershipId], references: [id])
+  playerId           String
+  player             Player           @relation(fields: [playerId], references: [id])
+  isStarting         Boolean          @default(false)
+  isCaptain          Boolean          @default(false)
+
+  @@unique([leagueMembershipId, playerId])
+}
+
+// ── Auction / waivers / pricing ─────────────────────────────────────────
+
+enum LotStatus {
+  OPEN
+  SOLD
+  UNSOLD
+}
+
+model AuctionLot {
+  id           String    @id @default(cuid())
+  leagueId     String
+  league       League    @relation(fields: [leagueId], references: [id])
+  playerId     String
+  player       Player    @relation(fields: [playerId], references: [id])
+  listPrice    Float
+  status       LotStatus @default(OPEN)
+  closesAt     DateTime
+  winningBidId String?
+
+  bids Bid[]
+
+  @@unique([leagueId, playerId])
+}
+
+model Bid {
+  id           String     @id @default(cuid())
+  leagueId     String
+  league       League     @relation(fields: [leagueId], references: [id])
+  lotId        String
+  lot          AuctionLot @relation(fields: [lotId], references: [id])
+  playerId     String
+  player       Player     @relation(fields: [playerId], references: [id])
+  managerId    String
+  manager      Manager    @relation(fields: [managerId], references: [id])
+  amount       Float
+  isBlind      Boolean    @default(false)
+  submittedAt  DateTime   @default(now())
+}
+
+enum WaiverStatus {
+  PENDING
+  AWARDED
+  PASSED
+}
+
+model WaiverClaim {
+  id         String       @id @default(cuid())
+  leagueId   String
+  league     League       @relation(fields: [leagueId], references: [id])
+  playerId   String
+  player     Player       @relation(fields: [playerId], references: [id])
+  managerId  String
+  manager    Manager      @relation(fields: [managerId], references: [id])
+  reason     String
+  priority   Int
+  status     WaiverStatus @default(PENDING)
+  createdAt  DateTime     @default(now())
+}
+
+model PlayerClearance {
+  id           String   @id @default(cuid())
+  leagueId     String
+  league       League   @relation(fields: [leagueId], references: [id])
+  playerId     String
+  player       Player   @relation(fields: [playerId], references: [id])
+  managerId    String
+  refundAmount Float
+  reason       String
+  createdAt    DateTime @default(now())
+}
+
+model PlayerPriceChange {
+  id        String   @id @default(cuid())
+  leagueId  String
+  league    League   @relation(fields: [leagueId], references: [id])
+  playerId  String
+  player    Player   @relation(fields: [playerId], references: [id])
+  gameweek  Int
+  oldPrice  Float
+  newPrice  Float
+  reason    String
+  createdAt DateTime @default(now())
+}
+
+// ── Fixtures / scoring ───────────────────────────────────────────────────
+
+enum FixtureStatus {
+  SCHEDULED
+  LIVE
+  FT
+}
+
+model Fixture {
+  id         String        @id @default(cuid())
+  round      String
+  gameweek   Int
+  homeClubId String
+  homeClub   Club          @relation("homeClub", fields: [homeClubId], references: [id])
+  awayClubId String
+  awayClub   Club          @relation("awayClub", fields: [awayClubId], references: [id])
+  kickoffAt  DateTime
+  homeScore  Int?
+  awayScore  Int?
+  status     FixtureStatus @default(SCHEDULED)
+
+  events MatchEvent[]
+}
+
+enum EventType {
+  GOAL
+  ASSIST
+  CLEAN_SHEET
+  YELLOW
+  RED
+  PENALTY_SAVE
+  PENALTY_MISS
+  OWN_GOAL
+  MINUTES
+}
+
+model MatchEvent {
+  id           String    @id @default(cuid())
+  fixtureId    String
+  fixture      Fixture   @relation(fields: [fixtureId], references: [id])
+  playerId     String
+  player       Player    @relation(fields: [playerId], references: [id])
+  minute       Int
+  type         EventType
+  pointsDelta  Int
+}
+
+model GameweekScore {
+  id                 String           @id @default(cuid())
+  leagueMembershipId String
+  leagueMembership   LeagueMembership @relation(fields: [leagueMembershipId], references: [id])
+  gameweek           Int
+  points             Int
+
+  @@unique([leagueMembershipId, gameweek])
+}
+
+// ── Engagement layer ─────────────────────────────────────────────────────
+
+model Prediction {
+  id                String   @id @default(cuid())
+  leagueId          String
+  league            League   @relation(fields: [leagueId], references: [id])
+  managerId         String
+  manager           Manager  @relation(fields: [managerId], references: [id])
+  gameweek          Int
+  topScorerPick     String
+  topScorerResolved Boolean  @default(false)
+  topScorerCorrect  Boolean  @default(false)
+  bonusPoints       Int      @default(0)
+  createdAt         DateTime @default(now())
+  fixturePicks      FixturePick[]
+
+  @@unique([leagueId, managerId, gameweek])
+}
+
+model FixturePick {
+  id           String     @id @default(cuid())
+  predictionId String
+  prediction   Prediction @relation(fields: [predictionId], references: [id])
+  fixtureId    String
+  pick         String // home | draw | away
+  resolved     Boolean    @default(false)
+  correct      Boolean    @default(false)
+}
+
+model HeadToHeadFixture {
+  id            String  @id @default(cuid())
+  leagueId      String
+  league        League  @relation(fields: [leagueId], references: [id])
+  gameweek      Int
+  managerAId    String
+  managerBId    String?
+  scoreA        Int     @default(0)
+  scoreB        Int     @default(0)
+  byeManagerId  String?
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  leagueId  String
+  league    League   @relation(fields: [leagueId], references: [id])
+  managerId String
+  manager   Manager  @relation(fields: [managerId], references: [id])
+  text      String
+  sentAt    DateTime @default(now())
+}
+
+// ── Monetization ─────────────────────────────────────────────────────────
+
+enum PlanId {
+  LEAGUE_PASS
+  CLUB_IDENTITY
+  SEASON_BOOK
+}
+
+model Purchase {
+  id          String   @id @default(cuid())
+  leagueId    String
+  league      League   @relation(fields: [leagueId], references: [id])
+  managerId   String
+  manager     Manager  @relation(fields: [managerId], references: [id])
+  plan        PlanId
+  amountCents Int
+  purchasedAt DateTime @default(now())
+}
