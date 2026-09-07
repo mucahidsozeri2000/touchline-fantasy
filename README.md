@@ -101,6 +101,8 @@ the API and generates a `JWT_SECRET`. Seed once from the service shell with
 `npx tsx prisma/seed.ts`, then set `CORS_ORIGINS`. Any other container host
 (Railway, Fly.io, a VPS running `docker compose`) works the same way.
 
+Shipping to a phone or Google Play: see [RELEASE.md](./RELEASE.md).
+
 The app builds for web, iOS and Android from `mobile/`. Point it at the deployed
 API at build time:
 

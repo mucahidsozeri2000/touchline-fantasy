@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from "react-native";
 import Constants from "expo-constants";
 import { demoRequest } from "./demoClient";
 
@@ -28,19 +29,36 @@ export async function clearToken() {
   await AsyncStorage.removeItem(TOKEN_KEY);
 }
 
+// "localhost" means the phone itself, so a device build pointed there can only
+// ever fail — and it fails as an opaque network error. Name the cause instead.
+const POINTS_AT_LOCALHOST = /\/\/(localhost|127\.0\.0\.1)\b/.test(API_BASE);
+const ON_DEVICE = Platform.OS === "android" || Platform.OS === "ios";
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   if (DEMO_MODE) {
     return demoRequest<T>(path, options);
   }
   const token = await getToken();
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options.headers ?? {}),
-    },
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(options.headers ?? {}),
+      },
+    });
+  } catch (err: any) {
+    if (ON_DEVICE && POINTS_AT_LOCALHOST) {
+      throw new Error(
+        `This build points at ${API_BASE}, which on a phone means the phone itself. ` +
+          `Rebuild with EXPO_PUBLIC_API_BASE_URL set to a reachable API ` +
+          `(your machine's LAN address for local testing, or your deployed host).`
+      );
+    }
+    throw new Error(`Can't reach the API at ${API_BASE}. ${err?.message ?? "Network request failed"}`);
+  }
   const body = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(body.error ?? `Request failed (${res.status})`);
   return body as T;
