@@ -96,6 +96,79 @@ try {
   line(`/fixtures failed: ${err.message}`);
 }
 
+// ── Does the response actually carry the fields the adapter reads? ────────
+//
+// The adapter is written from documentation; this checks it against the real
+// payload, so a field that was renamed or is simply absent shows up here
+// rather than as silently-missing points three weeks into a season.
+
+function probe(obj, path) {
+  return path.split(".").reduce((o, k) => (o == null ? undefined : o[k]), obj);
+}
+
+function checkFields(label, sample, fields) {
+  if (sample === undefined) {
+    line(`  ${label}: no sample available, skipped`);
+    return true;
+  }
+  let allOk = true;
+  const missing = [];
+  for (const [path, required] of fields) {
+    const v = probe(sample, path);
+    if (v === undefined) {
+      missing.push(path);
+      if (required) allOk = false;
+    }
+  }
+  line(`  ${label}: ${missing.length === 0 ? "all fields present" : "missing " + missing.join(", ")}`);
+  return allOk;
+}
+
+if (ok) {
+  line("");
+  line("Field check (what the importer reads):");
+  try {
+    const teams = await get("/teams", { league: CHAMPIONS_LEAGUE, season: SEASON });
+    const team = teams.response?.[0];
+    ok = checkFields("teams", team, [["team.id", true], ["team.name", true], ["team.code", false]]) && ok;
+
+    if (team?.team?.id) {
+      const squad = await get("/players/squads", { team: team.team.id });
+      const player = squad.response?.[0]?.players?.[0];
+      line(`  squad size for ${team.team.name}: ${squad.response?.[0]?.players?.length ?? 0}`);
+      ok = checkFields("squad player", player, [["id", true], ["name", true], ["position", true]]) && ok;
+      if (player?.position) line(`  position values look like: "${player.position}"`);
+    }
+
+    const fixtures = await get("/fixtures", { league: CHAMPIONS_LEAGUE, season: SEASON });
+    const finished = (fixtures.response ?? []).filter((f) =>
+      ["FT", "AET", "PEN"].includes(f.fixture?.status?.short)
+    );
+    ok = checkFields("fixture", fixtures.response?.[0], [
+      ["fixture.id", true], ["fixture.date", true], ["fixture.status.short", true],
+      ["league.round", true], ["teams.home.id", true], ["teams.away.id", true],
+      ["goals.home", true], ["goals.away", true],
+    ]) && ok;
+
+    if (finished.length) {
+      const stats = await get("/fixtures/players", { fixture: finished[0].fixture.id });
+      const row = stats.response?.[0]?.players?.[0];
+      ok = checkFields("player match stats", row, [
+        ["player.id", true], ["statistics.0.games.minutes", true],
+        ["statistics.0.goals.total", true], ["statistics.0.goals.assists", true],
+        ["statistics.0.goals.conceded", true], ["statistics.0.cards.yellow", true],
+        ["statistics.0.cards.red", true], ["statistics.0.penalty.saved", true],
+        ["statistics.0.penalty.missed", true], ["statistics.0.goals.own", false],
+      ]) && ok;
+    } else {
+      line("  player match stats: no finished fixture to sample");
+    }
+  } catch (err) {
+    ok = false;
+    line(`  field check failed: ${err.message}`);
+  }
+}
+
 line("");
-line(ok ? "OK — this key can drive the sync for that season." : "NOT USABLE for that season, see above.");
+line(ok ? "OK — this key can drive the sync for that season." : "NOT USABLE as-is, see above.");
 process.exit(ok ? 0 : 1);

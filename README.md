@@ -59,8 +59,16 @@ First check what your key can reach — free plans are often limited to older
 seasons, and that is the one thing worth knowing before anything else:
 
 ```bash
-node scripts/check-football-key.mjs YOUR_KEY 2026
+node scripts/check-football-key.mjs YOUR_KEY 2024
 ```
+
+It reports the plan and quota, which seasons the key can reach, and then checks
+the live payload for every field the importer reads — so a renamed or absent
+field surfaces here rather than as silently missing points weeks into a season.
+
+**API-Football's free plan only serves seasons 2022–2024.** It lists newer ones
+under `/leagues` but refuses `/teams` and `/fixtures` for them. Build against
+2024, then change `FOOTBALL_SEASON` after subscribing; no code depends on it.
 
 Then set `FOOTBALL_API_KEY` and `FOOTBALL_SEASON` in `server/.env` and pull:
 
