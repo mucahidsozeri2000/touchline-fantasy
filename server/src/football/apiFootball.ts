@@ -148,9 +148,14 @@ export class ApiFootballProvider implements FootballProvider {
       .filter(Boolean) as ProviderPlayer[];
   }
 
+  private fixtureCache = new Map<number, ProviderFixture[]>();
+
   async fetchFixtures(season: number): Promise<ProviderFixture[]> {
+    const cached = this.fixtureCache.get(season);
+    if (cached) return cached;
+
     const body = await this.get("/fixtures", { league: CHAMPIONS_LEAGUE, season });
-    return (body.response ?? []).map((row: Json): ProviderFixture => {
+    const mapped = (body.response ?? []).map((row: Json): ProviderFixture => {
       const short: string = row.fixture?.status?.short ?? "NS";
       let status: ProviderFixtureStatus = "SCHEDULED";
       if (FINISHED.has(short)) status = "FT";
@@ -162,12 +167,16 @@ export class ApiFootballProvider implements FootballProvider {
         round: row.league?.round ?? "League phase",
         kickoffAt: new Date(row.fixture.date),
         homeClubExternalId: String(row.teams.home.id),
+        homeClubName: row.teams.home.name ?? "Unknown",
         awayClubExternalId: String(row.teams.away.id),
+        awayClubName: row.teams.away.name ?? "Unknown",
         homeScore: row.goals?.home ?? null,
         awayScore: row.goals?.away ?? null,
         status,
       };
     });
+    this.fixtureCache.set(season, mapped);
+    return mapped;
   }
 
   async fetchFixturePlayerStats(fixtureExternalId: string): Promise<ProviderPlayerMatchStat[]> {

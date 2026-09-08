@@ -141,7 +141,22 @@ if (ok) {
     }
 
     const fixtures = await get("/fixtures", { league: CHAMPIONS_LEAGUE, season: SEASON });
-    const finished = (fixtures.response ?? []).filter((f) =>
+
+    // Sample the competition proper, not a July qualifier: the provider keeps
+    // no player statistics for qualifying rounds, so sampling one of those
+    // reports "no data" and proves nothing about the fields we actually read.
+    const rows = fixtures.response ?? [];
+    const matchdayStart = Math.min(
+      ...rows
+        .filter((f) => /league (stage|phase)|group stage/i.test(f.league?.round ?? ""))
+        .map((f) => new Date(f.fixture.date).getTime())
+    );
+    const inCompetition = Number.isFinite(matchdayStart)
+      ? rows.filter((f) => new Date(f.fixture.date).getTime() >= matchdayStart)
+      : rows;
+    line(`  fixtures in the competition proper: ${inCompetition.length} of ${rows.length}`);
+
+    const finished = inCompetition.filter((f) =>
       ["FT", "AET", "PEN"].includes(f.fixture?.status?.short)
     );
     ok = checkFields("fixture", fixtures.response?.[0], [
@@ -151,8 +166,14 @@ if (ok) {
     ]) && ok;
 
     if (finished.length) {
-      const stats = await get("/fixtures/players", { fixture: finished[0].fixture.id });
+      const sample = finished[0];
+      line(`  sampling player stats from: ${sample.league?.round} — ${sample.teams?.home?.name} v ${sample.teams?.away?.name}`);
+      const stats = await get("/fixtures/players", { fixture: sample.fixture.id });
       const row = stats.response?.[0]?.players?.[0];
+      if (row) {
+        const s = row.statistics?.[0] ?? {};
+        line(`    sample line: ${row.player?.name} — ${s.games?.minutes}min, ${s.goals?.total} goals, ${s.goals?.assists} assists, conceded ${s.goals?.conceded}`);
+      }
       ok = checkFields("player match stats", row, [
         ["player.id", true], ["statistics.0.games.minutes", true],
         ["statistics.0.goals.total", true], ["statistics.0.goals.assists", true],

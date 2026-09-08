@@ -25,7 +25,9 @@ export interface ProviderFixture {
   round: string;
   kickoffAt: Date;
   homeClubExternalId: string;
+  homeClubName: string;
   awayClubExternalId: string;
+  awayClubName: string;
   homeScore: number | null;
   awayScore: number | null;
   status: ProviderFixtureStatus;

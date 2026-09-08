@@ -37,8 +37,29 @@ function initialsFor(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
+/** Rounds that number the main competition's matchdays, whatever it is called. */
+const MATCHDAY_ROUND = /league (stage|phase)|group stage/i;
+
 /**
- * Rounds arrive as free text: matchdays as "League Phase - 3", knockouts as
+ * The provider's fixture list starts months before the competition proper:
+ * three qualifying rounds and a qualifying play-off, involving clubs that never
+ * reach the group or league stage. Those matches carry no player statistics and
+ * their clubs have no business in the auction pool.
+ *
+ * Filtering is by date, not by name. Names would need a blocklist, and a
+ * blocklist gets this wrong: "Play-offs" is a qualifying round in August, while
+ * "Knockout Round Play-offs" in February is part of the competition proper.
+ * Everything from the first matchday onwards is in; everything before is out.
+ */
+export function mainCompetitionFixtures<T extends { round: string; kickoffAt: Date }>(fixtures: T[]): T[] {
+  const matchdayKickoffs = fixtures.filter((f) => MATCHDAY_ROUND.test(f.round)).map((f) => f.kickoffAt.getTime());
+  if (matchdayKickoffs.length === 0) return fixtures; // no matchday rounds to anchor on: keep everything
+  const start = Math.min(...matchdayKickoffs);
+  return fixtures.filter((f) => f.kickoffAt.getTime() >= start);
+}
+
+/**
+ * Rounds arrive as free text: matchdays as "League Stage - 3", knockouts as
  * "Round of 16", "Quarter-finals", "Final".
  *
  * Only a number after a dash is a matchday number. Matching any trailing digits
@@ -80,10 +101,27 @@ export interface SyncSummary {
  */
 export async function syncCatalog(provider: FootballProvider, season: number): Promise<SyncSummary> {
   const notes: string[] = [];
-  const clubs = await provider.fetchClubs(season);
-  if (clubs.length === 0) {
-    throw new Error(`The provider returned no clubs for season ${season}. Run "sync doctor" to see what this key can reach.`);
+
+  // Only clubs that reach the competition proper. Pulling every club the
+  // provider associates with the season would add the qualifying-round teams —
+  // for 2024/25 that is 81 clubs rather than 36, so more than twice the squad
+  // requests, spent on players nobody can field.
+  const fixtures = mainCompetitionFixtures(await provider.fetchFixtures(season));
+  const participants = new Map<string, string>();
+  for (const f of fixtures) {
+    participants.set(f.homeClubExternalId, f.homeClubName);
+    participants.set(f.awayClubExternalId, f.awayClubName);
   }
+  if (participants.size === 0) {
+    throw new Error(`The provider returned no fixtures for season ${season}. Run "sync doctor" to see what this key can reach.`);
+  }
+
+  const all = await provider.fetchClubs(season);
+  const byExternal = new Map(all.map((c) => [c.externalId, c]));
+  const clubs = [...participants].map(
+    ([externalId, name]) => byExternal.get(externalId) ?? { externalId, name, shortCode: name.slice(0, 3).toUpperCase() }
+  );
+  notes.push(`${clubs.length} clubs in the competition proper (provider listed ${all.length} for the season)`);
 
   const clubIdByExternal = new Map<string, string>();
   for (const c of clubs) {
@@ -129,7 +167,11 @@ export async function syncCatalog(provider: FootballProvider, season: number): P
 /** Pulls the fixture list and current scores. One request; safe to run often. */
 export async function syncFixtures(provider: FootballProvider, season: number): Promise<SyncSummary> {
   const notes: string[] = [];
-  const fixtures = await provider.fetchFixtures(season);
+  const all = await provider.fetchFixtures(season);
+  const fixtures = mainCompetitionFixtures(all);
+  if (all.length !== fixtures.length) {
+    notes.push(`ignored ${all.length - fixtures.length} qualifying-round fixtures`);
+  }
 
   const byRound = new Map<string, Date>();
   for (const f of fixtures) {
