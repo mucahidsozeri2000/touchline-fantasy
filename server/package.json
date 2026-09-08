@@ -11,7 +11,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
     "seed": "tsx prisma/seed.ts",
-    "sync": "tsx src/cli/sync.ts"
+    "sync": "tsx src/cli/sync.ts",
+    "sync:prod": "node dist/cli/sync.js"
   },
   "dependencies": {
     "@prisma/client": "^5.20.0",

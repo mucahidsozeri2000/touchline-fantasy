@@ -189,10 +189,12 @@ export class ApiFootballProvider implements FootballProvider {
         if (!s) continue;
         out.push({
           playerExternalId: String(entry.player.id),
+          teamExternalId: String(team.team?.id ?? ""),
+          // Every count comes back as null rather than 0 when nothing happened,
+          // so `?? 0` is load-bearing here, not defensive decoration.
           minutes: s.games?.minutes ?? 0,
           goals: s.goals?.total ?? 0,
           assists: s.goals?.assists ?? 0,
-          goalsConceded: s.goals?.conceded ?? 0,
           yellowCards: s.cards?.yellow ?? 0,
           redCards: s.cards?.red ?? 0,
           penaltiesSaved: s.penalty?.saved ?? 0,

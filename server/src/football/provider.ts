@@ -36,10 +36,11 @@ export interface ProviderFixture {
 /** One player's line in one match, already normalised. */
 export interface ProviderPlayerMatchStat {
   playerExternalId: string;
+  /** Which side they played for, so a clean sheet can be read off the score. */
+  teamExternalId: string;
   minutes: number;
   goals: number;
   assists: number;
-  goalsConceded: number;
   yellowCards: number;
   redCards: number;
   penaltiesSaved: number;

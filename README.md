@@ -80,6 +80,16 @@ npm run sync fixtures   # fixtures and scores              (1 request)
 npm run sync results    # score finished games   (1 per unscored fixture)
 ```
 
+On a deployed container use **`npm run sync:prod`** instead — the production
+image is built without dev dependencies, so it carries the compiled CLI but
+neither `tsx` nor `src/`.
+
+Only the competition proper is imported. The provider's season begins in July
+with three qualifying rounds and a qualifying play-off — for 2024/25 that is 81
+clubs against the 36 that reach the league stage, and those matches carry no
+player statistics. Fixtures are taken from the first matchday onwards, and the
+club catalog is built from whoever appears in them.
+
 Request cost matters: the free plan allows 100 a day. `catalog` is the
 expensive one and is meant to be run once a season. `results` is safe to re-run
 — a fixture is scored once, and no request is spent on one already done.

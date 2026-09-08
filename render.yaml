@@ -3,12 +3,16 @@
 # provisions Postgres, builds server/Dockerfile, and injects DATABASE_URL and a
 # generated JWT_SECRET. The container runs `prisma migrate deploy` on start.
 #
-# After the first deploy, from the service's Shell:
-#   npm run sync doctor      # confirm the football key can reach the season
-#   npm run sync catalog     # real clubs and squads (~37 provider requests)
-#   npm run sync fixtures    # the real calendar
+# After the first deploy, from the service's Shell. Note `sync:prod`, not
+# `sync`: this image is built without dev dependencies, so it has the compiled
+# CLI but no tsx and no src/.
+#   npm run sync:prod doctor     # confirm the key reaches the season (2 requests)
+#   npm run sync:prod catalog    # real clubs and squads   (~37 requests)
+#   npm run sync:prod fixtures   # the real calendar        (1 request)
+#   npm run sync:prod results    # score finished matches   (1 per fixture)
 #
-# Or, to play with the built-in demo league instead of real data:
+# Or, to play with the built-in demo league instead of real data (this one does
+# need to fetch tsx, so it only works where the shell has network):
 #   npx tsx prisma/seed.ts
 #
 # Then set CORS_ORIGINS to the origin(s) your app is served from, and build the

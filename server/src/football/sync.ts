@@ -216,8 +216,15 @@ export async function syncFixtures(provider: FootballProvider, season: number): 
   return { clubs: 0, players: 0, fixtures: written, fixturesScored: 0, eventsWritten: 0, notes };
 }
 
-/** Turns one player's match line into the scoring events the app understands. */
-function eventsFor(stat: ProviderPlayerMatchStat, position: Position) {
+/**
+ * Turns one player's match line into the scoring events the app understands.
+ *
+ * `goalsConcededByTheirTeam` comes from the fixture score, not from the
+ * player's own stat line. The provider only fills goals.conceded for
+ * goalkeepers; for everyone else it is null, which would read as zero and hand
+ * a clean sheet to every defender who played an hour of a 3-0 defeat.
+ */
+function eventsFor(stat: ProviderPlayerMatchStat, position: Position, goalsConcededByTheirTeam: number | null) {
   const events: Array<{ type: EventType; count: number }> = [
     { type: "GOAL", count: stat.goals },
     { type: "ASSIST", count: stat.assists },
@@ -228,7 +235,7 @@ function eventsFor(stat: ProviderPlayerMatchStat, position: Position) {
     { type: "OWN_GOAL", count: stat.ownGoals },
   ];
 
-  if (stat.minutes >= CLEAN_SHEET_MINUTES && stat.goalsConceded === 0) {
+  if (stat.minutes >= CLEAN_SHEET_MINUTES && goalsConcededByTheirTeam === 0) {
     events.push({ type: "CLEAN_SHEET", count: 1 });
   }
 
@@ -259,6 +266,7 @@ export async function syncResults(
     where: { status: "FT", statsIngestedAt: null, externalId: { not: null } },
     orderBy: { kickoffAt: "asc" },
     take: opts.limit,
+    include: { homeClub: { select: { externalId: true } }, awayClub: { select: { externalId: true } } },
   });
 
   const players = await prisma.player.findMany({
@@ -277,11 +285,23 @@ export async function syncResults(
       continue;
     }
 
+    // What each side conceded, straight from the final score.
+    const concededBy = new Map<string, number>();
+    if (fixture.homeClub.externalId != null && fixture.awayScore != null) {
+      concededBy.set(fixture.homeClub.externalId, fixture.awayScore);
+    }
+    if (fixture.awayClub.externalId != null && fixture.homeScore != null) {
+      concededBy.set(fixture.awayClub.externalId, fixture.homeScore);
+    }
+
     const rows: Prisma.MatchEventCreateManyInput[] = [];
     for (const stat of stats) {
       const player = playerByExternal.get(stat.playerExternalId);
       if (!player) continue; // not in our catalog — nobody can own them, so nothing to score
-      for (const ev of eventsFor(stat, player.position)) {
+      // null (rather than 0) when the score is unknown or the team could not be
+      // matched, which withholds the clean sheet instead of inventing one.
+      const conceded = concededBy.has(stat.teamExternalId) ? concededBy.get(stat.teamExternalId)! : null;
+      for (const ev of eventsFor(stat, player.position, conceded)) {
         rows.push({
           fixtureId: fixture.id,
           playerId: player.id,
