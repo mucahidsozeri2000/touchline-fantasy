@@ -1,6 +1,7 @@
 import { prisma } from "../lib/prisma";
 import { windowPhase } from "../lib/window";
 import { HttpError } from "../lib/wrap";
+import { SQUAD_RULES } from "../lib/scoring";
 
 function randomInviteCode() {
   const words = ["TRAP", "AWAY", "GOAL", "SPUR", "KICK", "SAVE", "RUSH", "EDGE"];
@@ -19,26 +20,68 @@ export async function createLeague(commissionerId: string, input: {
   if (input.managerCap < 4 || input.managerCap > 20) {
     throw new HttpError(400, "managerCap must be between 4 and 20");
   }
-  const league = await prisma.league.create({
-    data: {
-      name: input.name,
-      inviteCode: randomInviteCode(),
-      managerCap: input.managerCap,
-      budgetPerManager: input.budgetPerManager,
-      auctionOpensAt: new Date(input.auctionOpensAt),
-      auctionClosesAt: new Date(input.auctionClosesAt),
-      commissionerId,
+
+  // Ownership is per league, so a new league needs its own copy of the market:
+  // one unowned row per player, and a lot to bid for them. Without this the
+  // league opens with nothing to draft and nothing to bid on.
+  const players = await prisma.player.findMany({ select: { id: true, basePrice: true } });
+
+  // Every player can be owned by only one manager, so the catalog has to be
+  // big enough to fill every squad. Refusing here beats letting people join a
+  // league that can never be completed.
+  const needed = input.managerCap * SQUAD_RULES.squadSize;
+  if (players.length < needed) {
+    throw new HttpError(
+      409,
+      players.length === 0
+        ? "There are no players in the catalog yet. Import the competition first (npm run sync catalog)."
+        : `Only ${players.length} players are in the catalog, but ${input.managerCap} managers need ${needed}. ` +
+            `Import the full competition (npm run sync catalog) or lower the manager cap.`
+    );
+  }
+
+  const auctionClosesAt = new Date(input.auctionClosesAt);
+
+  return prisma.$transaction(
+    async (tx) => {
+      const league = await tx.league.create({
+        data: {
+          name: input.name,
+          inviteCode: randomInviteCode(),
+          managerCap: input.managerCap,
+          budgetPerManager: input.budgetPerManager,
+          auctionOpensAt: new Date(input.auctionOpensAt),
+          auctionClosesAt,
+          commissionerId,
+        },
+      });
+      await tx.leagueMembership.create({
+        data: {
+          leagueId: league.id,
+          managerId: commissionerId,
+          budgetRemaining: input.budgetPerManager,
+          isCommissioner: true,
+        },
+      });
+
+      await tx.playerOwnership.createMany({
+        data: players.map((p) => ({ leagueId: league.id, playerId: p.id, currentPrice: p.basePrice })),
+      });
+      await tx.auctionLot.createMany({
+        data: players.map((p) => ({
+          leagueId: league.id,
+          playerId: p.id,
+          listPrice: p.basePrice,
+          closesAt: auctionClosesAt,
+        })),
+      });
+
+      return league;
     },
-  });
-  await prisma.leagueMembership.create({
-    data: {
-      leagueId: league.id,
-      managerId: commissionerId,
-      budgetRemaining: input.budgetPerManager,
-      isCommissioner: true,
-    },
-  });
-  return league;
+    // Two createMany calls over the whole catalog; the default 5s is tight for
+    // a competition-sized squad list on a small database.
+    { timeout: 30_000 }
+  );
 }
 
 export async function joinLeagueByCode(managerId: string, inviteCode: string) {
