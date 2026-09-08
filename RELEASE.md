@@ -72,13 +72,18 @@ Same thing, needing [Node.js](https://nodejs.org) installed:
 ```bash
 cd mobile
 npm install
-npx eas login
-npx eas init                 # creates the project and writes the id for you
-npx eas build --platform android --profile demo
+npx eas-cli@latest login
+npx eas-cli@latest build --platform android --profile demo
 ```
 
-`eas init` does step 3–4 above automatically. EAS generates and stores the
-signing keystore on first build.
+The npm package is `eas-cli`; it's the one that provides the `eas` command.
+`npx eas` fails with "could not determine executable to run", because a
+different, unrelated package happens to own that name.
+
+No `eas init` needed — `app.json` already carries the owner and project id, so
+the build attaches to the right project. EAS generates and stores the Android
+signing keystore on the first build, and reuses it afterwards. Steps 5–7 of the
+GitHub route (repo connection) are not involved at all here.
 
 ### Then the real one
 
@@ -156,7 +161,7 @@ Then complete, in the Console:
 
 ### Upload and submit
 
-Upload the `.aab` in the Console, or `npx eas submit --platform android --latest`.
+Upload the `.aab` in the Console, or `npx eas-cli@latest submit --platform android --latest`.
 
 ### The delay nobody expects
 
