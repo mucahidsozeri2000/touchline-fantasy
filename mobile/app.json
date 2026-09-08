@@ -2,6 +2,7 @@
   "expo": {
     "name": "Touchline Fantasy",
     "slug": "touchline-fantasy",
+    "owner": "mucahidsozeri2000s-team",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -11,7 +12,9 @@
     "primaryColor": "#ec3013",
     "extra": {
       "apiBaseUrl": "http://localhost:4000/api",
-      "eas": {}
+      "eas": {
+        "projectId": "d1573de7-8c41-476a-913d-98fe0eb3925a"
+      }
     },
     "splash": {
       "image": "./assets/splash-icon.png",
