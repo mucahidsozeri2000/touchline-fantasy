@@ -36,9 +36,9 @@ The code is already on GitHub, so Expo can build it directly.
    the Expo GitHub app for the account that owns this repo.
 3. **Projects → Create a project**. Use the slug `touchline-fantasy`. Expo shows
    you a **Project ID** (a uuid) and your **account name** — copy both.
-4. Tell the repo about that project. On GitHub, open `mobile/app.json` and click
-   the pencil icon. Add an `owner` line next to `"slug"`, and put the uuid inside
-   the empty `extra.eas` object that's already there:
+4. Tell the repo about that project — **already done here**: `mobile/app.json`
+   carries `owner` and `extra.eas.projectId`. If you ever rebuild against a
+   different Expo project, those are the two values to change:
 
    ```json
    "slug": "touchline-fantasy",
@@ -48,11 +48,11 @@ The code is already on GitHub, so Expo can build it directly.
    ```json
    "extra": {
      "apiBaseUrl": "http://localhost:4000/api",
-     "eas": { "projectId": "paste-the-uuid-here" }
+     "eas": { "projectId": "the-uuid-from-step-3" }
    },
    ```
 
-   Commit straight to `main`. (It's plain JSON — no comments, watch the commas.)
+   (Plain JSON — no comments, watch the commas.)
 5. Back on expo.dev: **your project → Project settings → GitHub → Connect** this
    repository. Set **Base directory** to `mobile` — the app lives in a
    subdirectory, and the build fails without this.
