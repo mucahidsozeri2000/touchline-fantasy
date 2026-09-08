@@ -4,6 +4,15 @@
     "appVersionSource": "local"
   },
   "build": {
+    "demo": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_DEMO_MODE": "1"
+      }
+    },
     "development": {
       "developmentClient": true,
       "distribution": "internal",
@@ -18,8 +27,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_ALLOW_CLEARTEXT": "1",
-        "EXPO_PUBLIC_API_BASE_URL": "http://REPLACE-WITH-YOUR-LAN-IP:4000/api"
+        "EXPO_PUBLIC_API_BASE_URL": "https://REPLACE-WITH-YOUR-API-HOST/api"
       }
     },
     "production": {

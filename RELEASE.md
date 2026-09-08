@@ -1,125 +1,134 @@
-# Shipping Touchline Fantasy to a phone and to Google Play
+# Getting Touchline Fantasy onto a phone, and onto Google Play
 
-Everything in the repo is configured for this already: Android package id,
-version code, icons, splash, permissions, and EAS build profiles. What's left
-needs your accounts, so it can't be done from a sandbox.
+The repo is already configured for this: Android package id, version code, icons,
+splash, permissions, and the EAS build profiles. What's left needs your accounts,
+so it can't be done from a sandbox.
 
 ---
 
-## 0. The one blocker: the backend must be public first
+## 1. Put an APK on your phone
 
-A phone cannot reach `localhost` — on a device that address means the phone
-itself. Until the API is deployed somewhere with a real hostname, an installed
-build has nothing to talk to and every screen will fail to load. (The app now
-says exactly this instead of showing a bare network error.)
+The normal way to get a React Native app onto a phone is to build an APK and
+install it. Expo builds it on their servers, so **you don't need Android Studio,
+the Android SDK, or a signing keystore** — and if you build from GitHub, you
+don't need Node or the terminal either.
 
-Deploy first — `render.yaml` in this repo is a one-click blueprint; see
-[README.md](./README.md#deploying) — then note the URL, e.g.
-`https://touchline-api.onrender.com`. Everything below assumes you have it.
+There are two APKs you can build, and they differ only in whether they talk to a
+server:
 
-Set it in `mobile/eas.json`, replacing `REPLACE-WITH-YOUR-API-HOST` in both the
-`preview` and `production` profiles:
+| | `demo` profile | `preview` profile |
+| --- | --- | --- |
+| Needs a backend | **No** | Yes, deployed and public |
+| Data | Built-in demo league, in memory | Real, saved in Postgres |
+| Survives app restart | No — resets | Yes |
+| Good for | Seeing and feeling the whole app now | Real testing before release |
+
+Start with `demo`. It's a genuine standalone app — all 19 screens, bidding,
+chat, captaincy, filters — that needs nothing but the phone. Then do `preview`
+once the API is deployed.
+
+### The no-terminal route: build from GitHub
+
+The code is already on GitHub, so Expo can build it directly.
+
+1. Create a free account at **[expo.dev](https://expo.dev)**.
+2. **Settings → Connections → GitHub → Connect**, then **Install and Authorize**
+   the Expo GitHub app for the account that owns this repo.
+3. **Projects → Create a project**. Use the slug `touchline-fantasy`. Expo shows
+   you a **Project ID** (a uuid) and your **account name** — copy both.
+4. Tell the repo about that project. On GitHub, open `mobile/app.json` and click
+   the pencil icon. Add an `owner` line next to `"slug"`, and put the uuid inside
+   the empty `extra.eas` object that's already there:
+
+   ```json
+   "slug": "touchline-fantasy",
+   "owner": "your-expo-account-name",
+   ```
+
+   ```json
+   "extra": {
+     "apiBaseUrl": "http://localhost:4000/api",
+     "eas": { "projectId": "paste-the-uuid-here" }
+   },
+   ```
+
+   Commit straight to `main`. (It's plain JSON — no comments, watch the commas.)
+5. Back on expo.dev: **your project → Project settings → GitHub → Connect** this
+   repository. Set **Base directory** to `mobile` — the app lives in a
+   subdirectory, and the build fails without this.
+6. **Builds → Build from GitHub** (or **Create a build**): platform **Android**,
+   profile **`demo`**. It takes roughly 10–20 minutes.
+7. When it's done the build page shows a QR code and a download link. Open it
+   **on the phone**, download the `.apk`, tap it. Android will ask you to allow
+   installs from your browser — allow it, then Install.
+
+That's it. The app is installed like any other app; there's no dev server, no
+Expo Go, no Wi-Fi pairing, nothing running on your computer.
+
+### If you'd rather use a terminal
+
+Same thing, needing [Node.js](https://nodejs.org) installed:
+
+```bash
+cd mobile
+npm install
+npx eas login
+npx eas init                 # creates the project and writes the id for you
+npx eas build --platform android --profile demo
+```
+
+`eas init` does step 3–4 above automatically. EAS generates and stores the
+signing keystore on first build.
+
+### Then the real one
+
+Once the API is deployed (section 2), edit `mobile/eas.json` and replace
+`REPLACE-WITH-YOUR-API-HOST` in the `preview` and `production` profiles:
 
 ```json
 "env": { "EXPO_PUBLIC_API_BASE_URL": "https://touchline-api.onrender.com/api" }
 ```
 
-Also set `CORS_ORIGINS` on the API to the origins you serve the app from.
+then build the `preview` profile the same way. Set `CORS_ORIGINS` on the API too.
+
+> A phone cannot reach `localhost` — on a device that address means the phone
+> itself, so a build pointed there can only fail. The app now says exactly that
+> rather than showing a bare network error.
 
 ---
 
-## 1. Trying it on a phone or emulator
+## 2. Deploy the backend
 
-All three routes below run the API on your own machine, so you don't need a
-deployed backend just to try the app. Start it first, in its own terminal:
+Needed for everything except the `demo` APK.
 
-```bash
-npm run server:dev        # http://localhost:4000
-```
+`render.yaml` is a ready blueprint: on [Render](https://render.com) pick
+**New → Blueprint**, point it at this repo, and it provisions Postgres, builds
+the API and generates a `JWT_SECRET`. Seed once from the service shell with
+`npx tsx prisma/seed.ts`, then set `CORS_ORIGINS`. Railway, Fly.io or any VPS
+running `docker compose` works the same way — see
+[README.md](./README.md#deploying).
 
-> **Why the addresses differ.** `localhost` inside an emulator or a phone means
-> *that device*, not your computer. The Android emulator reaches your machine at
-> the special address `10.0.2.2`; a real phone reaches it at your machine's LAN
-> IP. The iOS simulator is the exception — it shares `localhost` with the Mac.
-> Find your LAN IP with `ipconfig` (Windows) or `ipconfig getifaddr en0` /
-> `ip addr` (macOS/Linux).
-
-### A. Real phone, no build — Expo Go (fastest, ~5 minutes)
-
-Phone and computer on the **same Wi-Fi**:
-
-```bash
-cd mobile
-npm install
-EXPO_PUBLIC_API_BASE_URL=http://192.168.1.42:4000/api npx expo start
-```
-
-Install **Expo Go** from the Play Store / App Store and scan the QR code in the
-terminal. Swap in your own LAN IP. If the phone can't see the QR host, add
-`--tunnel`.
-
-### B. Android emulator
-
-Needs [Android Studio](https://developer.android.com/studio) (it ships the SDK
-and the emulator). Create a device in **Device Manager**, start it, then:
-
-```bash
-cd mobile
-EXPO_PUBLIC_API_BASE_URL=http://10.0.2.2:4000/api npx expo start
-```
-
-Press **`a`** in the terminal to open it in the emulator. (Expo Go is installed
-into the emulator automatically on first run.) Genymotion uses `10.0.3.2`
-instead of `10.0.2.2`.
-
-For the iOS simulator on a Mac, `localhost` works as-is: `npx expo start`, then
-press **`i`**.
-
-### C. A real installable APK — EAS Build (~15 min, no Android SDK needed)
-
-This builds on Expo's servers, so it needs a free Expo account but nothing
-installed locally:
-
-```bash
-cd mobile
-npx eas login                                   # free account at expo.dev
-# point the build at your machine's LAN IP first — see eas.json, preview profile
-npx eas build --platform android --profile preview
-```
-
-EAS generates and keeps the signing keystore for you. When it finishes you get
-a download link — open it on the phone and install the APK (Android will ask
-you to allow installs from that source). This is a standalone app: no Expo Go,
-no dev server running.
-
-The `preview` and `development` profiles set `EXPO_PUBLIC_ALLOW_CLEARTEXT=1`,
-which is what lets an installed build talk to a plain `http://` LAN address —
-Android 9+ blocks that by default. The `production` profile deliberately leaves
-it off, so a released build must use HTTPS.
+Note the URL, e.g. `https://touchline-api.onrender.com`.
 
 ---
 
-## 2. Publishing to Google Play
+## 3. Publishing to Google Play
 
-### What you need to have
+### What you need
 
 - **Google Play Developer account** — one-time $25, at
   [play.google.com/console](https://play.google.com/console).
-- **A deployed backend** (section 0). An app that can't reach its API will be
+- **A deployed backend** (section 2). An app that can't reach its API is
   rejected in review as a broken experience.
 - **Privacy policy at a public URL** — [`store/PRIVACY.md`](./store/PRIVACY.md)
-  is written and ready; fill in your contact email, then host it (GitHub Pages
-  on this repo is enough) and keep the URL.
+  is written and ready; fill in your contact email, host it (GitHub Pages on
+  this repo is enough) and keep the URL.
 
 ### Build the release bundle
 
-Play requires an **AAB**, not an APK. The `production` profile already produces
-one and auto-increments `versionCode`:
-
-```bash
-cd mobile
-npx eas build --platform android --profile production
-```
+Play requires an **AAB**, not an APK. The `production` profile produces one and
+auto-increments `versionCode` — build it exactly like the demo APK above, but
+choose the **`production`** profile.
 
 ### Create the listing
 
@@ -138,40 +147,66 @@ Then complete, in the Console:
 - **Data safety** — declare: name/user id and in-app messages collected,
   transmitted over HTTPS, not shared with third parties, deletion on request.
   This must match `store/PRIVACY.md`.
-- **Content rating** questionnaire — declare that the app has user-to-user
-  communication (league chat).
-- **Target audience** — 13+, so the chat declaration is consistent.
+- **Content rating** questionnaire — declare user-to-user communication (league
+  chat).
+- **Target audience** — 13+, consistent with the chat declaration.
 - **App access** — reviewers must be able to log in. Give them a team name and
   coach name to type; the app creates the account on the spot, so no test
   credentials are needed. Say that in the notes.
 
 ### Upload and submit
 
-```bash
-npx eas submit --platform android --latest
-```
-
-or upload the `.aab` by hand in the Console.
+Upload the `.aab` in the Console, or `npx eas submit --platform android --latest`.
 
 ### The delay nobody expects
 
-If your developer account is a **personal** account created after November
-2023, Google requires **closed testing with at least 12 testers who stay opted
-in for 14 continuous days** before you may apply for production access. Start
-that clock early: create a closed testing track, add 12 people, and let it run
-while you finish the listing. Organisation accounts are exempt.
-
-Review itself typically takes a few days on top.
+If your developer account is a **personal** account created after November 2023,
+Google requires **closed testing with at least 12 testers who stay opted in for
+14 continuous days** before you may apply for production access. Start that
+clock early: create a closed testing track, add 12 people, and let it run while
+you finish the listing. Organisation accounts are exempt. Review itself takes a
+few days on top.
 
 ---
 
-## 3. Before you ship — a short list
+## Appendix — running it from a dev machine
 
+Only useful if you're actively changing code. Start the API first
+(`npm run server:dev`, on `http://localhost:4000`).
+
+`localhost` inside an emulator or phone means *that device*. The Android
+emulator reaches your machine at `10.0.2.2`; a real phone reaches it at your
+machine's LAN IP (`ipconfig` on Windows, `ip addr` / `ipconfig getifaddr en0` on
+macOS/Linux). The iOS simulator shares `localhost` with the Mac.
+
+```bash
+cd mobile && npm install
+
+# Real phone on the same Wi-Fi, via the Expo Go app:
+EXPO_PUBLIC_API_BASE_URL=http://192.168.1.42:4000/api npx expo start
+
+# Android emulator (needs Android Studio), then press `a`:
+EXPO_PUBLIC_API_BASE_URL=http://10.0.2.2:4000/api npx expo start
+
+# In a browser:
+npm run web
+```
+
+The `development` and `preview` profiles set `EXPO_PUBLIC_ALLOW_CLEARTEXT=1`,
+which is what lets an installed build talk to a plain `http://` LAN address —
+Android 9+ blocks that by default. `production` deliberately leaves it off, so a
+released build must use HTTPS.
+
+---
+
+## Before you ship — a short list
+
+- [ ] Installed the `demo` APK and walked the app on a real phone
 - [ ] API deployed, reachable over HTTPS, `CORS_ORIGINS` set
-- [ ] `EXPO_PUBLIC_API_BASE_URL` set in both EAS profiles
-- [ ] Installed the `preview` APK on a real phone and played a full flow:
-      sign up → onboarding → squad → a bid → chat
+- [ ] `EXPO_PUBLIC_API_BASE_URL` set in the `preview` and `production` profiles
+- [ ] Installed the `preview` APK and played a full flow: sign up → onboarding →
+      squad → a bid → chat
 - [ ] Contact email filled into `store/PRIVACY.md`, hosted, URL noted
 - [ ] `versionCode` / `version` bumped for each new upload
-- [ ] Seed data reviewed — decide whether real users should land in the demo
-      league (`TRAP-2027`) or create their own on first run
+- [ ] Seed data reviewed — decide whether real users land in the demo league
+      (`TRAP-2027`) or create their own on first run

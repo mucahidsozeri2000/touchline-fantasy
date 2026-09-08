@@ -37,6 +37,20 @@ function match(path: string, pattern: RegExp) {
   return pattern.test(path.split("?")[0]);
 }
 
+// React Native's URL has no `searchParams`, so parse the query by hand rather
+// than reaching for it — this same code has to run in a native demo build.
+function queryParam(path: string, key: string): string | null {
+  const q = path.split("?")[1];
+  if (!q) return null;
+  for (const pair of q.split("&")) {
+    const eq = pair.indexOf("=");
+    const k = eq === -1 ? pair : pair.slice(0, eq);
+    if (decodeURIComponent(k) !== key) continue;
+    return eq === -1 ? "" : decodeURIComponent(pair.slice(eq + 1).replace(/\+/g, " "));
+  }
+  return null;
+}
+
 export async function demoRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
   await delay();
   const method = (options.method ?? "GET").toUpperCase();
@@ -92,8 +106,7 @@ export async function demoRequest<T>(path: string, options: RequestInit = {}): P
 
   // ── Transfers ───────────────────────────────────────────────────────
   if (match(path, /^\/leagues\/[^/]+\/transfers$/) && method === "GET") {
-    const url = new URL("http://x" + path);
-    const position = url.searchParams.get("position");
+    const position = queryParam(path, "position");
     const players = position ? state.transfers.players.filter((p: any) => p.position === position) : state.transfers.players;
     return { ...clone(state.transfers), players: clone(players) } as T;
   }
@@ -119,9 +132,8 @@ export async function demoRequest<T>(path: string, options: RequestInit = {}): P
 
   // ── Auction ─────────────────────────────────────────────────────────
   if (match(path, /^\/leagues\/[^/]+\/auction$/) && method === "GET") {
-    const url = new URL("http://x" + path);
-    const position = url.searchParams.get("position");
-    const search = url.searchParams.get("search")?.toLowerCase();
+    const position = queryParam(path, "position");
+    const search = queryParam(path, "search")?.toLowerCase();
     let lots = state.auction.lots;
     if (position) lots = lots.filter((l: any) => l.position === position);
     if (search) lots = lots.filter((l: any) => l.name.toLowerCase().includes(search));
