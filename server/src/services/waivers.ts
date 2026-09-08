@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma";
 import { requireMembership } from "./league";
+import { HttpError } from "../lib/wrap";
 
 export async function getWaiverPool(leagueId: string, managerId: string) {
   const claims = await prisma.waiverClaim.findMany({
@@ -37,7 +38,7 @@ export async function claimWaiver(leagueId: string, managerId: string, playerId:
     orderBy: { priority: "asc" },
   });
   const myClaim = claims.find((c) => c.managerId === managerId);
-  if (!myClaim) throw new Error("No pending waiver claim for this player");
+  if (!myClaim) throw new HttpError(404, "No pending waiver claim for this player");
 
   const winner = claims[0];
   const player = await prisma.player.findUniqueOrThrow({ where: { id: playerId } });

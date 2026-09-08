@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma";
 import { requireMembership } from "./league";
+import { HttpError } from "../lib/wrap";
 
 export async function getSquad(leagueId: string, managerId: string) {
   const membership = await requireMembership(leagueId, managerId);
@@ -37,7 +38,7 @@ export async function setCaptain(leagueId: string, managerId: string, playerId: 
   const slot = await prisma.squadSlot.findUnique({
     where: { leagueMembershipId_playerId: { leagueMembershipId: membership.id, playerId } },
   });
-  if (!slot || !slot.isStarting) throw new Error("Player is not in your starting XI");
+  if (!slot || !slot.isStarting) throw new HttpError(404, "Player is not in your starting XI");
   const alreadyCaptain = slot.isCaptain;
   await prisma.$transaction([
     prisma.squadSlot.updateMany({ where: { leagueMembershipId: membership.id }, data: { isCaptain: false } }),
@@ -60,10 +61,10 @@ export async function swapPlayers(leagueId: string, managerId: string, starterPl
       include: { player: true },
     }),
   ]);
-  if (!starter || !starter.isStarting) throw new Error("Starter not found in your XI");
-  if (!bench || bench.isStarting) throw new Error("Bench player not found");
+  if (!starter || !starter.isStarting) throw new HttpError(404, "Starter not found in your XI");
+  if (!bench || bench.isStarting) throw new HttpError(404, "Bench player not found");
   if (starter.player.position !== bench.player.position) {
-    throw new Error("Swaps must be between players in the same position");
+    throw new HttpError(400, "Swaps must be between players in the same position");
   }
   await prisma.$transaction([
     prisma.squadSlot.update({ where: { id: starter.id }, data: { isStarting: false, isCaptain: false } }),

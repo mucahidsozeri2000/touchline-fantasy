@@ -22,7 +22,8 @@ The app only stores what you enter or generate while playing:
 | Data | Why | Where it goes |
 | --- | --- | --- |
 | Team name and head coach name | Identifies you to the other managers in your league | Our backend database |
-| An account identifier derived from those names (or from Google sign-in, if used) | Signs you back in | Our backend database |
+| Your email address | Identifies your account so you can sign back in | Our backend database |
+| Your password | Proves the account is yours. Stored only as a scrypt hash with a per-account random salt, never as text, and never recoverable | Our backend database |
 | Your league activity — squad, captain, transfers, auction bids, waiver claims, predictions | It is the game | Our backend database |
 | League chat messages | Shown to the other managers in your league | Our backend database |
 | A session token | Keeps you signed in | Stored on your device only |

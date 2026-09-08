@@ -55,9 +55,10 @@ deployed API with `EXPO_PUBLIC_API_BASE_URL=https://your-api.example.com/api`.
 `TRAP-2027`) with 8 managers, real clubs and players, a 15-man squad, live auction
 lots, a waiver pool from Bayern's elimination, fixtures, chat and standings.
 
-To sign in as the seeded manager, use team **FC Northbank** / coach **Sen**
-(the seed's email is `you@touchline.dev`). A brand-new name creates a fresh
-manager instead, who can then create or join a league from the Home screen.
+To sign in as the seeded manager, use **`you@touchline.dev`** with the password
+**`touchline-demo`** (override it by setting `SEED_PASSWORD` before seeding).
+Signing up with any other email creates a fresh manager, who can then create or
+join a league from the Home screen.
 
 ## Screens
 

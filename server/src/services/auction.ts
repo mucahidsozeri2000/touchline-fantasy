@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma";
 import { requireMembership } from "./league";
+import { HttpError } from "../lib/wrap";
 
 const BID_STEP = 0.5;
 
@@ -85,12 +86,12 @@ export async function placeBid(leagueId: string, managerId: string, playerId: st
     where: { leagueId_playerId: { leagueId, playerId } },
     include: { bids: { orderBy: { amount: "desc" } } },
   });
-  if (!lot || lot.status !== "OPEN") throw new Error("This lot is not open for bidding");
+  if (!lot || lot.status !== "OPEN") throw new HttpError(409, "This lot is not open for bidding");
 
   const top = lot.bids[0];
   const floor = Math.max(lot.listPrice, (top?.amount ?? 0) + BID_STEP);
-  if (amount < floor) throw new Error(`Bid must be at least £${floor.toFixed(1)}m`);
-  if (amount > membership.budgetRemaining) throw new Error("Bid exceeds free funds");
+  if (amount < floor) throw new HttpError(400, `Bid must be at least £${floor.toFixed(1)}m`);
+  if (amount > membership.budgetRemaining) throw new HttpError(400, "Bid exceeds free funds");
 
   const bid = await prisma.bid.create({
     data: { leagueId, lotId: lot.id, playerId, managerId, amount, isBlind: league.blindRound },
@@ -114,7 +115,7 @@ export async function counterBid(leagueId: string, managerId: string, playerId: 
     where: { leagueId_playerId: { leagueId, playerId } },
     include: { bids: { orderBy: { amount: "desc" } } },
   });
-  if (!lot) throw new Error("Lot not found");
+  if (!lot) throw new HttpError(404, "Lot not found");
   const top = lot.bids[0];
   const amount = Math.max(lot.listPrice, (top?.amount ?? 0) + BID_STEP);
   return placeBid(leagueId, managerId, playerId, amount);
@@ -122,7 +123,7 @@ export async function counterBid(leagueId: string, managerId: string, playerId: 
 
 export async function setBlindRound(leagueId: string, managerId: string, enabled: boolean) {
   const membership = await requireMembership(leagueId, managerId);
-  if (!membership.isCommissioner) throw new Error("Only the commissioner can change auction mode");
+  if (!membership.isCommissioner) throw new HttpError(403, "Only the commissioner can change auction mode");
   return prisma.league.update({ where: { id: leagueId }, data: { blindRound: enabled } });
 }
 

@@ -2,6 +2,11 @@
 // clubs/players and the same reference data used in the Touchline Fantasy
 // design prototype, so the API has realistic content to serve on first run.
 import { PrismaClient, Position, AcquisitionRoute, LotStatus, EventType, FixtureStatus } from "@prisma/client";
+import { hashPassword } from "../src/lib/password";
+
+// Seeded managers share one password so the demo league can be driven end to
+// end. Override it with SEED_PASSWORD; the API never creates accounts this way.
+const SEED_PASSWORD = process.env.SEED_PASSWORD ?? "touchline-demo";
 
 const db = new PrismaClient();
 
@@ -110,12 +115,15 @@ async function main() {
 
   console.log("Seeding managers…");
   const managerByCoach: Record<string, string> = {};
+  const seedPasswordHash = await hashPassword(SEED_PASSWORD);
+
   for (const m of MANAGER_SEED) {
     const manager = await db.manager.upsert({
       where: { email: m.email ?? `${m.coachName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}@touchline.dev` },
       update: {},
       create: {
         email: m.email ?? `${m.coachName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}@touchline.dev`,
+        passwordHash: seedPasswordHash,
         teamName: m.teamName,
         coachName: m.coachName,
         avatarInitial: m.coachName[0].toUpperCase(),

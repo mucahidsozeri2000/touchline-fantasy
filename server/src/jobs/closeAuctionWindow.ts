@@ -1,6 +1,7 @@
 import { prisma } from "../lib/prisma";
 import { closeLot } from "../services/auction";
 import { Position } from "@prisma/client";
+import { HttpError } from "../lib/wrap";
 
 const SQUAD_POOL: Record<Position, number> = { GK: 2, DEF: 5, MID: 5, FWD: 3 };
 const STARTING: Record<Position, number> = { GK: 1, DEF: 4, MID: 3, FWD: 3 };
@@ -13,7 +14,7 @@ const STARTING: Record<Position, number> = { GK: 1, DEF: 4, MID: 3, FWD: 3 };
  */
 export async function closeAuctionWindow(leagueId: string) {
   const league = await prisma.league.findUniqueOrThrow({ where: { id: leagueId } });
-  if (new Date() < league.auctionClosesAt) throw new Error("Auction window has not closed yet");
+  if (new Date() < league.auctionClosesAt) throw new HttpError(409, "Auction window has not closed yet");
 
   const openLots = await prisma.auctionLot.findMany({ where: { leagueId, status: "OPEN" } });
   for (const lot of openLots) {

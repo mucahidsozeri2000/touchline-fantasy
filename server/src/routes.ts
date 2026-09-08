@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { AuthedRequest, requireAuth } from "./lib/auth";
 import { wrap } from "./lib/wrap";
+import { rateLimit } from "./lib/rateLimit";
 import * as auth from "./services/auth";
 import * as league from "./services/league";
 import * as squad from "./services/squad";
@@ -22,15 +23,13 @@ import { SQUAD_RULES, GOAL_POINTS, CLEAN_SHEET_POINTS, ASSIST_POINTS, YELLOW_POI
 export const router = Router();
 
 // ── Auth ─────────────────────────────────────────────────────────────────
-router.post("/auth/enter", wrap(async (req) => {
-  const { teamName, coachName, email } = req.body;
-  if (!teamName || !coachName) throw new Error("teamName and coachName are required");
-  return auth.enterLeagueAuth(teamName, coachName, email);
-}));
+const authLimit = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 });
 
-router.post("/auth/google", wrap(async () => auth.googleAuthStub()));
+router.post("/auth/register", authLimit, wrap(async (req) => auth.register(req.body)));
+router.post("/auth/login", authLimit, wrap(async (req) => auth.login(req.body)));
 
 router.get("/me", requireAuth, wrap(async (req: AuthedRequest) => auth.getMe(req.managerId!)));
+router.patch("/me", requireAuth, wrap(async (req: AuthedRequest) => auth.updateProfile(req.managerId!, req.body)));
 
 // ── Leagues ──────────────────────────────────────────────────────────────
 router.get("/leagues/mine", requireAuth, wrap(async (req: AuthedRequest) => league.myLeagues(req.managerId!)));

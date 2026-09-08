@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma";
 import { windowPhase } from "../lib/window";
+import { HttpError } from "../lib/wrap";
 
 function randomInviteCode() {
   const words = ["TRAP", "AWAY", "GOAL", "SPUR", "KICK", "SAVE", "RUSH", "EDGE"];
@@ -16,7 +17,7 @@ export async function createLeague(commissionerId: string, input: {
   auctionClosesAt: string;
 }) {
   if (input.managerCap < 4 || input.managerCap > 20) {
-    throw new Error("managerCap must be between 4 and 20");
+    throw new HttpError(400, "managerCap must be between 4 and 20");
   }
   const league = await prisma.league.create({
     data: {
@@ -42,8 +43,8 @@ export async function createLeague(commissionerId: string, input: {
 
 export async function joinLeagueByCode(managerId: string, inviteCode: string) {
   const league = await prisma.league.findUnique({ where: { inviteCode }, include: { memberships: true } });
-  if (!league) throw new Error("No league with that invite code");
-  if (league.memberships.length >= league.managerCap) throw new Error("League is full");
+  if (!league) throw new HttpError(404, "No league with that invite code");
+  if (league.memberships.length >= league.managerCap) throw new HttpError(409, "League is full");
   const existing = league.memberships.find((m) => m.managerId === managerId);
   if (existing) return league;
   await prisma.leagueMembership.create({
@@ -78,7 +79,7 @@ export async function requireMembership(leagueId: string, managerId: string) {
   const membership = await prisma.leagueMembership.findUnique({
     where: { leagueId_managerId: { leagueId, managerId } },
   });
-  if (!membership) throw new Error("Not a member of this league");
+  if (!membership) throw new HttpError(403, "Not a member of this league");
   return membership;
 }
 

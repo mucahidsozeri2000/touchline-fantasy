@@ -156,11 +156,12 @@ export function Tag({ label, variant = "neutral", style, textStyle }: { label: s
 }
 
 // ── Fields ───────────────────────────────────────────────────────────────
-export function Field({ label, children }: { label?: string; children: React.ReactNode }) {
+export function Field({ label, hint, children }: { label?: string; hint?: string; children: React.ReactNode }) {
   return (
     <View style={{ gap: 5 }}>
       {label ? <Micro style={{ color: colors.text, opacity: 0.7 }}>{label}</Micro> : null}
       {children}
+      {hint ? <Micro style={{ color: colors.textMuted }}>{hint}</Micro> : null}
     </View>
   );
 }

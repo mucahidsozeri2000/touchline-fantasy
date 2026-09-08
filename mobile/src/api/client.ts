@@ -69,9 +69,10 @@ export const api = {
   post: <T>(path: string, data?: unknown) => request<T>(path, { method: "POST", body: JSON.stringify(data ?? {}) }),
 
   // Auth
-  enter: (teamName: string, coachName: string, email?: string) =>
-    request<{ token: string; manager: any }>("/auth/enter", { method: "POST", body: JSON.stringify({ teamName, coachName, email }) }),
-  google: () => request<{ token: string; manager: any }>("/auth/google", { method: "POST" }),
+  register: (input: { email: string; password: string; teamName: string; coachName: string }) =>
+    request<{ token: string; manager: any }>("/auth/register", { method: "POST", body: JSON.stringify(input) }),
+  login: (email: string, password: string) =>
+    request<{ token: string; manager: any }>("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }),
   me: () => request<any>("/me"),
 
   // Leagues

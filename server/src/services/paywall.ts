@@ -1,6 +1,7 @@
 import { prisma } from "../lib/prisma";
 import { requireMembership } from "./league";
 import { PlanId } from "@prisma/client";
+import { HttpError } from "../lib/wrap";
 
 export const PLANS = [
   {
@@ -52,7 +53,7 @@ export async function getPaywallScreen(leagueId: string) {
 export async function purchasePlan(leagueId: string, managerId: string, plan: PlanId) {
   const membership = await requireMembership(leagueId, managerId);
   const planDef = PLANS.find((p) => p.id === plan);
-  if (!planDef) throw new Error("Unknown plan");
+  if (!planDef) throw new HttpError(404, "Unknown plan");
   await prisma.purchase.create({
     data: { leagueId, managerId, plan, amountCents: planDef.amountCents },
   });

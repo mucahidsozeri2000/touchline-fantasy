@@ -11,11 +11,12 @@ datasource db {
 
 model Manager {
   id            String   @id @default(cuid())
-  email         String?  @unique
+  email         String   @unique
+  passwordHash  String
   teamName      String
   coachName     String
   avatarInitial String
-  authProvider  String   @default("local") // local | google
+  authProvider  String   @default("local")
   createdAt     DateTime @default(now())
 
   memberships     LeagueMembership[]

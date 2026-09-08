@@ -57,13 +57,15 @@ export async function demoRequest<T>(path: string, options: RequestInit = {}): P
   const body = options.body ? JSON.parse(options.body as string) : {};
 
   // ── Auth ────────────────────────────────────────────────────────────
-  if (method === "POST" && path === "/auth/enter") {
+  // The preview has no account store, so registering just renames the demo
+  // manager and signing in always succeeds — there is nobody else to be.
+  if (method === "POST" && path === "/auth/register") {
     state.manager.teamName = body.teamName || state.manager.teamName;
     state.manager.coachName = body.coachName || state.manager.coachName;
     state.manager.avatarInitial = (state.manager.coachName?.[0] || "?").toUpperCase();
     return { token: "demo-token", manager: clone(state.manager) } as T;
   }
-  if (method === "POST" && path === "/auth/google") {
+  if (method === "POST" && path === "/auth/login") {
     return { token: "demo-token", manager: clone(state.manager) } as T;
   }
   if (method === "GET" && path === "/me") return clone(state.manager) as T;

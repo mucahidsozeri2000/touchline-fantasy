@@ -149,15 +149,18 @@ Everything for it is in [`store/`](./store):
 
 Then complete, in the Console:
 
-- **Data safety** — declare: name/user id and in-app messages collected,
-  transmitted over HTTPS, not shared with third parties, deletion on request.
-  This must match `store/PRIVACY.md`.
+- **Data safety** — declare: email address, name/user id and in-app messages
+  collected; email and password used for account management; data transmitted
+  over HTTPS, not shared with third parties, deletion on request. Passwords are
+  hashed, so declare them as collected but not shared. Must match
+  `store/PRIVACY.md`.
 - **Content rating** questionnaire — declare user-to-user communication (league
   chat).
 - **Target audience** — 13+, consistent with the chat declaration.
-- **App access** — reviewers must be able to log in. Give them a team name and
-  coach name to type; the app creates the account on the spot, so no test
-  credentials are needed. Say that in the notes.
+- **App access** — reviewers must be able to log in. Accounts need a real email
+  and password now, so give them working credentials: seed the deployed database
+  and hand over `you@touchline.dev` plus whatever `SEED_PASSWORD` you set. Note
+  that Sign Up also works with any email if they prefer a clean account.
 
 ### Upload and submit
 
