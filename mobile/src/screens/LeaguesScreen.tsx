@@ -5,7 +5,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@tanstack/react-query";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react-native";
-import { Screen, H, Body, Micro, Tag, Button, Table } from "../components/ui";
+import { Screen, H, Body, Micro, Tag, Button, Table, TAB_EDGES } from "../components/ui";
 import { colors, space } from "../theme";
 import { useApp } from "../store/AppContext";
 import { api } from "../api/client";
@@ -31,7 +31,7 @@ export default function LeaguesScreen() {
 
   if (!leagueId) {
     return (
-      <Screen>
+      <Screen edges={TAB_EDGES}>
         <View style={styles.nav}>
           <H level={4}>{t("brand")}</H>
         </View>
@@ -45,7 +45,7 @@ export default function LeaguesScreen() {
 
   if (standingsQ.isLoading) {
     return (
-      <Screen>
+      <Screen edges={TAB_EDGES}>
         <View style={styles.nav}>
           <H level={4}>{t("brand")}</H>
         </View>
@@ -72,7 +72,7 @@ export default function LeaguesScreen() {
   }));
 
   return (
-    <Screen>
+    <Screen edges={TAB_EDGES}>
       <View style={styles.nav}>
         <H level={4}>{t("brand")}</H>
         <Tag label={leagueName ?? ""} variant="outline" />

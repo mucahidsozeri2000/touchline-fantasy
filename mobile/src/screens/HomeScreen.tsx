@@ -5,7 +5,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery } from "@tanstack/react-query";
 import { Radio, Users, ArrowLeftRight, Trophy, Plus, ChevronRight, Gavel, ListOrdered, RefreshCcw, Swords, Target, MessageCircle, PieChart, BookOpen, Lock } from "lucide-react-native";
-import { Screen, H, Body, Micro, Tag, StatRow, Button, Avatar, HR, Segmented } from "../components/ui";
+import { Screen, H, Body, Micro, Tag, StatRow, Button, Avatar, HR, Segmented, TAB_EDGES } from "../components/ui";
 import { colors, space } from "../theme";
 import { useApp } from "../store/AppContext";
 import { api } from "../api/client";
@@ -26,7 +26,7 @@ export default function HomeScreen() {
 
   if (!leagueId) {
     return (
-      <Screen>
+      <Screen edges={TAB_EDGES}>
         <View style={styles.nav}>
           <H level={4}>{t("brand")}</H>
         </View>
@@ -43,7 +43,7 @@ export default function HomeScreen() {
   const isPro = paywallQ.data?.isPro;
 
   return (
-    <Screen>
+    <Screen edges={TAB_EDGES}>
       <ScrollView>
         <View style={styles.nav}>
           <H level={4}>{t("brand")}</H>

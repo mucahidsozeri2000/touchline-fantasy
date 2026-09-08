@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Home as HomeIcon, Shield, ArrowLeftRight, Trophy } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import { colors, font } from "../theme";
@@ -17,8 +18,11 @@ const LABEL_KEY: Record<string, string> = { Home: "tabHome", Squad: "tabSquad", 
 
 function CustomTabBar({ state, navigation }: any) {
   const { t } = useTranslation();
+  // Android draws edge-to-edge, so without this the gesture pill sits on top
+  // of the tab labels.
+  const insets = useSafeAreaInsets();
   return (
-    <View style={styles.bar}>
+    <View style={[styles.bar, { paddingBottom: insets.bottom }]}>
       {state.routes.map((route: any, index: number) => {
         const focused = state.index === index;
         const Icon = ICONS[route.name];

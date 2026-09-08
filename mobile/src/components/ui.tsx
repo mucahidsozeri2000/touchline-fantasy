@@ -1,14 +1,30 @@
 import React from "react";
 import {
   View, Text, Pressable, TextInput, StyleSheet, ViewStyle, TextStyle,
-  PressableProps, TextInputProps, ScrollView, SafeAreaView,
+  PressableProps, TextInputProps, ScrollView,
 } from "react-native";
+// react-native's own SafeAreaView is iOS-only — on Android it renders as a
+// plain View and applies no insets at all, so content slides under the notch.
+// Android draws edge-to-edge by default, which makes that very visible.
+import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, font, radius, space, type as ttype } from "../theme";
 
 // ── Screen shell ─────────────────────────────────────────────────────────
-export function Screen({ children, style }: { children: React.ReactNode; style?: ViewStyle }) {
+// Tab screens sit above the tab bar, which insets itself, so they pass
+// TAB_EDGES to avoid padding the bottom twice.
+export const TAB_EDGES = ["top", "left", "right"] as const;
+
+export function Screen({
+  children,
+  style,
+  edges = ["top", "left", "right", "bottom"],
+}: {
+  children: React.ReactNode;
+  style?: ViewStyle;
+  edges?: readonly ("top" | "bottom" | "left" | "right")[];
+}) {
   return (
-    <SafeAreaView style={[{ flex: 1, backgroundColor: colors.bg }, style]}>
+    <SafeAreaView edges={edges} style={[{ flex: 1, backgroundColor: colors.bg }, style]}>
       {children}
     </SafeAreaView>
   );

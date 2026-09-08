@@ -5,7 +5,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { X, ArrowLeftRight, Shirt } from "lucide-react-native";
-import { Screen, H, Body, Micro, StatRow, Button, Avatar, HR, BottomSheet, EmptyState, IconButton } from "../components/ui";
+import { Screen, H, Body, Micro, StatRow, Button, Avatar, HR, BottomSheet, EmptyState, IconButton, TAB_EDGES } from "../components/ui";
 import { colors, space, clubColor } from "../theme";
 import { useApp } from "../store/AppContext";
 import { api } from "../api/client";
@@ -89,7 +89,7 @@ export default function SquadScreen() {
 
   if (!leagueId) {
     return (
-      <Screen>
+      <Screen edges={TAB_EDGES}>
         <View style={styles.nav}>
           <H level={4}>{t("brand")}</H>
         </View>
@@ -103,7 +103,7 @@ export default function SquadScreen() {
 
   if (squadQ.isLoading) {
     return (
-      <Screen>
+      <Screen edges={TAB_EDGES}>
         <View style={styles.nav}>
           <H level={4}>{t("brand")}</H>
         </View>
@@ -121,7 +121,7 @@ export default function SquadScreen() {
   };
 
   return (
-    <Screen>
+    <Screen edges={TAB_EDGES}>
       <View style={styles.nav}>
         <H level={4}>{t("brand")}</H>
       </View>

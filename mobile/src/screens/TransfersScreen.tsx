@@ -5,7 +5,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Clock, Plus, Check, Lock } from "lucide-react-native";
-import { Screen, H, Body, Micro, Tag, StatRow, Button, Avatar, Segmented, EmptyState } from "../components/ui";
+import { Screen, H, Body, Micro, Tag, StatRow, Button, Avatar, Segmented, EmptyState, TAB_EDGES } from "../components/ui";
 import { colors, space, clubColor } from "../theme";
 import { useApp } from "../store/AppContext";
 import { api } from "../api/client";
@@ -87,7 +87,7 @@ export default function TransfersScreen() {
 
   if (!leagueId) {
     return (
-      <Screen>
+      <Screen edges={TAB_EDGES}>
         <View style={styles.nav}>
           <H level={4}>{t("brand")}</H>
         </View>
@@ -101,7 +101,7 @@ export default function TransfersScreen() {
 
   if (transfersQ.isLoading) {
     return (
-      <Screen>
+      <Screen edges={TAB_EDGES}>
         <View style={styles.nav}>
           <H level={4}>{t("brand")}</H>
         </View>
@@ -113,7 +113,7 @@ export default function TransfersScreen() {
   }
 
   return (
-    <Screen>
+    <Screen edges={TAB_EDGES}>
       <View style={styles.nav}>
         <H level={4}>{t("brand")}</H>
         <Tag label={t(PHASE_LABEL_KEY[phase])} variant="outline" />
