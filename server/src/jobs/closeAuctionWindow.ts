@@ -31,6 +31,8 @@ export async function closeAuctionWindow(leagueId: string) {
     }
     await autoAssignSquad(leagueId, membership.id);
   }
+
+  await prisma.league.update({ where: { id: leagueId }, data: { auctionClosedAt: new Date() } });
 }
 
 async function autoAssignSquad(leagueId: string, membershipId: string) {

@@ -39,6 +39,9 @@ model League {
   budgetPerManager Float    @default(120.0)
   auctionOpensAt   DateTime
   auctionClosesAt  DateTime
+  // Set by the window-close job once it has resolved this league's lots and
+  // filled any missing squads, so the scheduler runs it exactly once.
+  auctionClosedAt  DateTime?
   blindRound       Boolean  @default(true)
   antiSnipeSeconds Int      @default(60)
   isPro            Boolean  @default(false)
@@ -88,6 +91,9 @@ enum Position {
 
 model Club {
   id         String  @id @default(cuid())
+  // Id at the football data provider, so a re-sync updates rows instead of
+  // duplicating them. Null for anything created by the seed.
+  externalId String? @unique
   name       String
   shortCode  String  @unique
   colorHex   String
@@ -101,6 +107,7 @@ model Club {
 
 model Player {
   id           String   @id @default(cuid())
+  externalId   String?  @unique
   name         String
   clubId       String
   club         Club     @relation(fields: [clubId], references: [id])
@@ -248,6 +255,7 @@ enum FixtureStatus {
 
 model Fixture {
   id         String        @id @default(cuid())
+  externalId String?       @unique
   round      String
   gameweek   Int
   homeClubId String
@@ -258,6 +266,10 @@ model Fixture {
   homeScore  Int?
   awayScore  Int?
   status     FixtureStatus @default(SCHEDULED)
+  // Set once player stats for a finished fixture have been turned into
+  // MatchEvents, so a re-run does not double-score anyone and does not spend
+  // another provider request on a fixture already ingested.
+  statsIngestedAt DateTime?
 
   events MatchEvent[]
 }

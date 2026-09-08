@@ -49,6 +49,46 @@ npm run web        # or: npm run ios / npm run android
 The app talks to `http://localhost:4000/api` by default. Point a real build at a
 deployed API with `EXPO_PUBLIC_API_BASE_URL=https://your-api.example.com/api`.
 
+## Real Champions League data
+
+The catalog (clubs, squads, fixtures, results) comes from a football data
+provider behind a small interface, so swapping vendor means writing one adapter
+and changing nothing else. `api-football` ships with it.
+
+First check what your key can reach — free plans are often limited to older
+seasons, and that is the one thing worth knowing before anything else:
+
+```bash
+node scripts/check-football-key.mjs YOUR_KEY 2026
+```
+
+Then set `FOOTBALL_API_KEY` and `FOOTBALL_SEASON` in `server/.env` and pull:
+
+```bash
+cd server
+npm run sync doctor     # what this key can reach          (2 requests)
+npm run sync catalog    # clubs + squads      (1 + 1 per club, ~37 requests)
+npm run sync fixtures   # fixtures and scores              (1 request)
+npm run sync results    # score finished games   (1 per unscored fixture)
+```
+
+Request cost matters: the free plan allows 100 a day. `catalog` is the
+expensive one and is meant to be run once a season. `results` is safe to re-run
+— a fixture is scored once, and no request is spent on one already done.
+
+Player prices are **not** taken from the provider, which has no market
+valuation. Every player starts at a flat floor for their position and the
+auction discovers the real price; weekly re-rating then moves it from actual
+match output.
+
+## Background jobs
+
+`startScheduler()` runs inside the API process and is what makes the game move
+on its own: it closes auction windows when they expire (auto-filling any squad
+left incomplete), pulls fixtures every few hours, and scores finished matches.
+Intervals are environment variables — see `server/.env.example`. Run it on one
+instance only.
+
 ## Demo data
 
 `npm run server:seed` creates the league **THE OFFSIDE TRAP** (invite code

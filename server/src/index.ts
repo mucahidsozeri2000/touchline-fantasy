@@ -3,6 +3,7 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { router } from "./routes";
+import { startScheduler } from "./jobs/scheduler";
 
 const app = express();
 
@@ -26,4 +27,5 @@ app.get("/health", (_req, res) => res.json({ ok: true }));
 const port = Number(process.env.PORT ?? 4000);
 app.listen(port, () => {
   console.log(`Touchline API listening on :${port}`);
+  startScheduler();
 });

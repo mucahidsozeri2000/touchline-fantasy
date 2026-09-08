@@ -30,3 +30,7 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# Local build output from manual verification runs
+mobile/dist-live/
+mobile/dist-demo/
