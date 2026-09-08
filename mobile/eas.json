@@ -8,6 +8,7 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
+        "EXPO_PUBLIC_ALLOW_CLEARTEXT": "1",
         "EXPO_PUBLIC_API_BASE_URL": "http://10.0.2.2:4000/api"
       }
     },
@@ -17,7 +18,8 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://REPLACE-WITH-YOUR-API-HOST/api"
+        "EXPO_PUBLIC_ALLOW_CLEARTEXT": "1",
+        "EXPO_PUBLIC_API_BASE_URL": "http://REPLACE-WITH-YOUR-LAN-IP:4000/api"
       }
     },
     "production": {

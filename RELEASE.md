@@ -28,39 +28,74 @@ Also set `CORS_ORIGINS` on the API to the origins you serve the app from.
 
 ---
 
-## 1. Trying it on your phone
+## 1. Trying it on a phone or emulator
 
-### Fastest — Expo Go, no build (a few minutes)
+All three routes below run the API on your own machine, so you don't need a
+deployed backend just to try the app. Start it first, in its own terminal:
 
-On your own machine, with the phone on the **same Wi-Fi**:
+```bash
+npm run server:dev        # http://localhost:4000
+```
+
+> **Why the addresses differ.** `localhost` inside an emulator or a phone means
+> *that device*, not your computer. The Android emulator reaches your machine at
+> the special address `10.0.2.2`; a real phone reaches it at your machine's LAN
+> IP. The iOS simulator is the exception — it shares `localhost` with the Mac.
+> Find your LAN IP with `ipconfig` (Windows) or `ipconfig getifaddr en0` /
+> `ip addr` (macOS/Linux).
+
+### A. Real phone, no build — Expo Go (fastest, ~5 minutes)
+
+Phone and computer on the **same Wi-Fi**:
 
 ```bash
 cd mobile
 npm install
-# your machine's LAN address, so the phone can reach the API on your laptop
 EXPO_PUBLIC_API_BASE_URL=http://192.168.1.42:4000/api npx expo start
 ```
 
-Install **Expo Go** from the Play Store, scan the QR code in the terminal.
-Replace `192.168.1.42` with your machine's actual LAN IP (`ipconfig` on
-Windows, `ifconfig`/`ip addr` on macOS/Linux) — and make sure the API is
-running there with `npm run server:dev`.
+Install **Expo Go** from the Play Store / App Store and scan the QR code in the
+terminal. Swap in your own LAN IP. If the phone can't see the QR host, add
+`--tunnel`.
 
-### A real installable APK — EAS Build (~15 min, free tier)
+### B. Android emulator
 
-This builds on Expo's servers, so it needs a free Expo account but no Android
-SDK on your machine:
+Needs [Android Studio](https://developer.android.com/studio) (it ships the SDK
+and the emulator). Create a device in **Device Manager**, start it, then:
+
+```bash
+cd mobile
+EXPO_PUBLIC_API_BASE_URL=http://10.0.2.2:4000/api npx expo start
+```
+
+Press **`a`** in the terminal to open it in the emulator. (Expo Go is installed
+into the emulator automatically on first run.) Genymotion uses `10.0.3.2`
+instead of `10.0.2.2`.
+
+For the iOS simulator on a Mac, `localhost` works as-is: `npx expo start`, then
+press **`i`**.
+
+### C. A real installable APK — EAS Build (~15 min, no Android SDK needed)
+
+This builds on Expo's servers, so it needs a free Expo account but nothing
+installed locally:
 
 ```bash
 cd mobile
 npx eas login                                   # free account at expo.dev
+# point the build at your machine's LAN IP first — see eas.json, preview profile
 npx eas build --platform android --profile preview
 ```
 
 EAS generates and keeps the signing keystore for you. When it finishes you get
 a download link — open it on the phone and install the APK (Android will ask
-you to allow installs from that source). This build is a standalone app: no
-Expo Go, no dev server.
+you to allow installs from that source). This is a standalone app: no Expo Go,
+no dev server running.
+
+The `preview` and `development` profiles set `EXPO_PUBLIC_ALLOW_CLEARTEXT=1`,
+which is what lets an installed build talk to a plain `http://` LAN address —
+Android 9+ blocks that by default. The `production` profile deliberately leaves
+it off, so a released build must use HTTPS.
 
 ---
 
