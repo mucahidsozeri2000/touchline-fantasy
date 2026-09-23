@@ -1,0 +1,1844 @@
+<title>Karınca Vadisi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@500;600;700;800&display=swap">
+<style>
+  :root {
+    color-scheme: light;
+    --panel: rgba(36, 46, 36, 0.93);
+    --panel-solid: #243024;
+    --panel-2: rgba(255, 255, 255, 0.06);
+    --line: rgba(255, 255, 255, 0.10);
+    --ink: #f4efdf;
+    --muted: #b8c2ad;
+    --amber: #f3b33d;
+    --amber-deep: #c9851b;
+    --leaf: #8fcf6b;
+    --soil: #7b4e2e;
+    --danger: #e67b5f;
+    --water: #86c2c4;
+    --display: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+    --body: "Nunito", "Segoe UI", system-ui, sans-serif;
+  }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; overflow: hidden; background: var(--water); color: var(--ink);
+    font-family: var(--body); font-size: 14px; -webkit-user-select: none; user-select: none;
+    touch-action: none;
+  }
+  button { font-family: inherit; color: inherit; cursor: pointer; }
+  button:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+  .num { font-variant-numeric: tabular-nums; }
+  #world { position: fixed; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; }
+  #world.dragging { cursor: grabbing; }
+
+  /* ---------- HUD ---------- */
+  #hud {
+    position: fixed; left: 0; right: 0; top: 0; z-index: 5; pointer-events: none;
+    padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 0;
+    display: flex; gap: 10px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap;
+  }
+  #hud > * { pointer-events: auto; }
+  .stack { display: flex; flex-direction: column; gap: 8px; }
+  .pills { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 14px 0 8px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 18px;
+    font-weight: 800; font-size: 15px; box-shadow: 0 4px 14px rgba(20, 40, 30, 0.25);
+  }
+  button.pill { border: 1px solid var(--line); }
+  .hexi {
+    width: 22px; height: 24px; display: grid; place-items: center; flex: none;
+    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  }
+  .coin { background: radial-gradient(circle at 35% 30%, #ffe595, #e7a72a 70%, #b97a12); }
+  .antc { background: #6b4228; }
+  .boxc { background: #b98a52; }
+  .hexi svg { width: 13px; height: 13px; }
+  .pd { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; box-shadow: inset 0 -1px 0 rgba(0,0,0,.25); }
+
+  .season {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 8px 14px 10px;
+    min-width: 200px; max-width: 280px; box-shadow: 0 4px 14px rgba(20, 40, 30, 0.25);
+  }
+  .season .row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .season b { font-family: var(--display); font-size: 19px; line-height: 1; letter-spacing: .2px; }
+  .season small { color: var(--muted); font-weight: 700; }
+  .season p { margin: 4px 0 6px; color: var(--muted); font-size: 12px; line-height: 1.35; }
+  .bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,.12); overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--amber); border-radius: 3px; }
+
+  .goal {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 8px 12px;
+    max-width: 260px; font-size: 13px; box-shadow: 0 4px 14px rgba(20, 40, 30, 0.25);
+  }
+  .goal .lbl { font-size: 10.5px; letter-spacing: 1px; text-transform: uppercase; color: var(--leaf); font-weight: 800; }
+  .goal .rw { color: var(--amber); font-weight: 800; white-space: nowrap; }
+
+  .tools { display: flex; gap: 8px; }
+  .hexbtn {
+    width: 46px; height: 50px; border: none; display: grid; place-items: center;
+    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+    background: var(--panel-solid); color: var(--ink); font-weight: 800; font-size: 15px;
+    transition: transform .12s, background .12s;
+  }
+  .hexbtn:hover { background: #33452f; }
+  .hexbtn:active { transform: scale(.94); }
+  .hexbtn.on { background: var(--amber); color: #2d2311; }
+  .hexbtn svg { width: 20px; height: 20px; }
+
+  /* ---------- dock ---------- */
+  #dock {
+    position: fixed; left: 50%; transform: translateX(-50%); z-index: 5;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); display: flex; gap: 10px; align-items: flex-end;
+  }
+  .dockbtn { display: flex; flex-direction: column; align-items: center; gap: 3px; background: none; border: none; padding: 0; }
+  .dockbtn .hx {
+    width: 62px; height: 68px; display: grid; place-items: center;
+    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+    background: linear-gradient(180deg, #ffd06a, var(--amber) 55%, var(--amber-deep)); color: #3a2a10;
+    transition: transform .12s;
+  }
+  .dockbtn.alt .hx { background: linear-gradient(180deg, #a6dc83, var(--leaf) 55%, #5f9c46); color: #1f3317; }
+  .dockbtn:hover .hx { transform: translateY(-2px); }
+  .dockbtn:active .hx { transform: scale(.94); }
+  .dockbtn .hx svg { width: 28px; height: 28px; }
+  .dockbtn span {
+    font-family: var(--display); font-weight: 700; font-size: 14px; line-height: 1; color: #fff;
+    text-shadow: 0 1px 0 rgba(0,0,0,.45), 0 0 6px rgba(0,0,0,.35);
+  }
+
+  /* ---------- sheet (tile panel) ---------- */
+  #sheet {
+    position: fixed; z-index: 6; left: 50%; transform: translateX(-50%);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 104px);
+    width: min(440px, calc(100% - 32px)); max-height: min(56vh, 520px); overflow: auto;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 14px 16px 16px;
+    box-shadow: 0 12px 36px rgba(15, 30, 20, 0.4);
+  }
+  .shead { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .shead h2 { margin: 0; font-family: var(--display); font-size: 22px; line-height: 1.1; flex: 1; text-wrap: balance; }
+  .x {
+    width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line); background: var(--panel-2);
+    font-size: 18px; line-height: 1; flex: none;
+  }
+  .sub { color: var(--muted); font-size: 13px; line-height: 1.45; margin: 0 0 10px; }
+  .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .card {
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 14px; padding: 10px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .card h3 { margin: 0; font-family: var(--display); font-size: 16px; line-height: 1.15; }
+  .card .meta { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .card p { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.35; flex: 1; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 34px; padding: 0 12px;
+    border-radius: 11px; border: none; background: var(--amber); color: #2f230d; font-weight: 800; font-size: 13px;
+    box-shadow: inset 0 -2px 0 rgba(0,0,0,.18); transition: transform .1s, filter .1s;
+  }
+  .btn:hover { filter: brightness(1.06); }
+  .btn:active { transform: translateY(1px); }
+  .btn.ghost { background: rgba(255,255,255,.1); color: var(--ink); box-shadow: none; border: 1px solid var(--line); }
+  .btn.leaf { background: var(--leaf); color: #1d2f14; }
+  .btn.warn { background: var(--danger); color: #2c130c; }
+  .btn:disabled { opacity: .42; cursor: not-allowed; filter: none; transform: none; }
+  .btn .coin { width: 13px; height: 14px; }
+  .rowline { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); }
+  .rowline:first-child { border-top: none; }
+  .rowline .grow { flex: 1; min-width: 0; }
+  .rowline .t { font-weight: 800; }
+  .rowline .d { font-size: 12px; color: var(--muted); line-height: 1.35; }
+  .lvl { font-size: 11px; font-weight: 800; color: var(--amber); letter-spacing: .5px; }
+  .note { font-size: 12px; color: var(--muted); padding: 8px 10px; border-radius: 10px; background: rgba(0,0,0,.18); line-height: 1.4; }
+  .note.warn { color: #ffd2c4; background: rgba(230, 123, 95, .16); }
+  .btnrow { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* ---------- nest interior ---------- */
+  #nestView {
+    position: fixed; inset: 0; z-index: 10; display: flex; background: #3b271a;
+    opacity: 0; transform: scale(1.06); transition: opacity .28s ease, transform .35s ease; pointer-events: none;
+  }
+  #nestView.open { opacity: 1; transform: none; pointer-events: auto; }
+  #innerWrap { flex: 1; position: relative; min-width: 0; }
+  #inner { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: default; }
+  #nestPanel {
+    width: 380px; flex: none; overflow: auto; background: var(--panel-solid); border-left: 1px solid var(--line);
+    padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px calc(env(safe-area-inset-bottom, 0px) + 20px);
+  }
+  #backBtn {
+    background: var(--panel); color: var(--ink);
+    position: absolute; left: 16px; top: calc(env(safe-area-inset-top, 0px) + 14px); z-index: 2;
+  }
+  .sec { margin-top: 16px; }
+  .sec h4 {
+    margin: 0 0 6px; font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--leaf); font-weight: 800;
+  }
+  .statbars { display: grid; gap: 8px; margin: 10px 0 12px; }
+  .statbars .top { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px;
+    background: rgba(255,255,255,.08); border: 1px solid var(--line); font-size: 12px; font-weight: 700;
+  }
+  button.chip.on { background: var(--amber); color: #2f230d; border-color: transparent; }
+  button.chip:disabled { opacity: .4; cursor: not-allowed; }
+  .rowline.sel { background: rgba(243, 179, 61, .10); border-radius: 12px; padding-inline: 8px; margin-inline: -8px; border-top-color: transparent; }
+  .badge {
+    display: inline-grid; place-items: center; width: 34px; height: 38px; flex: none;
+    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+    background: var(--amber); color: #2f230d; font-family: var(--display); font-weight: 800; font-size: 16px;
+  }
+
+  /* ---------- market ---------- */
+  #market {
+    position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px;
+    background: rgba(20, 32, 24, .55);
+  }
+  .mcard {
+    width: min(560px, 100%); max-height: min(84vh, 720px); overflow: auto; background: var(--panel-solid);
+    border: 1px solid var(--line); border-radius: 22px; padding: 16px 18px 18px; box-shadow: 0 20px 50px rgba(0,0,0,.4);
+  }
+  .tabs { display: flex; gap: 6px; margin: 4px 0 12px; flex-wrap: wrap; }
+  .tab { padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.06); font-weight: 800; font-size: 13px; }
+  .tab.on { background: var(--leaf); color: #1d2f14; border-color: transparent; }
+  .price { font-weight: 800; color: var(--amber); white-space: nowrap; }
+  .trend { font-size: 11px; font-weight: 800; }
+  .trend.up { color: var(--leaf); } .trend.down { color: var(--danger); }
+
+  /* ---------- toasts ---------- */
+  #toasts {
+    position: fixed; z-index: 30; left: 50%; transform: translateX(-50%); top: calc(env(safe-area-inset-top, 0px) + 150px);
+    display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; width: calc(100% - 32px);
+  }
+  .toast {
+    background: rgba(28, 36, 28, .94); border: 1px solid var(--line); color: var(--ink); padding: 8px 14px; border-radius: 12px;
+    font-weight: 700; font-size: 13px; max-width: 420px; text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,.25);
+    animation: tin .25s ease both;
+  }
+  .toast.good { border-color: rgba(143, 207, 107, .5); }
+  .toast.bad { border-color: rgba(230, 123, 95, .6); }
+  @keyframes tin { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+  @media (max-width: 760px) {
+    #nestView { flex-direction: column; }
+    #innerWrap { flex: none; height: 44%; }
+    #nestPanel { width: auto; flex: 1; border-left: none; border-top: 1px solid var(--line); padding-top: 14px; }
+    .season { min-width: 0; max-width: 100%; }
+    .season p { display: none; }
+    .goal { max-width: 210px; }
+    #sheet { bottom: calc(env(safe-area-inset-bottom, 0px) + 96px); }
+    #toasts { top: calc(env(safe-area-inset-top, 0px) + 170px); }
+  }
+  @media (max-width: 460px) {
+    .hideS { display: none !important; }
+    .grid2 { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #nestView { transition: opacity .2s; transform: none; }
+    .toast { animation: none; }
+  }
+</style>
+
+<canvas id="world" aria-label="Karınca vadisi haritası"></canvas>
+
+<div id="hud">
+  <div class="stack">
+    <div class="pills">
+      <div class="pill num" title="Altın"><span class="hexi coin"></span><span id="hCoins">0</span></div>
+      <div class="pill num" title="Toplam karınca"><span class="hexi antc"><svg viewBox="0 0 20 20" fill="#f4dcc0"><ellipse cx="5" cy="10" rx="3.2" ry="2.6"/><ellipse cx="10" cy="10" rx="2" ry="1.6"/><ellipse cx="14.5" cy="10" rx="2.4" ry="2.2"/></svg></span><span id="hAnts">0</span></div>
+      <button class="pill num" id="hInv" title="Ambar (pazarı aç)"><span class="hexi boxc"><svg viewBox="0 0 20 20" fill="#3b2612"><rect x="3" y="7" width="14" height="10" rx="1.5"/><rect x="2" y="4" width="16" height="4" rx="1.2"/></svg></span><span id="hInvT">0/0</span></button>
+    </div>
+    <div class="goal" id="goal"></div>
+  </div>
+  <div class="season" id="season"></div>
+  <div class="tools">
+    <button class="hexbtn" id="bSpeed" title="Oyun hızı">1×</button>
+    <button class="hexbtn" id="bFar" title="Uzak görünüm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5M8 11h6"/></svg></button>
+    <button class="hexbtn hideS" id="bIn" title="Yakınlaştır">+</button>
+  </div>
+</div>
+
+<div id="dock">
+  <button class="dockbtn" id="bMarket"><span class="hx"><svg viewBox="0 0 32 32" fill="currentColor"><path d="M5 13h22l-2.2 12.2A2.5 2.5 0 0 1 22.3 27H9.7a2.5 2.5 0 0 1-2.5-1.8z"/><path d="M10 13l4-7M22 13l-4-7" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none"/></svg></span><span>Pazar</span></button>
+  <button class="dockbtn alt" id="bColonies"><span class="hx"><svg viewBox="0 0 32 32" fill="currentColor"><path d="M4 24c3-9 7-13 12-13s9 4 12 13z"/><ellipse cx="16" cy="12.5" rx="2.4" ry="1.4" fill="#1f3317" opacity=".7"/></svg></span><span>Koloniler</span></button>
+</div>
+
+<div id="sheet" hidden></div>
+
+<div id="nestView" aria-hidden="true">
+  <div id="innerWrap">
+    <canvas id="inner"></canvas>
+    <button class="btn ghost" id="backBtn">← Vadiye dön</button>
+  </div>
+  <div id="nestPanel"></div>
+</div>
+
+<div id="market" hidden><div class="mcard" id="mcard"></div></div>
+<div id="toasts"></div>
+
+<script>
+(() => {
+'use strict';
+
+/* ============================================================
+   Data
+   ============================================================ */
+const PRODUCTS = {
+  seed:   { name: 'Tohum',        color: '#d8b45e', price: 2,  edible: true },
+  nectar: { name: 'Nektar',       color: '#f49ac1', price: 3,  edible: true },
+  fruit:  { name: 'Meyve Şekeri', color: '#ef7f45', price: 4,  edible: true },
+  leaf:   { name: 'Yaprak',       color: '#6fb85a', price: 1,  edible: false },
+  dew:    { name: 'Bal Özü',      color: '#f2b134', price: 8,  edible: true },
+  fungus: { name: 'Mantar',       color: '#e9e1cf', price: 10, edible: true },
+};
+const PORDER = Object.keys(PRODUCTS);
+
+const SOURCES = {
+  clover:    { name: 'Yonca Çayırı',     cost: 25,  product: 'seed',   yield: 1, time: 2.0, desc: 'Ucuz ve güvenilir. Küçük tohumlar verir.' },
+  leafbush:  { name: 'Yaprak Çalısı',    cost: 70,  product: 'leaf',   yield: 2, time: 2.0, desc: 'Yaprak kesicilerin favorisi. Mantar bahçesini besler.' },
+  daisy:     { name: 'Papatya Bahçesi',  cost: 90,  product: 'nectar', yield: 1, time: 2.2, desc: 'İlkbaharda bol nektar veren beyaz papatyalar.' },
+  berry:     { name: 'Çilek Tarhı',      cost: 180, product: 'fruit',  yield: 2, time: 2.6, desc: 'Olgun çileklerden tatlı meyve şekeri.' },
+  lavender:  { name: 'Lavanta Tarhı',    cost: 240, product: 'nectar', yield: 2, time: 2.4, desc: 'Mis kokulu, yüksek verimli nektar.' },
+  sunflower: { name: 'Ayçiçeği Tarlası', cost: 320, product: 'seed',   yield: 3, time: 3.0, desc: 'Sonbaharda iri tohumlar döker.' },
+  apple:     { name: 'Elma Ağacı',       cost: 520, product: 'fruit',  yield: 4, time: 3.2, desc: 'Yere düşen elmalar bol şeker demek.' },
+  rose:      { name: 'Yaprak Biti Çiftliği', cost: 800, product: 'dew', yield: 2, time: 3.0, desc: 'Gül dallarındaki yaprak bitlerini sağarlar. Çok değerli bal özü.' },
+};
+const SORDER = Object.keys(SOURCES);
+
+const CASTES = {
+  worker:     { name: 'İşçi',          cost: 12, color: '#4a2c1c', sc: 1.0,  forage: true,  bonus: {},                    queenLvl: 1, desc: 'Her işe koşar.' },
+  harvester:  { name: 'Hasatçı',       cost: 35, color: '#8c3a1c', sc: 1.1,  forage: true,  bonus: { seed: 2 },           queenLvl: 2, desc: 'Tohumda 2 kat verim.' },
+  soldier:    { name: 'Asker',         cost: 50, color: '#2a1a10', sc: 1.45, forage: false, bonus: {},                    queenLvl: 2, desc: 'Toplamaz. Rakip akınlarını püskürtür.' },
+  leafcutter: { name: 'Yaprak Kesici', cost: 45, color: '#b0582c', sc: 1.1,  forage: true,  bonus: { leaf: 2.5 },         queenLvl: 3, desc: 'Yaprakta 2,5 kat verim, mantarı hızlandırır.' },
+  honeypot:   { name: 'Bal Karıncası', cost: 60, color: '#c98a2e', sc: 1.05, forage: true,  bonus: { nectar: 1.8, dew: 1.8 }, queenLvl: 3, desc: 'Nektar ve bal özünde 1,8 kat. Kışın koloninin iştahını azaltır.' },
+};
+const CORDER = Object.keys(CASTES);
+
+const CHAMBERS = {
+  queen:   { name: 'Kraliçe Odası',  base: 80,  desc: 'Kraliçe daha hızlı yumurtlar, yeni kastlar açılır.' },
+  nursery: { name: 'Kuluçka Odası',  base: 50,  desc: 'Daha çok yumurta ve larva: koloni kapasitesi artar.' },
+  storage: { name: 'Kiler',          base: 40,  desc: 'Daha çok yiyecek depolanır.' },
+  fungus:  { name: 'Mantar Bahçesi', base: 220, desc: 'Yaprağı değerli mantara çevirir. Kışın da çalışır.' },
+};
+const CH_ORDER = ['queen', 'nursery', 'storage', 'fungus'];
+
+const SEASON_LEN = 90;
+const SEASONS = [
+  { name: 'İlkbahar', grass: ['#8fd06b', '#86c865', '#9ad776'], sky: ['#bfe4f2', '#eaf6ef'], water: '#86c7c9',
+    desc: 'Çiçekler bol nektar verir, kraliçe hızlı yumurtlar.', prod: { nectar: 1.4, dew: 1.2 }, speed: 1, lay: 1.6, price: 1 },
+  { name: 'Yaz', grass: ['#a6cb5b', '#9cc355', '#afd166'], sky: ['#9fd4ef', '#e2f3f6'], water: '#7cc2cc',
+    desc: 'Karıncalar en hızlı dönemde. Meyveler olgun.', prod: { fruit: 1.3 }, speed: 1.15, lay: 1.1, price: 1 },
+  { name: 'Sonbahar', grass: ['#c9b35c', '#c0a353', '#d2bd66'], sky: ['#f1d7ad', '#f7ecd9'], water: '#8fbcb8',
+    desc: 'Tohum hasadı bereketli. Kış için kileri doldur!', prod: { seed: 1.6, fruit: 1.2, nectar: 0.6 }, speed: 1, lay: 0.8, price: 1 },
+  { name: 'Kış', grass: ['#e9f0f2', '#e0e9ed', '#f2f6f7'], sky: ['#d9e4ec', '#f1f5f7'], water: '#b3d2db',
+    desc: 'Kış uykusu: karıncalar dışarı çıkmaz, kilerden beslenir. Fiyatlar yüksek.', prod: {}, speed: 0, lay: 0, price: 1.35 },
+];
+
+const NEST_NAMES = ['Yonca Yuvası', 'Çam Tepesi', 'Kum Kalesi', 'Papatya Köşesi', 'Meşe Kökü', 'Güneş Tümseği', 'Çakıl Sarayı', 'Kozalak Evi', 'Sarmaşık Tepesi', 'Yosun Konağı'];
+const NEST_LEVEL_COST = [0, 0, 150, 450, 1100, 2400];
+
+const GOALS = [
+  { t: 'Yuvana dokun ve içini gör',       r: 15,  c: () => S.stats.opened > 0 },
+  { t: 'İlk hasadını yap',                 r: 20,  c: () => S.stats.harvests > 0 },
+  { t: 'Pazarda ürün sat',                 r: 25,  c: () => S.stats.sold > 0 },
+  { t: 'Yeni bir besin kaynağı kur',       r: 40,  c: () => S.sources.length >= 2 },
+  { t: 'Yuvayı 2. seviyeye çıkar',         r: 60,  c: () => S.nests.some(n => n.level >= 2) },
+  { t: 'Toplam 25 karıncaya ulaş',         r: 80,  c: () => totalAnts() >= 25 },
+  { t: 'Bir mantar bahçesi aç',            r: 120, c: () => S.nests.some(n => n.ch.fungus > 0) },
+  { t: 'İkinci koloniyi kur',              r: 150, c: () => S.nests.length >= 2 },
+  { t: 'Bir kışı atlat',                   r: 200, c: () => S.stats.winters > 0 },
+  { t: 'Bir çırak işe al',                 r: 250, c: () => S.helpers > 0 },
+  { t: 'Yaprak biti çiftliği kur',         r: 300, c: () => S.sources.some(s => s.kind === 'rose') },
+  { t: '100 karıncalık bir imparatorluk',  r: 800, c: () => totalAnts() >= 100 },
+];
+
+/* ============================================================
+   Hex math
+   ============================================================ */
+const SQ3 = Math.sqrt(3);
+const HS = 46, TILT = 0.58, DEPTH = 16, MAPR = 6;
+const key = (q, r) => q + ',' + r;
+const hexToWorld = (q, r) => ({ x: HS * SQ3 * (q + r / 2), y: HS * 1.5 * r * TILT });
+function hexRound(q, r) {
+  let x = q, z = r, y = -x - z;
+  let rx = Math.round(x), ry = Math.round(y), rz = Math.round(z);
+  const dx = Math.abs(rx - x), dy = Math.abs(ry - y), dz = Math.abs(rz - z);
+  if (dx > dy && dx > dz) rx = -ry - rz; else if (dy > dz) ry = -rx - rz; else rz = -rx - ry;
+  return { q: rx, r: rz };
+}
+const worldToHex = (x, y) => { const yy = y / TILT; return hexRound((SQ3 / 3 * x - yy / 3) / HS, (2 / 3 * yy) / HS); };
+const hexDist = (a, b) => { const dq = a.q - b.q, dr = a.r - b.r; return (Math.abs(dq) + Math.abs(dr) + Math.abs(dq + dr)) / 2; };
+const NB = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]];
+const CORNERS = [...Array(6)].map((_, i) => { const a = Math.PI / 180 * (60 * i - 30); return [Math.cos(a) * HS, Math.sin(a) * HS * TILT]; });
+
+function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const rnd = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const fmt = n => Math.floor(n).toLocaleString('tr-TR');
+
+function hexToRgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+function mix(a, b, t) { const A = hexToRgb(a), B = hexToRgb(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * t)).join(',')})`; }
+function mixRgb(a, b, t) { const A = hexToRgb(a), B = hexToRgb(b); return A.map((v, i) => Math.round(v + (B[i] - v) * t)); }
+
+/* ============================================================
+   State
+   ============================================================ */
+let S;
+const SAVE_KEY = 'karinca-vadisi-v1';
+
+function newGame() {
+  const tiles = {};
+  const rng = mulberry(11);
+  const reserved = new Set([key(0, 0), key(1, 0), key(2, -2)]);
+  const ponds = new Set([key(-3, 2), key(-4, 2), key(-4, 3), key(4, 1)]);
+  for (let q = -MAPR; q <= MAPR; q++) for (let r = -MAPR; r <= MAPR; r++) {
+    const d = hexDist({ q, r }, { q: 0, r: 0 });
+    if (d > MAPR) continue;
+    let type = 'grass';
+    const k = key(q, r), roll = rng();
+    if (ponds.has(k)) type = 'pond';
+    else if (!reserved.has(k) && d >= 2) { if (roll < 0.09) type = 'rock'; else if (roll < 0.19) type = 'tree'; }
+    tiles[k] = { q, r, type, locked: d > 2 && type !== 'pond', v: Math.floor(rng() * 3), obj: null };
+  }
+  tiles[key(0, 0)].obj = { kind: 'home' };
+  const s = {
+    coins: 80, inv: {}, invLvl: 1, t: 4, speed: 1,
+    nests: [], sources: [], tiles, helpers: 0, goal: 0, nextId: 1, landBought: 0,
+    stats: { harvests: 0, sold: 0, winters: 0, opened: 0 },
+    demand: {}, nextRaid: 230, nextRain: 75, rain: 0, lastSeason: 0,
+  };
+  PORDER.forEach(p => { s.inv[p] = 0; s.demand[p] = 1; });
+  S = s;
+  addNest(1, 0, true);
+  addSource(2, -2, 'clover');
+  S.nests[0].store.seed = 6;
+  return s;
+}
+
+function addNest(q, r, starter) {
+  const n = {
+    id: S.nextId++, q, r, name: NEST_NAMES[S.nests.length % NEST_NAMES.length], level: 1,
+    ch: { queen: 1, nursery: 1, storage: 1, fungus: 0 },
+    ants: { worker: starter ? 5 : 3, harvester: 0, soldier: 0, leafcutter: 0, honeypot: 0 },
+    store: {}, focus: 'worker', layT: 0, starve: 0, invested: starter ? 150 : newColonyCost(), flash: 0,
+  };
+  PORDER.forEach(p => n.store[p] = 0);
+  S.nests.push(n);
+  S.tiles[key(q, r)].obj = { kind: 'nest', id: n.id };
+  n._dirty = true;
+  return n;
+}
+function addSource(q, r, kind) {
+  const s = { id: S.nextId++, q, r, kind, ql: 1, sp: 1 };
+  S.sources.push(s);
+  S.tiles[key(q, r)].obj = { kind: 'source', id: s.id };
+  return s;
+}
+
+function serialize() { return JSON.stringify(S, (k, v) => (k[0] === '_' ? undefined : v)); }
+function save() { try { localStorage.setItem(SAVE_KEY, serialize()); } catch (e) { /* storage unavailable */ } }
+function load(raw) {
+  try {
+    const src = raw || localStorage.getItem(SAVE_KEY);
+    if (!src) return false;
+    const s = JSON.parse(src);
+    if (!s || !s.tiles || !s.nests) return false;
+    S = s;
+    PORDER.forEach(p => { S.inv[p] = S.inv[p] || 0; S.demand[p] = S.demand[p] || 1; });
+    S.nests.forEach(n => { n._dirty = true; PORDER.forEach(p => n.store[p] = n.store[p] || 0); });
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ============================================================
+   Derived values
+   ============================================================ */
+const nestById = id => S.nests.find(n => n.id === id);
+const srcById = id => S.sources.find(s => s.id === id);
+const seasonIdx = () => Math.floor(S.t / SEASON_LEN) % 4;
+const season = () => SEASONS[seasonIdx()];
+const year = () => Math.floor(S.t / (SEASON_LEN * 4)) + 1;
+const seasonFrac = () => (S.t % SEASON_LEN) / SEASON_LEN;
+const isWinter = () => seasonIdx() === 3;
+const antsOf = n => CORDER.reduce((s, c) => s + n.ants[c], 0);
+const totalAnts = () => S.nests.reduce((s, n) => s + antsOf(n), 0);
+const nestCap = n => 8 + n.ch.nursery * 8 + n.level * 4;
+const storeCap = n => 40 * n.ch.storage + 10 * n.level;
+const storeTotal = n => PORDER.reduce((s, p) => s + n.store[p], 0);
+const nestRadius = n => Math.min(7, 2 + n.level);
+const invCap = () => 150 * S.invLvl;
+const invTotal = () => PORDER.reduce((s, p) => s + S.inv[p], 0);
+const invUpCost = () => Math.round(100 * Math.pow(S.invLvl, 1.8));
+const helperCost = () => [600, 1500, 3500][S.helpers] ?? null;
+const newColonyCost = () => Math.round(250 * Math.pow(1.8, Math.max(0, S.nests.length - 1)));
+const landCost = () => Math.round(15 + 12 * Math.pow(S.landBought + 1, 1.35));
+const srcUpCost = (s, lvl) => Math.round(SOURCES[s.kind].cost * 0.5 * Math.pow(lvl, 1.7));
+const chamberMax = (n, c) => c === 'fungus' ? (n.level >= 2 ? n.level : 0) : n.level + 1;
+const chamberCost = (n, c) => Math.round(CHAMBERS[c].base * Math.pow(Math.max(1, n.ch[c] + (c === 'fungus' ? 1 : 0)), 1.6));
+const antSell = c => Math.round(CASTES[c].cost * 0.55);
+function price(p) { return Math.max(1, PRODUCTS[p].price * season().price * S.demand[p]); }
+function nestValue(n) {
+  const sv = PORDER.reduce((s, p) => s + n.store[p] * PRODUCTS[p].price, 0);
+  return Math.round(n.invested * 0.6 + CORDER.reduce((s, c) => s + n.ants[c] * antSell(c), 0) + sv);
+}
+function reachingNests(q, r) { return S.nests.filter(n => hexDist(n, { q, r }) <= nestRadius(n)); }
+function canAfford(c) { return S.coins >= c; }
+function spend(c) { if (S.coins < c) { toast('Yeterli altının yok', 'bad'); return false; } S.coins -= c; return true; }
+
+/* ============================================================
+   Canvas setup
+   ============================================================ */
+const cv = document.getElementById('world');
+const ctx = cv.getContext('2d');
+let W = 0, H = 0, DPR = 1;
+const cam = { x: 0, y: 0, zoom: 1, tz: 1 };
+function resize() {
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  W = window.innerWidth; H = window.innerHeight;
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  if (nestOpen) resizeInner();
+}
+window.addEventListener('resize', resize);
+
+/* ============================================================
+   Agents (ants in the world)
+   ============================================================ */
+const nestPos = n => { const p = hexToWorld(n.q, n.r); return { x: p.x, y: p.y + 2 }; };
+const srcPos = s => hexToWorld(s.q, s.r);
+
+function syncAgents(n) {
+  const a = n._agents || (n._agents = []);
+  const forCastes = CORDER.filter(c => CASTES[c].forage);
+  const tot = forCastes.reduce((s, c) => s + n.ants[c], 0);
+  const f = tot > 45 ? 45 / tot : 1;
+  n._w = {};
+  for (const c of forCastes) {
+    const want = n.ants[c] > 0 ? Math.max(1, Math.round(n.ants[c] * f)) : 0;
+    n._w[c] = want ? n.ants[c] / want : 0;
+    const have = a.filter(x => x.c === c);
+    while (have.length < want) { const g = { c, st: 'home', t: Math.random() * 4, x: 0, y: 0, tx: 0, ty: 0, src: 0, carry: 0, prod: null, ph: Math.random() * 6, ang: 0 }; a.push(g); have.push(g); }
+    while (have.length > want) { const g = have.pop(); a.splice(a.indexOf(g), 1); }
+  }
+  const gs = Math.min(6, n.ants.soldier);
+  n._guards = [...Array(gs)].map((_, i) => ({ a: i / Math.max(1, gs) * Math.PI * 2, ph: Math.random() * 6 }));
+  n._dirty = false;
+}
+
+function pickSource(n, c) {
+  const list = S.sources.filter(s => hexDist(n, s) <= nestRadius(n));
+  if (!list.length) return null;
+  const bonus = CASTES[c].bonus;
+  const w = list.map(s => (bonus[SOURCES[s.kind].product] ? 4 : 1) * (1 + (s.ql - 1) * 0.3));
+  let r = Math.random() * w.reduce((a, b) => a + b, 0);
+  for (let i = 0; i < list.length; i++) { r -= w[i]; if (r <= 0) return list[i]; }
+  return list[list.length - 1];
+}
+
+function moveAgent(g, sp, dt) {
+  const dx = g.tx - g.x, dy = g.ty - g.y, d = Math.hypot(dx, dy), step = sp * dt;
+  g.ang = Math.atan2(dy, dx);
+  if (d <= step) { g.x = g.tx; g.y = g.ty; return true; }
+  g.x += dx / d * step; g.y += dy / d * step; g.ph += dt * 14;
+  return false;
+}
+
+function updateAgents(n, dt) {
+  if (n._dirty || !n._agents) syncAgents(n);
+  const se = season(), home = nestPos(n);
+  const canGo = se.speed > 0 && S.rain <= 0;
+  const full = storeTotal(n) >= storeCap(n) - 0.01;
+  const speed = 34 * (se.speed || 1);
+  for (const g of n._agents) {
+    if (g.st === 'home') {
+      g.t -= dt;
+      if (g.t > 0) continue;
+      if (!canGo || full) { g.t = 1 + Math.random(); continue; }
+      const s = pickSource(n, g.c);
+      if (!s) { g.t = 3; continue; }
+      const sp = srcPos(s);
+      g.src = s.id; g.tx = sp.x + rnd(-16, 16); g.ty = sp.y + rnd(-7, 7);
+      g.x = home.x + rnd(-6, 6); g.y = home.y + rnd(-1, 4);
+      g.st = 'out';
+    } else if (g.st === 'out') {
+      const s = srcById(g.src);
+      if (!s || !canGo) { g.st = 'back'; g.tx = home.x; g.ty = home.y; continue; }
+      if (moveAgent(g, speed * (CASTES[g.c].sc > 1.08 ? 0.95 : 1), dt)) { g.st = 'gather'; g.t = SOURCES[s.kind].time * Math.pow(0.85, s.sp - 1); }
+    } else if (g.st === 'gather') {
+      g.t -= dt; g.ph += dt * 5;
+      if (g.t <= 0) {
+        const s = srcById(g.src);
+        if (s) {
+          const def = SOURCES[s.kind];
+          g.prod = def.product;
+          g.carry = def.yield * (1 + 0.5 * (s.ql - 1)) * (CASTES[g.c].bonus[def.product] || 1) * (se.prod[def.product] || 1) * (n._w[g.c] || 1);
+        }
+        g.st = 'back'; g.tx = home.x + rnd(-4, 4); g.ty = home.y;
+      }
+    } else if (g.st === 'back') {
+      if (moveAgent(g, speed * (S.rain > 0 ? 1.4 : 1), dt)) {
+        if (g.carry > 0 && g.prod) {
+          const space = storeCap(n) - storeTotal(n);
+          n.store[g.prod] += Math.max(0, Math.min(g.carry, space));
+        }
+        g.carry = 0; g.prod = null; g.st = 'home'; g.t = rnd(1, 3);
+      }
+    }
+  }
+}
+
+/* ============================================================
+   Nest simulation
+   ============================================================ */
+function takeFood(n, amount) {
+  const ed = PORDER.filter(p => PRODUCTS[p].edible).sort((a, b) => PRODUCTS[a].price - PRODUCTS[b].price);
+  for (const p of ed) {
+    const t = Math.min(n.store[p], amount);
+    n.store[p] -= t; amount -= t;
+    if (amount <= 1e-6) return true;
+  }
+  return false;
+}
+const edibleStore = n => PORDER.filter(p => PRODUCTS[p].edible).reduce((s, p) => s + n.store[p], 0);
+
+function updateNest(n, dt) {
+  const se = season(), total = antsOf(n);
+  // appetite
+  const honey = Math.min(0.6, n.ants.honeypot * 0.03);
+  const need = total * (isWinter() ? 0.007 : 0.0025) * (1 - honey) * dt;
+  if (!takeFood(n, need)) {
+    n.starve += dt;
+    if (n.starve > 14 && total > 1) {
+      n.starve = 0;
+      const c = [...CORDER].sort((a, b) => n.ants[b] - n.ants[a])[0];
+      n.ants[c]--; n._dirty = true;
+      toast(`${n.name}: aç kalan bir karınca yuvayı terk etti. Kilere yiyecek bırak!`, 'bad');
+    }
+  } else n.starve = Math.max(0, n.starve - dt);
+
+  // queen
+  n._laying = false;
+  if (se.lay > 0 && total < nestCap(n)) {
+    const castePace = n.focus === 'worker' ? 1 : 0.4;
+    n.layT += dt * (1 + 0.35 * (n.ch.queen - 1)) * se.lay * castePace / 9;
+    n._laying = true;
+    if (n.layT >= 1) {
+      const cost = n.focus === 'worker' ? 1 : 3;
+      if (edibleStore(n) >= cost) { takeFood(n, cost); n.ants[n.focus]++; n._dirty = true; n.layT = 0; n._hungryQueen = false; }
+      else { n.layT = 0.85; n._hungryQueen = true; }
+    }
+  }
+  // fungus garden
+  if (n.ch.fungus > 0 && n.store.leaf >= 1) {
+    n._fg = (n._fg || 0) + dt;
+    if (n._fg >= 3) {
+      n._fg = 0;
+      const k = Math.min(n.store.leaf, 2 * n.ch.fungus);
+      n.store.leaf -= k;
+      n.store.fungus += k * 0.6 * Math.min(1.6, 1 + n.ants.leafcutter * 0.03);
+    }
+  }
+  if (n.flash > 0) n.flash -= dt;
+  updateAgents(n, dt);
+}
+
+/* ============================================================
+   Keeper (you) and helpers
+   ============================================================ */
+const homePos = () => { const p = hexToWorld(0, 0); return { x: p.x + 16, y: p.y + 10 }; };
+const keepers = [];
+function makeKeeper(helper) {
+  const h = homePos();
+  return { helper, x: h.x + rnd(-10, 10), y: h.y + rnd(-4, 4), queue: [], task: null, idleT: 1, ph: 0, walking: false, tx: 0, ty: 0,
+    hat: helper ? '#4b88b8' : '#c94b3b', shirt: helper ? '#e6d7a8' : '#f3e2c0', pants: helper ? '#6b7f3f' : '#4f7c5a' };
+}
+function ensureKeepers() {
+  if (!keepers.length) keepers.push(makeKeeper(false));
+  while (keepers.length < 1 + S.helpers) keepers.push(makeKeeper(true));
+}
+function queueHarvest(n) {
+  const k = keepers[0];
+  if (k.task?.nestId === n.id || k.queue.includes(n.id)) { toast('Bakıcı zaten bu yuvaya gidiyor'); return; }
+  k.queue.push(n.id);
+  toast(`Bakıcı ${n.name} için yola çıktı`);
+}
+function updateKeeper(k, dt) {
+  const sp = k.helper ? 58 : 70;
+  const go = (x, y) => { k.tx = x; k.ty = y; const dx = x - k.x, dy = y - k.y, d = Math.hypot(dx, dy); if (d < sp * dt) { k.x = x; k.y = y; k.walking = false; return true; } k.x += dx / d * sp * dt; k.y += dy / d * sp * dt; k.walking = true; k.face = dx < 0 ? -1 : 1; k.ph += dt * 10; return false; };
+  if (!k.task) {
+    if (k.queue.length) k.task = { nestId: k.queue.shift(), phase: 'go' };
+    else if (k.helper) {
+      const busy = new Set(keepers.map(o => o.task?.nestId).concat(keepers[0].queue));
+      const n = S.nests.filter(n => !busy.has(n.id) && storeTotal(n) / storeCap(n) > 0.6).sort((a, b) => storeTotal(b) / storeCap(b) - storeTotal(a) / storeCap(a))[0];
+      if (n) k.task = { nestId: n.id, phase: 'go' };
+    }
+  }
+  if (!k.task) {
+    k.idleT -= dt;
+    if (k.idleT <= 0 && !k.walking) { const h = homePos(); k.tx = h.x + rnd(-24, 24); k.ty = h.y + rnd(-6, 10); k.idleT = rnd(3, 7); k.walking = true; }
+    if (k.walking) go(k.tx, k.ty);
+    return;
+  }
+  const n = nestById(k.task.nestId);
+  if (!n) { k.task = null; return; }
+  const np = nestPos(n);
+  if (k.task.phase === 'go') { if (go(np.x + 20, np.y + 8)) { k.task.phase = 'work'; k.task.t = 1.5; k.face = -1; } }
+  else if (k.task.phase === 'work') { k.task.t -= dt; k.ph += dt * 6; if (k.task.t <= 0) { doHarvest(n, k); k.task.phase = 'home'; } }
+  else { const h = homePos(); if (go(h.x + rnd(-2, 2), h.y)) k.task = null; }
+}
+
+function doHarvest(n, k) {
+  const reserve = Math.ceil(antsOf(n) * (isWinter() || seasonIdx() === 2 ? 0.8 : 0.4));
+  const keep = {}; let r = reserve;
+  PORDER.filter(p => PRODUCTS[p].edible).sort((a, b) => PRODUCTS[a].price - PRODUCTS[b].price).forEach(p => { const x = Math.min(n.store[p], r); keep[p] = x; r -= x; });
+  if (n.ch.fungus > 0) keep.leaf = n.store.leaf;
+  let moved = 0, value = 0;
+  for (const p of [...PORDER].sort((a, b) => PRODUCTS[b].price - PRODUCTS[a].price)) {
+    const avail = Math.floor(n.store[p] - (keep[p] || 0));
+    const m = Math.max(0, Math.min(avail, invCap() - invTotal()));
+    if (m > 0) { n.store[p] -= m; S.inv[p] += m; moved += m; value += m * price(p); }
+  }
+  const np = nestPos(n);
+  if (moved > 0) {
+    S.stats.harvests++;
+    floatText(np.x, np.y - 50, `+${moved} ürün`, '#ffe08a');
+    if (!k.helper) toast(`${n.name}: ${moved} ürün ambara taşındı (≈${fmt(value)} altın)`, 'good');
+  } else if (invTotal() >= invCap()) { floatText(np.x, np.y - 50, 'Ambar dolu', '#ffb4a0'); if (!k.helper) toast('Ambar dolu. Pazarda sat ya da ambarı büyüt.', 'bad'); }
+  else if (!k.helper) { floatText(np.x, np.y - 50, 'Kiler boş', '#fff'); toast('Hasat edilecek fazlalık yok. Kış payı yuvada kaldı.'); }
+}
+
+/* ============================================================
+   World events
+   ============================================================ */
+function updateWorld(dt) {
+  S.t += dt;
+  const si = seasonIdx();
+  if (si !== S.lastSeason) {
+    if (S.lastSeason === 3 && si === 0) { S.stats.winters++; toast('Bahar geldi! Koloniler kış uykusundan uyandı.', 'good'); }
+    else if (si === 3) toast('Kış geldi. Karıncalar kış uykusuna yattı; kilerden beslenecekler.');
+    else toast(`${SEASONS[si].name} başladı. ${SEASONS[si].desc}`);
+    S.lastSeason = si;
+  }
+  PORDER.forEach(p => { S.demand[p] += (1 - S.demand[p]) * Math.min(1, dt * 0.012); });
+  // rain
+  if (S.rain > 0) { S.rain -= dt; if (S.rain <= 0) toast('Yağmur dindi, karıncalar yeniden yola çıktı.'); }
+  else if (S.t > S.nextRain) {
+    S.nextRain = S.t + rnd(70, 140);
+    if (si === 0 || si === 2) { S.rain = rnd(10, 16); toast('Yağmur başladı. Karıncalar yuvaya sığındı.'); }
+  }
+  // raid
+  if (S.t > S.nextRaid) {
+    S.nextRaid = S.t + rnd(110, 170);
+    const cands = S.nests.filter(n => antsOf(n) >= 12);
+    if (!isWinter() && cands.length && totalAnts() >= 18) {
+      const n = cands[Math.floor(Math.random() * cands.length)];
+      const strength = 6 + year() * 4 + Math.random() * 8;
+      const defense = n.ants.soldier * 4 + n.level * 2 + antsOf(n) * 0.15;
+      n.flash = 2;
+      if (defense >= strength) {
+        const loot = Math.round(15 + strength * 2);
+        S.coins += loot;
+        toast(`Rakip karıncalar ${n.name} yuvasına saldırdı ama askerler püskürttü! +${loot} altın`, 'good');
+      } else {
+        let lost = 0; PORDER.forEach(p => { const l = n.store[p] * 0.3; n.store[p] -= l; lost += l; });
+        toast(`Rakip akını! ${n.name} kilerinden ${fmt(lost)} ürün çalındı. Asker karınca yetiştir.`, 'bad');
+      }
+    }
+  }
+  S.nests.forEach(n => updateNest(n, dt));
+  ensureKeepers();
+  keepers.forEach(k => updateKeeper(k, dt));
+}
+
+let goalTimer = 0;
+function checkGoals(dt) {
+  goalTimer += dt;
+  if (goalTimer < 0.5) return;
+  goalTimer = 0;
+  const g = GOALS[S.goal];
+  if (g && g.c()) { S.coins += g.r; S.goal++; toast(`Hedef tamam: ${g.t}. +${g.r} altın`, 'good'); }
+}
+
+/* ============================================================
+   Drawing helpers
+   ============================================================ */
+function ell(x, y, rx, ry, fill, rot = 0) { ctx.beginPath(); ctx.ellipse(x, y, Math.max(0.1, rx), Math.max(0.1, ry), rot, 0, Math.PI * 2); ctx.fillStyle = fill; ctx.fill(); }
+function hexPath(c, cx, cy, s = 1, dy = 0) { c.beginPath(); CORNERS.forEach(([x, y], i) => i ? c.lineTo(cx + x * s, cy + y * s + dy) : c.moveTo(cx + x * s, cy + y * s + dy)); c.closePath(); }
+
+function grassColor(v) {
+  const i = seasonIdx(), f = seasonFrac(), next = (i + 1) % 4;
+  const a = SEASONS[i].grass[v], b = SEASONS[next].grass[v];
+  const t = f > 0.88 ? (f - 0.88) / 0.12 : 0;
+  return t ? mix(a, b, t) : a;
+}
+function waterColor() {
+  const i = seasonIdx(), f = seasonFrac(); const t = f > 0.88 ? (f - 0.88) / 0.12 : 0;
+  return t ? mix(SEASONS[i].water, SEASONS[(i + 1) % 4].water, t) : SEASONS[i].water;
+}
+
+function tileDecor(t) {
+  if (t._dec) return t._dec;
+  const r = mulberry((t.q * 73856093) ^ (t.r * 19349663));
+  t._dec = [...Array(5)].map(() => ({ x: (r() - 0.5) * 56, y: (r() - 0.5) * 30, k: r(), c: r() }));
+  return t._dec;
+}
+
+function drawTile(t) {
+  const { x, y } = hexToWorld(t.q, t.r);
+  const [c1, c2, c3] = [CORNERS[1], CORNERS[2], CORNERS[3]];
+  // side faces (soil)
+  const soilA = t.type === 'pond' ? '#5b8f93' : '#8a5a3b', soilB = t.type === 'pond' ? '#4a7a7e' : '#6e452c';
+  ctx.beginPath(); ctx.moveTo(x + c1[0], y + c1[1]); ctx.lineTo(x + c2[0], y + c2[1]); ctx.lineTo(x + c2[0], y + c2[1] + DEPTH); ctx.lineTo(x + c1[0], y + c1[1] + DEPTH); ctx.closePath(); ctx.fillStyle = soilB; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(x + c2[0], y + c2[1]); ctx.lineTo(x + c3[0], y + c3[1]); ctx.lineTo(x + c3[0], y + c3[1] + DEPTH); ctx.lineTo(x + c2[0], y + c2[1] + DEPTH); ctx.closePath(); ctx.fillStyle = soilA; ctx.fill();
+  // grass lip on the side
+  ctx.beginPath(); ctx.moveTo(x + c1[0], y + c1[1]); ctx.lineTo(x + c2[0], y + c2[1]); ctx.lineTo(x + c3[0], y + c3[1]); ctx.lineTo(x + c3[0], y + c3[1] + 3); ctx.lineTo(x + c2[0], y + c2[1] + 3); ctx.lineTo(x + c1[0], y + c1[1] + 3); ctx.closePath();
+  ctx.fillStyle = t.type === 'pond' ? '#9fd3d6' : grassColor(t.v); ctx.fill();
+
+  hexPath(ctx, x, y);
+  if (t.type === 'pond') {
+    const g = ctx.createLinearGradient(x, y - 20, x, y + 20);
+    const w = isWinter() ? ['#cfe6ee', '#b4d4e0'] : ['#7cc3d6', '#5aa9c2'];
+    g.addColorStop(0, w[0]); g.addColorStop(1, w[1]); ctx.fillStyle = g; ctx.fill();
+  } else {
+    ctx.fillStyle = grassColor(t.v); ctx.fill();
+  }
+  ctx.strokeStyle = 'rgba(255,255,255,0.16)'; ctx.lineWidth = 1; ctx.stroke();
+
+  if (t.type === 'pond') {
+    const ph = now * 0.001 + t.q;
+    ctx.strokeStyle = 'rgba(255,255,255,.45)'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.ellipse(x - 10 + Math.sin(ph) * 3, y - 4, 8, 2.2, 0, 0, Math.PI * 2); ctx.stroke();
+    if (!isWinter()) {
+      ell(x + 10, y + 4, 7, 3.6, '#5c9e4b'); ctx.beginPath(); ctx.moveTo(x + 10, y + 4); ctx.lineTo(x + 17, y + 2.5); ctx.lineTo(x + 17, y + 5.5); ctx.fillStyle = '#6fbcd0'; ctx.fill();
+      if ((t.q + t.r) % 2 === 0) { ell(x + 8, y + 2, 2.4, 1.6, '#f6b3c9'); ell(x + 8, y + 1.4, 1, 0.8, '#fff3c4'); }
+    }
+  } else if (!t.obj || t.obj.kind !== 'source') {
+    const si = seasonIdx();
+    for (const d of tileDecor(t)) {
+      if (d.k < 0.55) {
+        ctx.strokeStyle = si === 3 ? 'rgba(170,190,200,.6)' : 'rgba(40,90,30,.35)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(x + d.x - 2, y + d.y); ctx.lineTo(x + d.x - 3, y + d.y - 4); ctx.moveTo(x + d.x, y + d.y); ctx.lineTo(x + d.x, y + d.y - 5); ctx.moveTo(x + d.x + 2, y + d.y); ctx.lineTo(x + d.x + 3, y + d.y - 4); ctx.stroke();
+      } else if (d.k < 0.8 && si < 2) {
+        ell(x + d.x, y + d.y, 1.7, 1.3, ['#fff7e8', '#f7c1d5', '#fde58a'][Math.floor(d.c * 3)]);
+      } else if (d.k >= 0.8) {
+        ell(x + d.x, y + d.y, 2.2, 1.4, si === 3 ? '#d4dee2' : 'rgba(150,140,120,.7)');
+      }
+    }
+  }
+  if (t.locked) {
+    hexPath(ctx, x, y); ctx.fillStyle = 'rgba(46, 70, 58, 0.42)'; ctx.fill();
+    hexPath(ctx, x, y, 0.84); ctx.setLineDash([3, 4]); ctx.strokeStyle = 'rgba(255,255,255,.22)'; ctx.stroke(); ctx.setLineDash([]);
+  }
+}
+
+/* ---------- ants ---------- */
+function drawAnt(c, x, y, ang, col, sc, carry, ph, still) {
+  c.save(); c.translate(x, y); c.rotate(ang); c.scale(sc, sc);
+  c.strokeStyle = col; c.lineWidth = 0.7; c.lineCap = 'round';
+  c.beginPath();
+  for (let i = -1; i <= 1; i++) {
+    const sw = still ? 0 : Math.sin(ph + i * 2.1) * 1.3;
+    c.moveTo(i * 1.2, 0); c.lineTo(i * 1.4 + sw, -3.2);
+    c.moveTo(i * 1.2, 0); c.lineTo(i * 1.4 - sw, 3.2);
+  }
+  c.moveTo(3.2, -0.5); c.lineTo(5, -2.2); c.moveTo(3.2, 0.5); c.lineTo(5, 2.2);
+  c.stroke();
+  c.fillStyle = col;
+  c.beginPath(); c.ellipse(-3.3, 0, 2.5, 1.9, 0, 0, Math.PI * 2); c.fill();
+  c.beginPath(); c.ellipse(0, 0, 1.5, 1.05, 0, 0, Math.PI * 2); c.fill();
+  c.beginPath(); c.ellipse(2.7, 0, 1.55, 1.45, 0, 0, Math.PI * 2); c.fill();
+  c.fillStyle = 'rgba(255,255,255,.28)';
+  c.beginPath(); c.ellipse(-3.8, -0.8, 1, 0.55, 0, 0, Math.PI * 2); c.fill();
+  if (carry) { c.fillStyle = carry; c.beginPath(); c.arc(4.9, 0, 1.7, 0, Math.PI * 2); c.fill(); c.strokeStyle = 'rgba(0,0,0,.25)'; c.lineWidth = 0.4; c.stroke(); }
+  c.restore();
+}
+
+/* ---------- nest mound ---------- */
+function drawMound(c, x, y, level, scale = 1, opts = {}) {
+  const s = (0.72 + 0.1 * level) * scale;
+  c.save(); c.translate(x, y);
+  c.fillStyle = 'rgba(40,50,30,.22)'; c.beginPath(); c.ellipse(0, 3 * s, 36 * s, 12 * s, 0, 0, Math.PI * 2); c.fill();
+  if (level >= 3) mound(c, -24 * s, 2 * s, s * 0.45, opts);
+  if (level >= 5) mound(c, 26 * s, 3 * s, s * 0.5, opts);
+  mound(c, 0, 0, s, opts);
+  c.restore();
+}
+function mound(c, x, y, s, opts) {
+  c.save(); c.translate(x, y);
+  const g = c.createLinearGradient(0, -40 * s, 0, 4 * s);
+  g.addColorStop(0, '#c08a58'); g.addColorStop(0.6, '#98663f'); g.addColorStop(1, '#7a4e2f');
+  c.beginPath(); c.moveTo(-34 * s, 2 * s);
+  c.bezierCurveTo(-28 * s, -26 * s, -12 * s, -40 * s, 0, -40 * s);
+  c.bezierCurveTo(12 * s, -40 * s, 28 * s, -26 * s, 34 * s, 2 * s);
+  c.ellipse(0, 2 * s, 34 * s, 10 * s, 0, 0, Math.PI, false);
+  c.closePath(); c.fillStyle = g; c.fill();
+  // soil grains and pine needles
+  const r = mulberry(Math.round(s * 100) + 7);
+  for (let i = 0; i < 26; i++) {
+    const a = r() * Math.PI, rr = r();
+    const px = Math.cos(a) * 30 * s * rr * (r() < 0.5 ? -1 : 1), py = -Math.sin(a) * 36 * s * (1 - rr * 0.8) + 2 * s;
+    c.fillStyle = r() < 0.5 ? 'rgba(255,230,190,.35)' : 'rgba(70,40,20,.35)';
+    c.beginPath(); c.arc(px, py, (0.8 + r() * 1.2) * s, 0, Math.PI * 2); c.fill();
+  }
+  c.strokeStyle = 'rgba(90,60,30,.55)'; c.lineWidth = 1 * s;
+  for (let i = 0; i < 9; i++) { const px = (r() - 0.5) * 44 * s, py = -r() * 30 * s - 2 * s, a = r() * 3; c.beginPath(); c.moveTo(px, py); c.lineTo(px + Math.cos(a) * 7 * s, py + Math.sin(a) * 3 * s); c.stroke(); }
+  // entrance
+  c.fillStyle = '#2f1c10'; c.beginPath(); c.ellipse(0, -34 * s, 6 * s, 3.2 * s, 0, 0, Math.PI * 2); c.fill();
+  c.fillStyle = '#23140b'; c.beginPath(); c.ellipse(-14 * s, -10 * s, 3.2 * s, 2 * s, 0, 0, Math.PI * 2); c.fill();
+  if (opts.winter) {
+    c.fillStyle = 'rgba(245,250,252,.95)';
+    c.beginPath(); c.moveTo(-22 * s, -26 * s); c.bezierCurveTo(-12 * s, -41 * s, 12 * s, -41 * s, 22 * s, -26 * s);
+    c.bezierCurveTo(12 * s, -30 * s, 6 * s, -24 * s, 0, -29 * s); c.bezierCurveTo(-8 * s, -24 * s, -14 * s, -30 * s, -22 * s, -26 * s); c.fill();
+    c.fillStyle = '#2f1c10'; c.beginPath(); c.ellipse(0, -34 * s, 5 * s, 2.6 * s, 0, 0, Math.PI * 2); c.fill();
+  }
+  c.restore();
+}
+
+/* ---------- home: mushroom cottage ---------- */
+function drawHome(x, y) {
+  const w = isWinter();
+  ctx.save(); ctx.translate(x - 4, y);
+  ell(0, 4, 30, 10, 'rgba(40,50,30,.22)');
+  // stem
+  ctx.fillStyle = '#f2e5cb'; ctx.beginPath(); ctx.moveTo(-16, 2); ctx.quadraticCurveTo(-19, -18, -14, -32); ctx.lineTo(14, -32); ctx.quadraticCurveTo(19, -18, 16, 2); ctx.ellipse(0, 2, 16, 5, 0, 0, Math.PI); ctx.fill();
+  ctx.fillStyle = 'rgba(160,120,80,.18)'; ctx.fillRect(6, -30, 8, 32);
+  // door and window
+  ctx.fillStyle = '#8a5530'; ctx.beginPath(); ctx.moveTo(-6, 4); ctx.lineTo(-6, -8); ctx.arc(0, -8, 6, Math.PI, 0); ctx.lineTo(6, 4); ctx.fill();
+  ell(3.5, -3, 1, 1, '#f3c24b');
+  ctx.fillStyle = '#fbe39a'; ctx.beginPath(); ctx.arc(9, -20, 3.6, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#8a5530'; ctx.lineWidth = 1.2; ctx.stroke();
+  // cap
+  const cg = ctx.createLinearGradient(0, -62, 0, -26);
+  cg.addColorStop(0, '#ee6a5b'); cg.addColorStop(1, '#c2413a');
+  ctx.fillStyle = cg; ctx.beginPath(); ctx.moveTo(-36, -26); ctx.bezierCurveTo(-34, -58, 34, -58, 36, -26); ctx.quadraticCurveTo(0, -18, -36, -26); ctx.fill();
+  ctx.fillStyle = '#fff4e4';
+  [[-20, -38, 5, 3.4], [2, -48, 6, 3.8], [20, -36, 4.4, 3], [-6, -32, 3.4, 2.2], [26, -30, 2.6, 1.8]].forEach(([a, b, c, d]) => ell(a, b, c, d, '#fff4e4'));
+  if (w) { ctx.fillStyle = '#f7fbfc'; ctx.beginPath(); ctx.moveTo(-30, -40); ctx.bezierCurveTo(-24, -56, 24, -56, 30, -40); ctx.bezierCurveTo(18, -44, 8, -38, 0, -43); ctx.bezierCurveTo(-10, -38, -20, -45, -30, -40); ctx.fill(); }
+  // chimney smoke
+  ctx.fillStyle = '#7a5a44'; ctx.fillRect(14, -58, 6, 10);
+  for (let i = 0; i < 3; i++) { const p = (now * 0.0004 + i / 3) % 1; ell(17 + Math.sin(p * 6 + i) * 4, -60 - p * 26, 3 + p * 5, 2.4 + p * 4, `rgba(255,255,255,${0.55 * (1 - p)})`); }
+  // sign
+  ctx.fillStyle = '#8a5a34'; ctx.fillRect(-32, -6, 2.2, 12);
+  ctx.fillStyle = '#d7a466'; ctx.beginPath(); ctx.roundRect(-42, -14, 22, 10, 2); ctx.fill();
+  ctx.fillStyle = '#5a3a1e'; ctx.font = '700 6px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('AMBAR', -31, -7);
+  ctx.restore();
+}
+
+/* ---------- sources ---------- */
+function plantPts(s) {
+  if (s._pts) return s._pts;
+  const r = mulberry(s.id * 977 + 13);
+  const pts = [];
+  let guard = 0;
+  while (pts.length < 11 && guard++ < 400) {
+    const px = (r() - 0.5) * 54, py = (r() - 0.5) * 26;
+    if ((px * px) / (27 * 27) + (py * py) / (13 * 13) > 1) continue;
+    if (pts.some(p => Math.hypot(p.x - px, (p.y - py) * 1.8) < 9)) continue;
+    pts.push({ x: px, y: py, v: r() });
+  }
+  s._pts = pts;
+  return pts;
+}
+function drawSource(s, x, y) {
+  const si = seasonIdx(), winter = si === 3, autumn = si === 2;
+  const pts = plantPts(s);
+  const n = Math.min(pts.length, 5 + s.ql);
+  const P = pts.slice(0, n).sort((a, b) => a.y - b.y);
+  ctx.save(); ctx.translate(x, y);
+  if (winter && 'filter' in ctx) ctx.filter = 'saturate(0.35) brightness(1.08)';
+  const k = s.kind;
+  if (k !== 'clover' && k !== 'apple') ell(0, 1, 30, 13, 'rgba(110,72,40,.28)');
+  const stem = (px, py, h, col = '#5a9a48', w = 1.2) => { ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(px, py); ctx.quadraticCurveTo(px + 1.5, py - h / 2, px, py - h); ctx.stroke(); };
+  const sway = (p) => Math.sin(now * 0.0015 + p.v * 6) * 1.2;
+  if (k === 'clover') {
+    for (const p of pts.slice(0, Math.min(11, 7 + s.ql))) {
+      const c = p.v > 0.5 ? '#4f9a45' : '#5eaa4f';
+      ell(p.x - 2.3, p.y - 2.5, 2.5, 2, c); ell(p.x + 2.3, p.y - 2.5, 2.5, 2, c); ell(p.x, p.y - 4.8, 2.5, 2, c);
+      if (p.v > 0.45 && !autumn) { stem(p.x + 2, p.y - 1, 8); ell(p.x + 2 + sway(p), p.y - 10, 2.8, 2.4, '#fbf6ee'); ell(p.x + 2 + sway(p), p.y - 10.6, 1.4, 1.1, '#f5b8cb'); }
+    }
+  } else if (k === 'daisy') {
+    for (const p of P) {
+      const h = 11 + p.v * 5, cx = p.x + sway(p), cy = p.y - h;
+      stem(p.x, p.y, h);
+      ell(p.x - 2.5, p.y - 4, 2.4, 1, '#5a9a48', -0.5);
+      if (winter) continue;
+      for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2; ell(cx + Math.cos(a) * 3, cy + Math.sin(a) * 2.4, 2.1, 1.05, autumn ? '#efe6d3' : '#ffffff', a); }
+      ell(cx, cy, 1.9, 1.7, '#f2c14e');
+    }
+  } else if (k === 'lavender') {
+    for (const p of P) {
+      const h = 14 + p.v * 6; stem(p.x, p.y, h, '#6d9a5a');
+      stem(p.x - 2, p.y, h - 4, '#6d9a5a'); stem(p.x + 2, p.y, h - 3, '#6d9a5a');
+      if (winter) continue;
+      [[0, h], [-2, h - 4], [2, h - 3]].forEach(([dx, hh]) => { for (let j = 0; j < 5; j++) ell(p.x + dx + sway(p) * 0.6 + (j % 2 ? 0.6 : -0.6), p.y - hh + j * 1.9, 1.3, 1.6, j % 2 ? '#9b7fd1' : '#b69be6'); });
+    }
+  } else if (k === 'sunflower') {
+    for (const p of P.slice(0, 2 + Math.ceil(s.ql / 2))) {
+      const h = 26 + p.v * 6, cx = p.x + sway(p) * 0.6, cy = p.y - h;
+      stem(p.x, p.y, h, '#5f8f3a', 2);
+      ell(p.x - 4, p.y - h * 0.45, 4.5, 2, '#5f8f3a', -0.4); ell(p.x + 4, p.y - h * 0.6, 4.5, 2, '#6a9a44', 0.4);
+      if (winter) continue;
+      for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; ell(cx + Math.cos(a) * 6, cy + Math.sin(a) * 5, 3.2, 1.4, autumn ? '#d99a2b' : '#f7c62c', a); }
+      ell(cx, cy, 4.2, 3.6, '#6b4020'); ell(cx - 1, cy - 1, 1.6, 1.2, '#8a5a30');
+    }
+  } else if (k === 'berry') {
+    for (const p of P.slice(0, 3 + Math.ceil(s.ql / 2))) {
+      ell(p.x, p.y - 4, 9, 6, '#3f8a3e'); ell(p.x - 3, p.y - 6, 5, 3.5, '#5aa64d');
+      if (winter) continue;
+      for (let i = 0; i < 3; i++) { const bx = p.x - 5 + i * 5, by = p.y - 1 + (i % 2) * -3; ell(bx, by, 2.2, 2.6, '#e2463f'); ell(bx, by - 2.4, 1.6, 0.8, '#4d8f3a'); ell(bx - 0.6, by - 0.5, 0.5, 0.5, '#ffd9a8'); }
+    }
+  } else if (k === 'leafbush') {
+    for (const p of P.slice(0, 3 + Math.ceil(s.ql / 2))) {
+      for (let i = 0; i < 6; i++) {
+        const a = -Math.PI / 2 + (i - 2.5) * 0.45;
+        const lx = p.x + Math.cos(a) * 6, ly = p.y - 5 + Math.sin(a) * 6;
+        ell(lx, ly, 6, 2.8, autumn ? (i % 2 ? '#d98a3a' : '#c96a2e') : (i % 2 ? '#3f8a3e' : '#58a64d'), a);
+        ctx.strokeStyle = 'rgba(255,255,255,.25)'; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(lx - Math.cos(a) * 5, ly - Math.sin(a) * 2); ctx.lineTo(lx + Math.cos(a) * 5, ly + Math.sin(a) * 2); ctx.stroke();
+      }
+    }
+  } else if (k === 'apple') {
+    ell(0, 2, 26, 9, 'rgba(40,50,30,.2)');
+    ctx.fillStyle = '#7a5232'; ctx.beginPath(); ctx.moveTo(-4, 2); ctx.lineTo(-3, -26); ctx.lineTo(3, -26); ctx.lineTo(4, 2); ctx.fill();
+    ctx.strokeStyle = '#7a5232'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(-10, -32); ctx.moveTo(1, -22); ctx.lineTo(11, -34); ctx.stroke();
+    if (!winter) {
+      const cA = autumn ? '#d5963a' : '#5d9e46', cB = autumn ? '#e8b04e' : '#79b85a';
+      [[-12, -34, 13], [11, -36, 14], [0, -46, 14], [-2, -30, 12]].forEach(([a, b, r]) => ell(a, b, r, r * 0.85, cA));
+      [[-8, -40, 7], [6, -48, 7]].forEach(([a, b, r]) => ell(a, b, r, r * 0.8, cB));
+      for (let i = 0; i < 2 + s.ql; i++) { const a = i * 2.3, rr = 10 + (i % 3) * 3; ell(Math.cos(a) * rr, -38 + Math.sin(a) * 8, 2.6, 2.6, '#d9433a'); }
+    } else {
+      ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(-10, -32); ctx.lineTo(-16, -42); ctx.moveTo(11, -34); ctx.lineTo(16, -46); ctx.moveTo(0, -26); ctx.lineTo(1, -46); ctx.stroke();
+      ell(-15, -43, 4, 1.5, '#fafcfd'); ell(15, -47, 4, 1.5, '#fafcfd'); ell(1, -47, 4, 1.5, '#fafcfd');
+    }
+    for (let i = 0; i < Math.min(4, s.ql + 1); i++) ell(-16 + i * 10, 6 - (i % 2) * 6, 2.6, 2.2, winter ? '#9b6a55' : '#d9433a');
+  } else if (k === 'rose') {
+    for (const p of P.slice(0, 3 + Math.ceil(s.ql / 2))) {
+      ell(p.x, p.y - 5, 10, 7, '#35703a'); ell(p.x + 3, p.y - 8, 6, 4, '#4a8a45');
+      if (winter) continue;
+      for (let i = 0; i < 3; i++) {
+        const rx = p.x - 5 + i * 5, ry = p.y - 9 + (i % 2) * 3;
+        ell(rx, ry, 3.2, 2.8, i % 2 ? '#e46b8e' : '#f08aa6');
+        ctx.strokeStyle = '#b93f66'; ctx.lineWidth = 0.6; ctx.beginPath(); ctx.arc(rx, ry, 1.4, 0.3, 4.5); ctx.stroke();
+      }
+      for (let i = 0; i < 5; i++) ell(p.x - 6 + i * 3, p.y - 3 - (i % 2) * 2, 0.9, 0.7, '#c4ec7c');
+    }
+  }
+  if (winter) {
+    ctx.filter = 'none';
+    for (const p of P) ell(p.x, p.y - 6, 5, 1.8, 'rgba(250,252,253,.95)');
+  }
+  ctx.restore();
+}
+
+function drawRock(x, y) {
+  ell(x, y + 3, 20, 7, 'rgba(40,50,30,.2)');
+  ell(x - 6, y - 2, 11, 8, '#98a19c'); ell(x + 6, y - 4, 9, 8, '#aeb6b1'); ell(x + 1, y + 1, 7, 4, '#8b948f');
+  ell(x + 4, y - 8, 4, 2, 'rgba(255,255,255,.35)');
+  if (isWinter()) { ell(x - 6, y - 8, 7, 2.5, '#f7fbfc'); ell(x + 6, y - 10, 5, 2, '#f7fbfc'); }
+  else { ell(x - 12, y + 1, 3, 1.6, '#6fa45a'); ell(x + 13, y, 2.6, 1.4, '#6fa45a'); }
+}
+function drawTree(x, y) {
+  const w = isWinter();
+  ell(x, y + 3, 18, 6, 'rgba(40,50,30,.22)');
+  ctx.fillStyle = '#6b4a2e'; ctx.fillRect(x - 2.5, y - 10, 5, 12);
+  const tiers = [[-10, 18, 16], [-22, 15, 14], [-33, 11, 12]];
+  tiers.forEach(([dy, hw, h], i) => {
+    ctx.fillStyle = i % 2 ? '#3f7d4c' : '#357043';
+    ctx.beginPath(); ctx.moveTo(x - hw, y + dy); ctx.quadraticCurveTo(x, y + dy + 4, x + hw, y + dy); ctx.lineTo(x, y + dy - h); ctx.closePath(); ctx.fill();
+    if (w) { ctx.fillStyle = '#f7fbfc'; ctx.beginPath(); ctx.moveTo(x - hw * 0.55, y + dy - h * 0.4); ctx.lineTo(x, y + dy - h); ctx.lineTo(x + hw * 0.55, y + dy - h * 0.4); ctx.quadraticCurveTo(x, y + dy - h * 0.55, x - hw * 0.55, y + dy - h * 0.4); ctx.fill(); }
+  });
+}
+
+/* ---------- keeper ---------- */
+function drawKeeper(k) {
+  const bob = k.walking ? Math.abs(Math.sin(k.ph)) * 1.6 : 0;
+  const x = k.x, y = k.y;
+  ctx.save(); ctx.translate(x, y); ctx.scale((k.face || 1) * (k.helper ? 0.9 : 1), k.helper ? 0.9 : 1);
+  ell(0, 1, 8, 3, 'rgba(30,40,25,.28)');
+  const leg = k.walking ? Math.sin(k.ph) * 2 : 0;
+  ctx.fillStyle = '#4a3322'; ctx.fillRect(-3 + leg * 0.5, -5, 2.4, 6); ctx.fillRect(1 - leg * 0.5, -5, 2.4, 6);
+  ctx.fillStyle = k.pants; ctx.beginPath(); ctx.roundRect(-5, -15 - bob, 10, 11, 3); ctx.fill();
+  ctx.fillStyle = k.shirt; ctx.beginPath(); ctx.roundRect(-4.5, -18 - bob, 9, 6, 2.5); ctx.fill();
+  ctx.fillStyle = k.pants; ctx.fillRect(-3.5, -17 - bob, 1.4, 5); ctx.fillRect(2.1, -17 - bob, 1.4, 5);
+  ell(0, -23 - bob, 5, 5, '#f1c6a0');
+  ell(2.2, -23 - bob, 0.7, 0.8, '#4a3322');
+  ell(3.2, -21.5 - bob, 1.2, 0.7, '#e89f86');
+  // straw hat
+  ell(0, -26.5 - bob, 9, 2.6, '#e8c872');
+  ctx.fillStyle = '#e8c872'; ctx.beginPath(); ctx.ellipse(0, -28 - bob, 5, 4.2, 0, Math.PI, 0); ctx.fill();
+  ctx.fillStyle = k.hat; ctx.fillRect(-5, -28.5 - bob, 10, 1.6);
+  // basket
+  const working = k.task?.phase === 'work';
+  if (working || k.task?.phase === 'home') {
+    const by = working ? -8 + Math.sin(k.ph) * 1.5 : -10 - bob;
+    ctx.fillStyle = '#b8864f'; ctx.beginPath(); ctx.roundRect(4, by, 8, 6, 2); ctx.fill();
+    ctx.strokeStyle = '#8a5f33'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(8, by, 3.4, Math.PI, 0); ctx.stroke();
+    if (k.task.phase === 'home') { ell(6, by, 1.6, 1.2, '#f2b134'); ell(9, by - 0.5, 1.6, 1.2, '#d8b45e'); }
+  }
+  ctx.restore();
+}
+
+/* ---------- particles and floaters ---------- */
+const floaters = [];
+function floatText(x, y, text, color) { floaters.push({ x, y, text, color, t: 0 }); }
+const ambient = [...Array(46)].map(() => ({ x: Math.random(), y: Math.random(), s: Math.random(), r: Math.random() * 6 }));
+
+/* ============================================================
+   World render
+   ============================================================ */
+let now = 0;
+let hoverTile = null, selTile = null;
+const tileList = () => S._tl || (S._tl = Object.values(S.tiles).sort((a, b) => a.r - b.r || a.q - b.q));
+
+function render() {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  // water backdrop
+  ctx.fillStyle = waterColor(); ctx.fillRect(0, 0, W, H);
+  ctx.save();
+  ctx.translate(W / 2 - cam.x * cam.zoom, H / 2 - cam.y * cam.zoom);
+  ctx.scale(cam.zoom, cam.zoom);
+  // water ripples
+  ctx.strokeStyle = 'rgba(255,255,255,.22)'; ctx.lineWidth = 1.4;
+  const rr = mulberry(5);
+  for (let i = 0; i < 40; i++) {
+    const wx = (rr() - 0.5) * 1300, wy = (rr() - 0.5) * 800, ph = now * 0.0008 + i;
+    ctx.beginPath(); ctx.moveTo(wx - 12, wy + Math.sin(ph) * 2); ctx.quadraticCurveTo(wx, wy - 3 + Math.sin(ph) * 2, wx + 12, wy + Math.sin(ph) * 2); ctx.stroke();
+  }
+  // island shadow
+  ctx.fillStyle = 'rgba(30, 70, 70, .18)'; ctx.beginPath(); ctx.ellipse(0, 40, HS * SQ3 * MAPR + 60, HS * 1.5 * MAPR * TILT + 60, 0, 0, Math.PI * 2); ctx.fill();
+
+  const tl = tileList();
+  for (const t of tl) drawTile(t);
+
+  // pheromone trails
+  if (!isWinter()) {
+    ctx.setLineDash([2, 5]); ctx.lineWidth = 1.6; ctx.strokeStyle = 'rgba(95, 60, 35, .22)';
+    for (const n of S.nests) {
+      const a = nestPos(n);
+      for (const s of S.sources) if (hexDist(n, s) <= nestRadius(n)) { const b = srcPos(s); ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.quadraticCurveTo((a.x + b.x) / 2 + (b.y - a.y) * 0.15, (a.y + b.y) / 2 - (b.x - a.x) * 0.05, b.x, b.y); ctx.stroke(); }
+    }
+    ctx.setLineDash([]);
+  }
+
+  // selection
+  const hl = (t, col, w) => { const p = hexToWorld(t.q, t.r); hexPath(ctx, p.x, p.y, 0.96); ctx.strokeStyle = col; ctx.lineWidth = w; ctx.stroke(); };
+  if (hoverTile && hoverTile !== selTile) hl(hoverTile, 'rgba(255,255,255,.5)', 2);
+  if (selTile) {
+    hl(selTile, `rgba(243,179,61,${0.65 + Math.sin(now * 0.006) * 0.3})`, 3);
+    if (selTile.obj?.kind === 'source' || (!selTile.obj && !selTile.locked && selTile.type === 'grass')) {
+      // show which nests reach it
+      for (const n of reachingNests(selTile.q, selTile.r)) hl(S.tiles[key(n.q, n.r)], 'rgba(143,207,107,.8)', 2);
+    }
+  }
+
+  // drawables
+  const items = [];
+  for (const t of tl) {
+    if (!t.obj && t.type !== 'rock' && t.type !== 'tree') continue;
+    const p = hexToWorld(t.q, t.r);
+    items.push({ y: p.y, f: () => {
+      if (t.type === 'rock') drawRock(p.x, p.y);
+      else if (t.type === 'tree') drawTree(p.x, p.y);
+      else if (t.obj.kind === 'home') drawHome(p.x, p.y);
+      else if (t.obj.kind === 'source') { const s = srcById(t.obj.id); if (s) drawSource(s, p.x, p.y); }
+      else if (t.obj.kind === 'nest') { const n = nestById(t.obj.id); if (n) drawNestWorld(n, p.x, p.y); }
+    } });
+  }
+  const winter = isWinter();
+  for (const n of S.nests) {
+    if (!n._agents) continue;
+    for (const g of n._agents) {
+      if (g.st === 'home') continue;
+      items.push({ y: g.y, f: () => {
+        const wob = g.st === 'gather' ? 0 : Math.sin(g.ph * 0.35) * 0.9;
+        drawAnt(ctx, g.x - Math.sin(g.ang) * wob, g.y + Math.cos(g.ang) * wob, g.ang, CASTES[g.c].color, 0.95 * CASTES[g.c].sc, g.carry > 0 && g.prod ? PRODUCTS[g.prod].color : null, g.ph, g.st === 'gather' && Math.sin(g.ph) > 0);
+      } });
+    }
+    if (!winter) {
+      const np = nestPos(n);
+      for (const gd of n._guards || []) {
+        const a = gd.a + now * 0.0002, gx = np.x + Math.cos(a) * 30, gy = np.y + Math.sin(a) * 10 + 2;
+        items.push({ y: gy, f: () => drawAnt(ctx, gx, gy, a + Math.PI / 2, CASTES.soldier.color, 1.35, null, now * 0.01 + gd.ph, false) });
+      }
+    }
+  }
+  for (const k of keepers) items.push({ y: k.y, f: () => drawKeeper(k) });
+  items.sort((a, b) => a.y - b.y);
+  for (const it of items) it.f();
+
+  // floaters
+  ctx.textAlign = 'center';
+  for (const f of floaters) {
+    const a = 1 - f.t / 1.8;
+    ctx.globalAlpha = Math.max(0, a);
+    ctx.font = '800 13px Nunito, sans-serif';
+    ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(40,30,20,.6)'; ctx.strokeText(f.text, f.x, f.y - f.t * 22);
+    ctx.fillStyle = f.color; ctx.fillText(f.text, f.x, f.y - f.t * 22);
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+
+  drawLabels();
+  drawWeather();
+}
+
+function drawNestWorld(n, x, y) {
+  const flash = n.flash > 0 ? Math.sin(now * 0.03) * 0.5 + 0.5 : 0;
+  drawMound(ctx, x, y, n.level, 1, { winter: isWinter() });
+  if (flash) { ctx.fillStyle = `rgba(230,90,70,${flash * 0.35})`; ctx.beginPath(); ctx.ellipse(x, y - 10, 34, 24, 0, 0, Math.PI * 2); ctx.fill(); }
+  const s = 0.72 + 0.1 * n.level;
+  const full = storeTotal(n) >= storeCap(n) - 0.01;
+  const hungry = n.starve > 2;
+  if ((full || hungry) && cam.zoom > 0.6) {
+    const by = y - 46 * s - 14 + Math.sin(now * 0.005) * 2;
+    ctx.fillStyle = hungry ? '#e67b5f' : '#f3b33d';
+    ctx.beginPath(); ctx.arc(x + 16, by, 8, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x + 12, by + 6); ctx.lineTo(x + 14, by + 12); ctx.lineTo(x + 18, by + 7); ctx.fill();
+    ctx.fillStyle = '#2f230d'; ctx.font = '900 11px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('!', x + 16, by + 4);
+  }
+  if (isWinter() && cam.zoom > 0.6) {
+    ctx.fillStyle = 'rgba(80,100,120,.8)'; ctx.font = '800 10px Nunito, sans-serif'; ctx.textAlign = 'left';
+    const p = (now * 0.0006) % 1;
+    ctx.globalAlpha = 1 - p; ctx.fillText('z', x + 8 + p * 8, y - 42 * s - p * 14); ctx.globalAlpha = 1;
+  }
+}
+
+function toScreen(wx, wy) { return { x: (wx - cam.x) * cam.zoom + W / 2, y: (wy - cam.y) * cam.zoom + H / 2 }; }
+function toWorld(sx, sy) { return { x: (sx - W / 2) / cam.zoom + cam.x, y: (sy - H / 2) / cam.zoom + cam.y }; }
+
+function drawLabels() {
+  const far = cam.zoom < 0.62;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const pill = (x, y, text, bg, fg, sub) => {
+    ctx.font = '800 12px Nunito, sans-serif';
+    const w = ctx.measureText(text).width + (sub ? ctx.measureText(sub).width + 14 : 0) + 18;
+    ctx.fillStyle = bg; ctx.beginPath(); ctx.roundRect(x - w / 2, y - 11, w, 22, 11); ctx.fill();
+    ctx.fillStyle = fg; ctx.textAlign = 'left'; ctx.fillText(text, x - w / 2 + 9, y + 0.5);
+    if (sub) { ctx.fillStyle = '#f3b33d'; ctx.fillText(sub, x - w / 2 + 9 + ctx.measureText(text).width + 8, y + 0.5); }
+    ctx.textAlign = 'center';
+  };
+  for (const n of S.nests) {
+    const p = hexToWorld(n.q, n.r), sp = toScreen(p.x, p.y - (far ? 30 : 58) * (0.72 + 0.1 * n.level));
+    if (far || (cam.zoom > 0.9 && hoverTile && hoverTile.q === n.q && hoverTile.r === n.r))
+      pill(sp.x, sp.y, n.name, 'rgba(36,46,36,.9)', '#f4efdf', `${antsOf(n)}`);
+  }
+  if (far) {
+    for (const s of S.sources) {
+      const p = hexToWorld(s.q, s.r), sp = toScreen(p.x, p.y + 10);
+      ctx.font = '700 11px Nunito, sans-serif';
+      const text = SOURCES[s.kind].name, w = ctx.measureText(text).width + 22;
+      ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.beginPath(); ctx.roundRect(sp.x - w / 2, sp.y - 9, w, 18, 9); ctx.fill();
+      ctx.fillStyle = PRODUCTS[SOURCES[s.kind].product].color; ctx.beginPath(); ctx.arc(sp.x - w / 2 + 9, sp.y, 4, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#2f3a2c'; ctx.textAlign = 'left'; ctx.fillText(text, sp.x - w / 2 + 16, sp.y + 0.5); ctx.textAlign = 'center';
+    }
+    const h = toScreen(0, -30); pill(h.x, h.y, 'Bakıcı Kulübesi', 'rgba(201,75,59,.92)', '#fff');
+  }
+  ctx.textBaseline = 'alphabetic';
+}
+
+function drawWeather() {
+  const si = seasonIdx();
+  for (const p of ambient) {
+    const x = p.x * W, y = p.y * H;
+    if (si === 0) { ctx.fillStyle = 'rgba(248, 185, 206, .75)'; ctx.beginPath(); ctx.ellipse(x, y, 3.2, 1.8, p.r, 0, Math.PI * 2); ctx.fill(); }
+    else if (si === 1) { if (p.s < 0.35) { const a = 0.35 + Math.sin(now * 0.003 + p.r * 5) * 0.35; ctx.fillStyle = `rgba(255, 245, 190, ${a})`; ctx.beginPath(); ctx.arc(x, y, 1.8, 0, Math.PI * 2); ctx.fill(); } }
+    else if (si === 2) { ctx.fillStyle = p.s > 0.5 ? 'rgba(222, 136, 58, .8)' : 'rgba(196, 92, 50, .75)'; ctx.beginPath(); ctx.ellipse(x, y, 4, 2, p.r, 0, Math.PI * 2); ctx.fill(); }
+    else { ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.beginPath(); ctx.arc(x, y, 1.2 + p.s * 2, 0, Math.PI * 2); ctx.fill(); }
+  }
+  if (S.rain > 0) {
+    ctx.fillStyle = 'rgba(40, 60, 80, .12)'; ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = 'rgba(210, 230, 245, .55)'; ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    for (let i = 0; i < 120; i++) { const x = ((i * 97.3 + now * 0.35) % (W + 40)) - 20, y = ((i * 57.7 + now * 0.9) % (H + 40)) - 20; ctx.moveTo(x, y); ctx.lineTo(x - 3, y + 11); }
+    ctx.stroke();
+  }
+}
+function updateAmbient(dt) {
+  const si = seasonIdx();
+  for (const p of ambient) {
+    if (si === 3) { p.y += dt * (0.03 + p.s * 0.04); p.x += Math.sin(now * 0.001 + p.r) * dt * 0.01; }
+    else if (si === 2) { p.y += dt * (0.025 + p.s * 0.02); p.x += dt * 0.02; p.r += dt * 1.5; }
+    else if (si === 0) { p.y += dt * 0.015; p.x += dt * (0.02 + p.s * 0.015); p.r += dt; }
+    else { p.x += Math.sin(now * 0.0007 + p.r) * dt * 0.01; p.y += Math.cos(now * 0.0009 + p.r) * dt * 0.01; }
+    if (p.y > 1.02) p.y = -0.02; if (p.x > 1.02) p.x = -0.02; if (p.x < -0.02) p.x = 1.02; if (p.y < -0.02) p.y = 1.02;
+  }
+  for (let i = floaters.length - 1; i >= 0; i--) { floaters[i].t += dt; if (floaters[i].t > 1.8) floaters.splice(i, 1); }
+}
+
+/* ============================================================
+   Camera and input (world)
+   ============================================================ */
+const pointers = new Map();
+let drag = null, pinch = null, camAnim = null;
+const ZMIN = 0.38, ZMAX = 2.2;
+function clampCam() {
+  const ex = HS * SQ3 * MAPR, ey = HS * 1.5 * MAPR * TILT;
+  cam.x = clamp(cam.x, -ex, ex); cam.y = clamp(cam.y, -ey - 40, ey + 20);
+}
+function zoomAt(sx, sy, z) {
+  const before = toWorld(sx, sy);
+  cam.zoom = clamp(z, ZMIN, ZMAX);
+  const after = toWorld(sx, sy);
+  cam.x += before.x - after.x; cam.y += before.y - after.y; clampCam();
+}
+cv.addEventListener('pointerdown', e => {
+  cv.setPointerCapture(e.pointerId);
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  camAnim = null;
+  if (pointers.size === 1) drag = { sx: e.clientX, sy: e.clientY, cx: cam.x, cy: cam.y, moved: false };
+  else if (pointers.size === 2) {
+    const [a, b] = [...pointers.values()];
+    pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), z: cam.zoom }; if (drag) drag.moved = true;
+  }
+});
+cv.addEventListener('pointermove', e => {
+  if (pointers.has(e.pointerId)) pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pinch && pointers.size >= 2) {
+    const [a, b] = [...pointers.values()];
+    zoomAt((a.x + b.x) / 2, (a.y + b.y) / 2, pinch.z * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d);
+    return;
+  }
+  if (drag) {
+    const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+    if (Math.hypot(dx, dy) > 6) { drag.moved = true; cv.classList.add('dragging'); }
+    if (drag.moved) { cam.x = drag.cx - dx / cam.zoom; cam.y = drag.cy - dy / cam.zoom; clampCam(); }
+  } else if (e.pointerType === 'mouse') {
+    const w = toWorld(e.clientX, e.clientY), h = worldToHex(w.x, w.y);
+    hoverTile = S.tiles[key(h.q, h.r)] || null;
+  }
+});
+const endPointer = e => {
+  pointers.delete(e.pointerId);
+  if (pointers.size < 2) pinch = null;
+  if (drag && pointers.size === 0) {
+    if (!drag.moved && e.type === 'pointerup') tap(e.clientX, e.clientY);
+    drag = null; cv.classList.remove('dragging');
+  }
+};
+cv.addEventListener('pointerup', endPointer);
+cv.addEventListener('pointercancel', endPointer);
+cv.addEventListener('pointerleave', () => { hoverTile = null; });
+cv.addEventListener('wheel', e => { e.preventDefault(); camAnim = null; zoomAt(e.clientX, e.clientY, cam.zoom * Math.exp(-e.deltaY * 0.0015)); }, { passive: false });
+
+function animateCam(x, y, z, dur, done) { camAnim = { fx: cam.x, fy: cam.y, fz: cam.zoom, x, y, z, t: 0, dur, done }; }
+function stepCam(dt) {
+  if (!camAnim) return;
+  camAnim.t += dt;
+  const k = Math.min(1, camAnim.t / camAnim.dur), e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+  cam.x = camAnim.fx + (camAnim.x - camAnim.fx) * e; cam.y = camAnim.fy + (camAnim.y - camAnim.fy) * e; cam.zoom = camAnim.fz + (camAnim.z - camAnim.fz) * e;
+  if (k >= 1) { const d = camAnim.done; camAnim = null; d && d(); }
+}
+
+function tap(sx, sy) {
+  const w = toWorld(sx, sy);
+  let h = worldToHex(w.x, w.y);
+  // tall objects: a tap on a mound's upper half should still hit it
+  const below = worldToHex(w.x, w.y + 22);
+  const tb = S.tiles[key(below.q, below.r)];
+  if (tb?.obj?.kind === 'nest' || tb?.obj?.kind === 'home') h = below;
+  const t = S.tiles[key(h.q, h.r)];
+  if (!t) { closeSheet(); return; }
+  if (t.obj?.kind === 'nest') { closeSheet(); openNest(nestById(t.obj.id)); return; }
+  selTile = t; renderSheet(true);
+}
+
+/* ============================================================
+   UI helpers
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const coinHtml = '<span class="hexi coin" style="width:13px;height:14px"></span>';
+const costBtn = (label, cost, act, extra = '', cls = '') => `<button class="btn ${cls}" data-act="${act}" ${extra} ${canAfford(cost) ? '' : 'disabled'}>${label} ${coinHtml}<span class="num">${fmt(cost)}</span></button>`;
+const pdot = p => `<span class="pd" style="background:${PRODUCTS[p].color}"></span>`;
+
+function toast(msg, kind = '') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + kind; el.textContent = msg;
+  const box = $('toasts'); box.appendChild(el);
+  while (box.children.length > 3) box.firstChild.remove();
+  setTimeout(() => { el.style.transition = 'opacity .4s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 400); }, 3600);
+}
+
+let uiDown = false;
+document.addEventListener('pointerdown', e => { if (e.target.closest('#sheet,#nestPanel,#mcard')) uiDown = true; });
+document.addEventListener('pointerup', () => { setTimeout(() => { uiDown = false; }, 0); });
+function setHtml(el, html) { if (el._h !== html) { el._h = html; el.innerHTML = html; } }
+
+/* ---------- HUD ---------- */
+function renderHud() {
+  $('hCoins').textContent = fmt(S.coins);
+  $('hAnts').textContent = fmt(totalAnts());
+  $('hInvT').textContent = `${fmt(invTotal())}/${fmt(invCap())}`;
+  const se = season();
+  setHtml($('season'), `<div class="row"><b>${se.name}</b><small>Yıl ${year()}${S.rain > 0 ? ' · Yağmurlu' : ''}</small></div><p>${se.desc}</p><div class="bar"><i style="width:${(seasonFrac() * 100).toFixed(1)}%"></i></div>`);
+  const g = GOALS[S.goal];
+  setHtml($('goal'), g ? `<div class="lbl">Hedef ${S.goal + 1}/${GOALS.length}</div><div style="display:flex;gap:8px;justify-content:space-between;align-items:baseline"><span>${g.t}</span><span class="rw">+${g.r}</span></div>` : `<div class="lbl">Tüm hedefler tamam</div><div>Vadinin en ünlü karınca bakıcısısın.</div>`);
+  $('bSpeed').textContent = S.speed + '×';
+  $('bFar').classList.toggle('on', cam.zoom < 0.62);
+}
+
+/* ---------- tile sheet ---------- */
+function closeSheet() { selTile = null; $('sheet').hidden = true; }
+function renderSheet(force) {
+  const el = $('sheet');
+  if (!selTile) { el.hidden = true; return; }
+  if (uiDown && !force) return;
+  el.hidden = false;
+  const t = selTile;
+  const head = (title, sub) => `<div class="shead"><h2>${title}</h2><button class="x" data-act="close" aria-label="Kapat">×</button></div>${sub ? `<p class="sub">${sub}</p>` : ''}`;
+  let h = '';
+  if (t.type === 'pond') {
+    h = head('Nilüfer Göleti', 'Karıncalar suya giremez ama kurbağalar burada çok mutlu. Buraya bir şey kurulamaz.');
+  } else if (t.locked) {
+    const adj = NB.some(([dq, dr]) => { const o = S.tiles[key(t.q + dq, t.r + dr)]; return o && !o.locked && o.type !== 'pond'; });
+    h = head('Keşfedilmemiş Arazi', adj ? 'Bu araziyi satın alıp vadini genişletebilirsin.' : 'Önce yanındaki araziyi açman gerekiyor.')
+      + (adj ? `<div class="btnrow">${costBtn('Araziyi Satın Al', landCost(), 'buyLand')}</div>` : '');
+  } else if (t.type === 'rock' || t.type === 'tree') {
+    const c = t.type === 'rock' ? 20 : 35;
+    h = head(t.type === 'rock' ? 'Taş Yığını' : 'Çam Ağacı', 'Bu alanı temizleyip besin kaynağı ya da yeni yuva kurabilirsin.')
+      + `<div class="btnrow">${costBtn('Temizle', c, 'clear')}</div>`;
+  } else if (t.obj?.kind === 'home') {
+    const hc = helperCost();
+    h = head('Bakıcı Kulübesi', 'Senin evin. Hasat ettiğin ürünler buradaki ambarda bekler.')
+      + `<div class="rowline"><div class="grow"><div class="t">Ambar <span class="lvl">SV ${S.invLvl}</span></div><div class="d">${fmt(invTotal())} / ${fmt(invCap())} ürün</div></div>${costBtn('Büyüt', invUpCost(), 'upInv')}</div>`
+      + `<div class="rowline"><div class="grow"><div class="t">Çıraklar <span class="lvl">${S.helpers}/3</span></div><div class="d">Kileri %60'ı geçen yuvaları kendiliğinden hasat ederler.</div></div>${hc != null ? costBtn('İşe Al', hc, 'hire') : '<span class="chip">Tam kadro</span>'}</div>`
+      + `<div class="rowline"><div class="grow"><div class="chips">${PORDER.map(p => `<span class="chip">${pdot(p)}${PRODUCTS[p].name} <b class="num">${fmt(S.inv[p])}</b></span>`).join('')}</div></div></div>`
+      + `<div class="btnrow" style="margin-top:6px"><button class="btn leaf" data-act="market">Pazara Git</button></div>`;
+  } else if (t.obj?.kind === 'source') {
+    const s = srcById(t.obj.id), d = SOURCES[s.kind], reach = reachingNests(s.q, s.r);
+    const yieldNow = d.yield * (1 + 0.5 * (s.ql - 1)), time = d.time * Math.pow(0.85, s.sp - 1);
+    h = head(d.name, d.desc)
+      + `<div class="rowline"><div class="grow"><div class="t">Ürün</div><div class="d" style="display:flex;gap:6px;align-items:center">${pdot(d.product)}${PRODUCTS[d.product].name} · karınca başına ${yieldNow.toFixed(1)} · ${time.toFixed(1)} sn toplama</div></div></div>`
+      + `<div class="rowline"><div class="grow"><div class="t">Kalite <span class="lvl">SV ${s.ql}/5</span></div><div class="d">Daha verimli, daha renkli bitkiler. Verim +%50.</div></div>${s.ql < 5 ? costBtn('Geliştir', srcUpCost(s, s.ql), 'upQ') : '<span class="chip">En üst</span>'}</div>`
+      + `<div class="rowline"><div class="grow"><div class="t">Hız <span class="lvl">SV ${s.sp}/5</span></div><div class="d">Karıncalar daha çabuk toplar. Süre −%15.</div></div>${s.sp < 5 ? costBtn('Geliştir', srcUpCost(s, s.sp), 'upS') : '<span class="chip">En üst</span>'}</div>`
+      + `<p class="note ${reach.length ? '' : 'warn'}">${reach.length ? 'Buradan toplayan yuvalar: ' + reach.map(n => esc(n.name)).join(', ') : 'Hiçbir yuvanın menzilinde değil. Yakına yuva kur ya da yuvayı geliştirip menzili büyüt.'}</p>`
+      + `<div class="btnrow" style="margin-top:8px"><button class="btn ghost" data-act="removeSrc">Kaldır (+${fmt(SOURCES[s.kind].cost * 0.4)} altın)</button></div>`;
+  } else {
+    const reach = reachingNests(t.q, t.r);
+    h = head('Boş Çayır', reach.length ? `Menzildeki yuvalar: ${reach.map(n => esc(n.name)).join(', ')}` : 'Hiçbir yuvanın menzilinde değil. Burada kurulan kaynağa karınca gelmez; yeni koloni kurabilirsin.')
+      + `<div class="grid2">${SORDER.map(k => { const d = SOURCES[k]; return `<div class="card"><h3>${d.name}</h3><div class="meta">${pdot(d.product)}${PRODUCTS[d.product].name} · ${PRODUCTS[d.product].price} altın</div><p>${d.desc}</p>${costBtn('Kur', d.cost, 'build', `data-k="${k}"`)}</div>`; }).join('')}
+         <div class="card" style="grid-column:1/-1;flex-direction:row;align-items:center;gap:10px"><div class="grow" style="flex:1"><h3>Yeni Koloni</h3><p>Genç bir kraliçe ve 3 işçiyle yeni bir yuva kur.</p></div>${costBtn('Kur', newColonyCost(), 'buildNest', '', 'leaf')}</div></div>`;
+  }
+  setHtml(el, h);
+}
+
+$('sheet').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
+  const t = selTile, a = b.dataset.act;
+  if (a === 'close') return closeSheet();
+  if (a === 'market') { closeSheet(); return openMarket('products'); }
+  if (a === 'buyLand') { if (spend(landCost())) { t.locked = false; S.landBought++; toast('Yeni arazi açıldı', 'good'); } }
+  else if (a === 'clear') { if (spend(t.type === 'rock' ? 20 : 35)) { t.type = 'grass'; toast('Alan temizlendi'); } }
+  else if (a === 'upInv') { if (spend(invUpCost())) { S.invLvl++; toast('Ambar büyüdü', 'good'); } }
+  else if (a === 'hire') { const c = helperCost(); if (c != null && spend(c)) { S.helpers++; ensureKeepers(); toast('Yeni çırak işe başladı', 'good'); } }
+  else if (a === 'build') { const d = SOURCES[b.dataset.k]; if (spend(d.cost)) { addSource(t.q, t.r, b.dataset.k); toast(`${d.name} kuruldu`, 'good'); } }
+  else if (a === 'buildNest') { const c = newColonyCost(); if (spend(c)) { const n = addNest(t.q, t.r, false); n.invested = c; toast(`${n.name} kuruldu. Kraliçe yuvaya yerleşti!`, 'good'); } }
+  else if (a === 'upQ' || a === 'upS') { const s = srcById(t.obj.id), f = a === 'upQ' ? 'ql' : 'sp'; if (spend(srcUpCost(s, s[f]))) { s[f]++; s._pts = null; } }
+  else if (a === 'removeSrc') { const s = srcById(t.obj.id); S.coins += Math.round(SOURCES[s.kind].cost * 0.4); S.sources = S.sources.filter(x => x !== s); t.obj = null; }
+  S._tl = null;
+  renderSheet(true); renderHud();
+});
+
+/* ============================================================
+   Nest interior
+   ============================================================ */
+let nestOpen = null, selChamber = null, hoverChamber = null, prevCam = null;
+const icv = $('inner'), ictx = icv.getContext('2d');
+let IW = 0, IH = 0;
+function resizeInner() {
+  const r = $('innerWrap').getBoundingClientRect();
+  IW = r.width; IH = r.height;
+  icv.width = Math.round(IW * DPR); icv.height = Math.round(IH * DPR);
+  layoutInner();
+}
+let L = {};
+function layoutInner() {
+  const g = IH * 0.22, u = Math.min(IW, IH * 1.35);
+  const P = (fx, fy) => ({ x: IW * fx, y: g + (IH - g) * fy });
+  L = {
+    g, u,
+    nodes: { E: { x: IW * 0.5, y: g - 6 }, guard: P(0.5, 0.16), nursery: P(0.24, 0.42), storage: P(0.76, 0.42), queen: P(0.5, 0.64), fungus: P(0.25, 0.84) },
+    edges: [['E', 'guard'], ['guard', 'nursery'], ['guard', 'storage'], ['nursery', 'queen'], ['storage', 'queen'], ['queen', 'fungus']],
+  };
+  inAnts = [];
+}
+function chamberSize(n, c) {
+  const lv = c === 'guard' ? 1 : n.ch[c] || 1;
+  const base = { guard: 0.07, nursery: 0.1, storage: 0.1, queen: 0.1, fungus: 0.1 }[c];
+  const rx = L.u * base * (0.85 + 0.1 * lv);
+  return { rx, ry: rx * 0.58 };
+}
+function edgeCtrl(a, b) { return { x: (a.x + b.x) / 2 + (b.y - a.y) * 0.12, y: (a.y + b.y) / 2 - (b.x - a.x) * 0.05 }; }
+function qpt(a, c, b, t) { const u = 1 - t; return { x: u * u * a.x + 2 * u * t * c.x + t * t * b.x, y: u * u * a.y + 2 * u * t * c.y + t * t * b.y }; }
+
+let inAnts = [];
+function syncInAnts(n) {
+  const want = Math.min(26, Math.max(3, Math.round(antsOf(n) * 0.5)));
+  const edges = L.edges.filter(e => e[1] !== 'fungus' || n.ch.fungus > 0);
+  const pool = CORDER.flatMap(c => Array(n.ants[c]).fill(c));
+  while (inAnts.length < want) inAnts.push({ e: edges[Math.floor(Math.random() * edges.length)], t: Math.random(), dir: Math.random() < 0.5 ? 1 : -1, sp: rnd(0.12, 0.22), c: pool[Math.floor(Math.random() * pool.length)] || 'worker', ph: Math.random() * 6, carry: Math.random() < 0.4 });
+  if (inAnts.length > want) inAnts.length = want;
+}
+function stepInAnts(n, dt) {
+  const edges = L.edges.filter(e => e[1] !== 'fungus' || n.ch.fungus > 0);
+  const slow = isWinter() ? 0.25 : 1;
+  for (const a of inAnts) {
+    a.t += a.dir * a.sp * dt * slow; a.ph += dt * 12 * slow;
+    if (a.t > 1 || a.t < 0) {
+      const node = a.t > 1 ? a.e[1] : a.e[0];
+      const opts = edges.filter(e => e[0] === node || e[1] === node);
+      const e = opts[Math.floor(Math.random() * opts.length)];
+      a.e = e; a.dir = e[0] === node ? 1 : -1; a.t = a.dir > 0 ? 0 : 1;
+      if (Math.random() < 0.3) a.carry = !a.carry;
+    }
+  }
+}
+
+function renderInner(n) {
+  const c = ictx, si = seasonIdx(), se = SEASONS[si];
+  c.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const g = L.g;
+  // sky
+  const sky = c.createLinearGradient(0, 0, 0, g);
+  sky.addColorStop(0, se.sky[0]); sky.addColorStop(1, se.sky[1]); c.fillStyle = sky; c.fillRect(0, 0, IW, g);
+  // soil
+  const soil = c.createLinearGradient(0, g, 0, IH);
+  soil.addColorStop(0, '#a0704a'); soil.addColorStop(0.45, '#7a4f31'); soil.addColorStop(1, '#4b2f1d');
+  c.fillStyle = soil; c.fillRect(0, g, IW, IH - g);
+  c.strokeStyle = 'rgba(50, 28, 15, .18)'; c.lineWidth = 2;
+  for (let i = 1; i < 6; i++) { const y = g + (IH - g) * i / 6; c.beginPath(); c.moveTo(0, y); for (let x = 0; x <= IW; x += 30) c.lineTo(x, y + Math.sin(x * 0.02 + i) * 5); c.stroke(); }
+  const r = mulberry(99);
+  for (let i = 0; i < 70; i++) { const x = r() * IW, y = g + 10 + r() * (IH - g); c.fillStyle = r() < 0.5 ? 'rgba(210,180,140,.28)' : 'rgba(40,22,12,.28)'; c.beginPath(); c.ellipse(x, y, 2 + r() * 5, 1.5 + r() * 3, r() * 3, 0, Math.PI * 2); c.fill(); }
+  c.strokeStyle = 'rgba(214, 180, 130, .4)'; c.lineWidth = 1.5;
+  for (let i = 0; i < 7; i++) { let x = r() * IW, y = g; c.beginPath(); c.moveTo(x, y); for (let j = 0; j < 6; j++) { x += (r() - 0.5) * 22; y += 12 + r() * 14; c.lineTo(x, y); } c.stroke(); }
+  // grass strip
+  c.fillStyle = grassColor(1); c.beginPath(); c.moveTo(0, g + 6);
+  for (let x = 0; x <= IW; x += 8) c.lineTo(x, g - 3 - (Math.sin(x * 0.7) + 1) * 2.5);
+  c.lineTo(IW, g + 6); c.closePath(); c.fill();
+  c.fillStyle = 'rgba(0,0,0,.12)'; c.fillRect(0, g + 4, IW, 3);
+  // mound on surface
+  drawMound(c, IW / 2, g + 2, n.level, Math.max(1.2, L.u / 420), { winter: si === 3 });
+  if (si === 3) { c.fillStyle = 'rgba(248,251,252,.95)'; c.fillRect(0, g - 6, IW, 5); }
+
+  // tunnels
+  const N = L.nodes;
+  const tunnel = (e, locked) => {
+    const a = N[e[0]], b = N[e[1]], cp = edgeCtrl(a, b);
+    c.lineCap = 'round';
+    if (locked) { c.setLineDash([6, 8]); c.strokeStyle = 'rgba(40,22,12,.45)'; c.lineWidth = 6; c.beginPath(); c.moveTo(a.x, a.y); c.quadraticCurveTo(cp.x, cp.y, b.x, b.y); c.stroke(); c.setLineDash([]); return; }
+    c.strokeStyle = '#3b2415'; c.lineWidth = L.u * 0.034 + 4; c.beginPath(); c.moveTo(a.x, a.y); c.quadraticCurveTo(cp.x, cp.y, b.x, b.y); c.stroke();
+    c.strokeStyle = '#6b4529'; c.lineWidth = L.u * 0.034; c.beginPath(); c.moveTo(a.x, a.y); c.quadraticCurveTo(cp.x, cp.y, b.x, b.y); c.stroke();
+  };
+  L.edges.forEach(e => tunnel(e, e[1] === 'fungus' && n.ch.fungus === 0));
+
+  // chambers
+  const drawCh = (id) => {
+    const p = N[id], { rx, ry } = chamberSize(n, id);
+    const locked = id === 'fungus' && n.ch.fungus === 0;
+    if (locked) {
+      c.setLineDash([6, 6]); c.strokeStyle = 'rgba(255,230,200,.35)'; c.lineWidth = 2;
+      c.beginPath(); c.ellipse(p.x, p.y, rx, ry, 0, 0, Math.PI * 2); c.stroke(); c.setLineDash([]);
+    } else {
+      c.fillStyle = '#3b2415'; c.beginPath(); c.ellipse(p.x, p.y, rx + 4, ry + 4, 0, 0, Math.PI * 2); c.fill();
+      const cg = c.createRadialGradient(p.x, p.y - ry * 0.4, 2, p.x, p.y, rx);
+      cg.addColorStop(0, '#9a6b45'); cg.addColorStop(1, '#6a4428');
+      c.fillStyle = cg; c.beginPath(); c.ellipse(p.x, p.y, rx, ry, 0, 0, Math.PI * 2); c.fill();
+      c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(p.x, p.y + ry * 0.55, rx * 0.85, ry * 0.35, 0, 0, Math.PI * 2); c.fill();
+    }
+    if (id === selChamber || id === hoverChamber) {
+      c.strokeStyle = id === selChamber ? '#f3b33d' : 'rgba(255,255,255,.5)'; c.lineWidth = 3;
+      c.beginPath(); c.ellipse(p.x, p.y, rx + 7, ry + 7, 0, 0, Math.PI * 2); c.stroke();
+    }
+    chamberContents(n, id, p, rx, ry, locked);
+    const label = id === 'guard' ? `Nöbet Odası · ${n.ants.soldier} asker` : locked ? `${CHAMBERS[id].name} · kilitli` : `${CHAMBERS[id].name} · Sv ${n.ch[id]}`;
+    c.font = `800 ${Math.max(11, L.u * 0.024)}px Nunito, sans-serif`; c.textAlign = 'center';
+    c.lineWidth = 3.5; c.strokeStyle = 'rgba(30,16,8,.8)'; c.strokeText(label, p.x, p.y + ry + 20);
+    c.fillStyle = '#f6e7d0'; c.fillText(label, p.x, p.y + ry + 20);
+  };
+  ['guard', 'nursery', 'storage', 'queen', 'fungus'].forEach(drawCh);
+
+  // moving ants in tunnels
+  const sc = Math.max(1.3, L.u / 330);
+  for (const a of inAnts) {
+    const A = N[a.e[0]], B = N[a.e[1]], cp = edgeCtrl(A, B);
+    const p = qpt(A, cp, B, clamp(a.t, 0, 1)), p2 = qpt(A, cp, B, clamp(a.t + 0.01 * a.dir, 0, 1));
+    const ang = Math.atan2(p2.y - p.y, p2.x - p.x);
+    drawAnt(c, p.x, p.y, ang, CASTES[a.c].color, sc * CASTES[a.c].sc, a.carry ? '#e9d6a0' : null, a.ph, isWinter());
+  }
+  if (isWinter()) {
+    c.fillStyle = 'rgba(200, 220, 240, .10)'; c.fillRect(0, g, IW, IH - g);
+  }
+}
+
+function chamberContents(n, id, p, rx, ry, locked) {
+  const c = ictx, sc = Math.max(1.3, L.u / 330), t = now * 0.001;
+  if (id === 'queen') {
+    const pulse = 1 + Math.sin(t * 2) * 0.03;
+    c.save(); c.translate(p.x, p.y + 2); c.scale(pulse, pulse);
+    // big egg-laying abdomen behind the body, then the ant, then a tiny crown
+    c.fillStyle = '#6b3a22'; c.beginPath(); c.ellipse(-sc * 15, 0, sc * 10, sc * 6.5, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = 'rgba(255,255,255,.2)'; c.beginPath(); c.ellipse(-sc * 16, -sc * 2.5, sc * 5, sc * 2, 0, 0, Math.PI * 2); c.fill();
+    drawAnt(c, 0, 0, 0, '#6b3a22', sc * 2.4, null, t * 2, true);
+    c.fillStyle = '#f3c14b'; const hx = sc * 6.5, hy = -sc * 3.6;
+    c.beginPath(); c.moveTo(hx - sc * 3, hy); c.lineTo(hx - sc * 3, hy - sc * 3); c.lineTo(hx - sc * 1.5, hy - sc * 1.5); c.lineTo(hx, hy - sc * 3.6); c.lineTo(hx + sc * 1.5, hy - sc * 1.5); c.lineTo(hx + sc * 3, hy - sc * 3); c.lineTo(hx + sc * 3, hy); c.fill();
+    c.restore();
+    for (let i = 0; i < 3; i++) { const a = t * 0.5 + i * 2.1; drawAnt(c, p.x + Math.cos(a) * rx * 0.72, p.y + Math.sin(a) * ry * 0.62, a + Math.PI / 2, '#4a2c1c', sc, null, t * 8 + i, false); }
+    if (n._laying && !isWinter()) { const k = n.layT; for (let i = 0; i < 3; i++) ell2(c, p.x - rx * 0.62 + i * sc * 4, p.y + ry * 0.45, sc * 1.6, sc * 2.2, `rgba(255,252,240,${i / 3 < k ? 1 : 0.25})`); }
+    if (isWinter()) { c.fillStyle = 'rgba(255,255,255,.8)'; c.font = `800 ${14 * sc / 1.3}px Nunito, sans-serif`; c.fillText('z z', p.x + rx * 0.5, p.y - ry * 0.6 - Math.sin(t) * 3); }
+  } else if (id === 'nursery') {
+    const eggs = Math.min(22, 5 + n.ch.nursery * 3);
+    const rr = mulberry(n.id * 31 + 5);
+    for (let i = 0; i < eggs; i++) {
+      const a = rr() * Math.PI * 2, d = Math.sqrt(rr()) * 0.7;
+      const x = p.x + Math.cos(a) * rx * d, y = p.y + Math.sin(a) * ry * d + ry * 0.1;
+      const kind = rr();
+      if (kind < 0.5) ell2(c, x, y, sc * 1.5, sc * 2.1, '#fffaf0', a);
+      else if (kind < 0.8) { c.strokeStyle = '#f7efdc'; c.lineWidth = sc * 2.4; c.lineCap = 'round'; c.beginPath(); c.arc(x, y, sc * 2.2, a, a + 3.6 + Math.sin(t * 2 + i) * 0.2); c.stroke(); }
+      else ell2(c, x, y, sc * 2.2, sc * 3.4, '#e8cf9f', a);
+    }
+    drawAnt(c, p.x + Math.cos(t * 0.7) * rx * 0.5, p.y - ry * 0.3, t * 0.7 + Math.PI / 2, '#4a2c1c', sc, null, t * 8, false);
+  } else if (id === 'storage') {
+    const tot = storeTotal(n), cap = storeCap(n);
+    const piles = PORDER.filter(pp => n.store[pp] >= 0.5);
+    const count = Math.round(Math.min(1, tot / cap) * 46);
+    let k = 0;
+    const rr = mulberry(77);
+    piles.forEach((pp) => {
+      const m = Math.round(count * n.store[pp] / Math.max(1, tot));
+      for (let i = 0; i < m; i++, k++) {
+        const a = rr() * Math.PI, d = Math.sqrt(rr()) * 0.75;
+        const x = p.x + Math.cos(a) * rx * d * (rr() < 0.5 ? -1 : 1), y = p.y + ry * 0.45 - Math.sin(a) * ry * d * 0.9;
+        ell2(c, x, y, sc * 2.4, sc * 2, PRODUCTS[pp].color);
+      }
+    });
+    const bw = rx * 1.2;
+    c.fillStyle = 'rgba(0,0,0,.35)'; c.fillRect(p.x - bw / 2, p.y - ry - 12, bw, 5);
+    c.fillStyle = tot >= cap - 0.01 ? '#e67b5f' : '#f3b33d'; c.fillRect(p.x - bw / 2, p.y - ry - 12, bw * Math.min(1, tot / cap), 5);
+  } else if (id === 'fungus') {
+    if (locked) { c.fillStyle = 'rgba(255,230,200,.6)'; c.font = `700 ${Math.max(11, L.u * 0.022)}px Nunito, sans-serif`; c.textAlign = 'center'; c.fillText(n.level >= 2 ? 'Açmak için dokun' : 'Yuva Sv 2 gerekli', p.x, p.y + 4); return; }
+    const blobs = 3 + n.ch.fungus * 3;
+    const rr = mulberry(n.id * 7 + 3);
+    for (let i = 0; i < blobs; i++) {
+      const a = rr() * Math.PI * 2, d = Math.sqrt(rr()) * 0.62;
+      const x = p.x + Math.cos(a) * rx * d, y = p.y + Math.sin(a) * ry * d + ry * 0.15, s = sc * (3 + rr() * 2.5) * (1 + Math.sin(t + i) * 0.04);
+      ell2(c, x, y, s * 1.2, s, '#e9e1cf'); ell2(c, x - s * 0.4, y - s * 0.3, s * 0.6, s * 0.5, '#fbf8f0'); ell2(c, x + s * 0.5, y + s * 0.2, s * 0.35, s * 0.3, '#c9d2d6');
+    }
+    for (let i = 0; i < Math.min(8, Math.round(n.store.leaf)); i++) ell2(c, p.x - rx * 0.6 + i * sc * 4, p.y + ry * 0.62, sc * 2.2, sc * 1, '#6fb85a', 0.5);
+    drawAnt(c, p.x + Math.cos(t * 0.6) * rx * 0.55, p.y - ry * 0.25, t * 0.6 + Math.PI / 2, CASTES.leafcutter.color, sc * 1.1, '#6fb85a', t * 8, false);
+  } else if (id === 'guard') {
+    const k = Math.min(6, n.ants.soldier);
+    for (let i = 0; i < k; i++) { const x = p.x - rx * 0.6 + (i + 0.5) * rx * 1.2 / k; drawAnt(c, x, p.y + Math.sin(t + i) * 1.2, -Math.PI / 2, CASTES.soldier.color, sc * 1.4, null, t * 3 + i, true); }
+    if (!k) { c.fillStyle = 'rgba(255,230,200,.5)'; c.font = `700 ${Math.max(11, L.u * 0.02)}px Nunito, sans-serif`; c.textAlign = 'center'; c.fillText('boş', p.x, p.y + 4); }
+  }
+}
+function ell2(c, x, y, rx, ry, fill, rot = 0) { c.beginPath(); c.ellipse(x, y, rx, ry, rot, 0, Math.PI * 2); c.fillStyle = fill; c.fill(); }
+
+function chamberAt(x, y) {
+  if (!nestOpen) return null;
+  for (const id of ['guard', 'nursery', 'storage', 'queen', 'fungus']) {
+    const p = L.nodes[id], { rx, ry } = chamberSize(nestOpen, id);
+    if (((x - p.x) / (rx + 8)) ** 2 + ((y - p.y) / (ry + 18)) ** 2 <= 1) return id;
+  }
+  return null;
+}
+icv.addEventListener('pointermove', e => { const r = icv.getBoundingClientRect(); hoverChamber = chamberAt(e.clientX - r.left, e.clientY - r.top); icv.style.cursor = hoverChamber ? 'pointer' : 'default'; });
+icv.addEventListener('pointerleave', () => { hoverChamber = null; });
+icv.addEventListener('click', e => {
+  const r = icv.getBoundingClientRect(), id = chamberAt(e.clientX - r.left, e.clientY - r.top);
+  selChamber = id; renderNestPanel(true);
+  const row = document.querySelector(`[data-ch="${id === 'guard' ? 'castes' : id}"]`);
+  row?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+});
+
+function openNest(n) {
+  if (!n) return;
+  prevCam = { x: cam.x, y: cam.y, z: cam.zoom };
+  const p = hexToWorld(n.q, n.r);
+  S.stats.opened++;
+  animateCam(p.x, p.y - 16, Math.min(ZMAX, 2.1), 0.38, () => {
+    nestOpen = n; selChamber = null;
+    const v = $('nestView'); v.classList.add('open'); v.setAttribute('aria-hidden', 'false');
+    requestAnimationFrame(() => { resizeInner(); syncInAnts(n); renderNestPanel(true); });
+    resizeInner(); syncInAnts(n); renderNestPanel(true);
+  });
+}
+function closeNest() {
+  const v = $('nestView'); v.classList.remove('open'); v.setAttribute('aria-hidden', 'true');
+  nestOpen = null;
+  if (prevCam) animateCam(prevCam.x, prevCam.y, prevCam.z, 0.4);
+}
+$('backBtn').addEventListener('click', closeNest);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!$('market').hidden) closeMarket(); else if (nestOpen) closeNest(); else closeSheet(); } });
+
+function renderNestPanel(force) {
+  const n = nestOpen; if (!n) return;
+  if (uiDown && !force) return;
+  const el = $('nestPanel');
+  const total = antsOf(n), cap = nestCap(n), st = storeTotal(n), sc = storeCap(n);
+  const winter = isWinter();
+  const status = winter ? 'Kış uykusunda. Kraliçe dinleniyor, karıncalar kilerden besleniyor.'
+    : n._hungryQueen ? 'Kraliçe aç: yumurtlamak için kilerde yiyecek olmalı.'
+    : total >= cap ? 'Yuva dolu. Kuluçka odasını ya da yuvayı geliştir.'
+    : `Kraliçe yumurtluyor: sıradaki ${CASTES[n.focus].name.toLowerCase()} %${Math.floor(n.layT * 100)}`;
+  const nextLvl = NEST_LEVEL_COST[n.level + 1];
+  let h = `<div class="shead"><span class="badge">${n.level}</span><h2>${esc(n.name)}</h2></div>
+    <p class="sub">Toplama menzili ${nestRadius(n)} kare · Değeri ${fmt(nestValue(n))} altın</p>
+    <div class="statbars">
+      <div><div class="top"><span>Karıncalar</span><span class="num">${total} / ${cap}</span></div><div class="bar"><i style="width:${Math.min(100, total / cap * 100)}%;background:var(--leaf)"></i></div></div>
+      <div><div class="top"><span>Kiler</span><span class="num">${fmt(st)} / ${sc}</span></div><div class="bar"><i style="width:${Math.min(100, st / sc * 100)}%;${st >= sc - 0.01 ? 'background:var(--danger)' : ''}"></i></div></div>
+    </div>
+    <p class="note ${n.starve > 2 || n._hungryQueen ? 'warn' : ''}">${status}</p>
+    <div class="btnrow" style="margin-top:10px">
+      <button class="btn" data-act="harvest">Hasat Et</button>
+      ${nextLvl ? costBtn(`Yuvayı Sv ${n.level + 1} yap`, nextLvl, 'nestUp', '', 'leaf') : '<span class="chip">Yuva en üst seviyede</span>'}
+    </div>
+    <div class="sec"><h4>Kiler</h4><div class="chips">${PORDER.map(p => `<span class="chip">${pdot(p)}${PRODUCTS[p].name} <b class="num">${fmt(n.store[p])}</b></span>`).join('')}</div>
+    <p class="sub" style="margin-top:8px">Hasatta kış payı yuvada kalır${n.ch.fungus ? '; yapraklar mantar bahçesine ayrılır' : ''}.</p></div>
+    <div class="sec"><h4>Odalar</h4>`;
+  for (const cId of CH_ORDER) {
+    const lv = n.ch[cId], max = chamberMax(n, cId);
+    const btn = cId === 'fungus' && lv === 0
+      ? (n.level >= 2 ? costBtn('Aç', chamberCost(n, cId), 'chamber', `data-c="${cId}"`) : '<span class="chip">Yuva Sv 2</span>')
+      : lv < max ? costBtn('Geliştir', chamberCost(n, cId), 'chamber', `data-c="${cId}"`) : `<span class="chip">${n.level >= 5 ? 'En üst' : `Yuva Sv ${n.level + 1}`}</span>`;
+    h += `<div class="rowline ${selChamber === cId ? 'sel' : ''}" data-ch="${cId}"><div class="grow"><div class="t">${CHAMBERS[cId].name} <span class="lvl">${lv ? `SV ${lv}/${max}` : 'KAPALI'}</span></div><div class="d">${CHAMBERS[cId].desc}</div></div>${btn}</div>`;
+  }
+  h += `</div><div class="sec"><h4>Kraliçenin tercihi</h4><div class="chips">${CORDER.map(c => { const ok = n.ch.queen >= CASTES[c].queenLvl; return `<button class="chip ${n.focus === c ? 'on' : ''}" data-act="focus" data-c="${c}" ${ok ? '' : 'disabled'} title="${ok ? '' : 'Kraliçe Odası Sv ' + CASTES[c].queenLvl}">${CASTES[c].name}${ok ? '' : ' · Sv' + CASTES[c].queenLvl}</button>`; }).join('')}</div>
+    <p class="sub" style="margin-top:8px">İşçi yumurtası 1 yiyecek, özel kastlar 3 yiyecek ister ve daha yavaş gelişir.</p></div>
+    <div class="sec ${selChamber === 'guard' ? 'sel' : ''}" data-ch="castes"><h4>Karıncalar</h4>`;
+  for (const c of CORDER) {
+    h += `<div class="rowline"><div class="grow"><div class="t">${CASTES[c].name} <span class="lvl num">×${n.ants[c]}</span></div><div class="d">${CASTES[c].desc}</div></div>
+      <div class="btnrow" style="flex-wrap:nowrap">${costBtn('+', CASTES[c].cost, 'buyAnt', `data-c="${c}" ${total >= cap ? 'disabled' : ''}`)}<button class="btn ghost" data-act="sellAnt" data-c="${c}" ${n.ants[c] > 0 && total > 1 ? '' : 'disabled'} title="Sat: ${antSell(c)} altın">−${antSell(c)}</button></div></div>`;
+  }
+  h += `</div>`;
+  setHtml(el, h);
+}
+$('nestPanel').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); const n = nestOpen; if (!b || b.disabled || !n) return;
+  const a = b.dataset.act, c = b.dataset.c;
+  if (a === 'harvest') { queueHarvest(n); closeNest(); }
+  else if (a === 'nestUp') { const cost = NEST_LEVEL_COST[n.level + 1]; if (cost && spend(cost)) { n.level++; n.invested += cost; toast(`${n.name} seviye ${n.level} oldu. Menzil büyüdü!`, 'good'); layoutInner(); syncInAnts(n); } }
+  else if (a === 'chamber') { const cost = chamberCost(n, c); if (spend(cost)) { n.ch[c]++; n.invested += cost; selChamber = c; toast(`${CHAMBERS[c].name} ${n.ch[c] === 1 && c === 'fungus' ? 'açıldı' : 'gelişti'}`, 'good'); inAnts = []; syncInAnts(n); } }
+  else if (a === 'focus') { n.focus = c; n.layT = 0; }
+  else if (a === 'buyAnt') { if (antsOf(n) < nestCap(n) && spend(CASTES[c].cost)) { n.ants[c]++; n.invested += CASTES[c].cost * 0.3; n._dirty = true; syncInAnts(n); } }
+  else if (a === 'sellAnt') { if (n.ants[c] > 0 && antsOf(n) > 1) { n.ants[c]--; S.coins += antSell(c); n._dirty = true; } }
+  renderNestPanel(true); renderHud();
+});
+
+/* ============================================================
+   Market
+   ============================================================ */
+let mTab = 'products', mNest = null, confirmSell = null;
+function openMarket(tab) { mTab = tab || mTab; confirmSell = null; $('market').hidden = false; renderMarket(true); }
+function closeMarket() { $('market').hidden = true; }
+$('market').addEventListener('click', e => { if (e.target.id === 'market') closeMarket(); });
+function renderMarket(force) {
+  if ($('market').hidden) return;
+  if (uiDown && !force) return;
+  let h = `<div class="shead"><h2>Vadi Pazarı</h2><button class="x" data-act="close" aria-label="Kapat">×</button></div>
+    <div class="tabs">${[['products', 'Ürünler'], ['ants', 'Karıncalar'], ['colonies', 'Koloniler']].map(([k, l]) => `<button class="tab ${mTab === k ? 'on' : ''}" data-act="tab" data-t="${k}">${l}</button>`).join('')}</div>`;
+  if (mTab === 'products') {
+    h += `<p class="sub">Ambar: ${fmt(invTotal())} / ${fmt(invCap())}. Çok satılan ürünün fiyatı geçici olarak düşer${isWinter() ? '. Kışın her şey %35 daha değerli.' : '.'}</p>`;
+    let all = 0;
+    for (const p of PORDER) {
+      const pr = price(p), amt = Math.floor(S.inv[p]); all += amt * pr;
+      const dem = S.demand[p], tr = dem < 0.97 ? `<span class="trend down">▼ %${Math.round((1 - dem) * 100)}</span>` : isWinter() ? '<span class="trend up">▲ kış</span>' : '';
+      h += `<div class="rowline"><span class="pd" style="width:14px;height:14px;background:${PRODUCTS[p].color}"></span><div class="grow"><div class="t">${PRODUCTS[p].name} ${tr}</div><div class="d num">Ambarda ${fmt(amt)} · birim <span class="price">${pr.toFixed(1)}</span></div></div>
+        <div class="btnrow" style="flex-wrap:nowrap"><button class="btn ghost" data-act="sell" data-p="${p}" data-q="10" ${amt >= 1 ? '' : 'disabled'}>10 sat</button><button class="btn" data-act="sell" data-p="${p}" data-q="all" ${amt >= 1 ? '' : 'disabled'}>Tümü</button></div></div>`;
+    }
+    h += `<div class="btnrow" style="margin-top:12px;justify-content:flex-end"><button class="btn leaf" data-act="sellAll" ${all >= 1 ? '' : 'disabled'}>Hepsini sat · ≈${fmt(all)} altın</button></div>`;
+  } else if (mTab === 'ants') {
+    if (!mNest || !nestById(mNest)) mNest = S.nests[0].id;
+    const n = nestById(mNest), total = antsOf(n), cap = nestCap(n);
+    h += `<div class="chips" style="margin-bottom:10px">${S.nests.map(x => `<button class="chip ${x.id === mNest ? 'on' : ''}" data-act="pickNest" data-id="${x.id}">${esc(x.name)} · ${antsOf(x)}</button>`).join('')}</div>
+      <p class="sub">${esc(n.name)}: ${total} / ${cap} karınca. Satın alınan karıncalar hemen işe başlar.</p>`;
+    for (const c of CORDER) {
+      h += `<div class="rowline"><div class="grow"><div class="t">${CASTES[c].name} <span class="lvl num">×${n.ants[c]}</span></div><div class="d">${CASTES[c].desc}</div></div>
+        <div class="btnrow" style="flex-wrap:nowrap">${costBtn('Al', CASTES[c].cost, 'buyAnt', `data-c="${c}" ${total >= cap ? 'disabled' : ''}`)}<button class="btn ghost" data-act="sellAnt" data-c="${c}" ${n.ants[c] > 0 && total > 1 ? '' : 'disabled'}>Sat +${antSell(c)}</button></div></div>`;
+    }
+  } else {
+    h += `<p class="sub">Kolonini ziyaret et ya da iyi bir fiyata başka bir bakıcıya sat. En az bir koloni kalmalı.</p>`;
+    for (const n of S.nests) {
+      const confirm = confirmSell === n.id;
+      h += `<div class="rowline"><span class="badge" style="width:30px;height:34px;font-size:14px">${n.level}</span><div class="grow"><div class="t">${esc(n.name)}</div><div class="d num">${antsOf(n)} karınca · kiler ${fmt(storeTotal(n))} · değer ${fmt(nestValue(n))} altın</div></div>
+        <div class="btnrow" style="flex-wrap:nowrap"><button class="btn ghost" data-act="goNest" data-id="${n.id}">Git</button><button class="btn ${confirm ? 'warn' : ''}" data-act="sellNest" data-id="${n.id}" ${S.nests.length > 1 ? '' : 'disabled'}>${confirm ? 'Eminim, sat' : 'Sat'}</button></div></div>`;
+    }
+    h += `<p class="note" style="margin-top:10px">Yeni koloni kurmak için haritada boş bir çayıra dokun. Sıradaki koloni: ${fmt(newColonyCost())} altın.</p>`;
+  }
+  setHtml($('mcard'), h);
+}
+$('mcard').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
+  const a = b.dataset.act;
+  if (a === 'close') return closeMarket();
+  if (a === 'tab') { mTab = b.dataset.t; confirmSell = null; }
+  else if (a === 'sell' || a === 'sellAll') {
+    const list = a === 'sellAll' ? PORDER : [b.dataset.p];
+    let got = 0, cnt = 0;
+    for (const p of list) {
+      const amt = Math.floor(S.inv[p]), q = a === 'sellAll' || b.dataset.q === 'all' ? amt : Math.min(10, amt);
+      for (let i = 0; i < q; i++) { got += price(p); S.demand[p] = Math.max(0.45, S.demand[p] - 0.0035); }
+      S.inv[p] -= q; cnt += q;
+    }
+    if (cnt) { S.coins += got; S.stats.sold += cnt; toast(`${cnt} ürün satıldı: +${fmt(got)} altın`, 'good'); }
+  }
+  else if (a === 'pickNest') mNest = +b.dataset.id;
+  else if (a === 'buyAnt' || a === 'sellAnt') {
+    const n = nestById(mNest), c = b.dataset.c;
+    if (a === 'buyAnt') { if (antsOf(n) < nestCap(n) && spend(CASTES[c].cost)) { n.ants[c]++; n.invested += CASTES[c].cost * 0.3; n._dirty = true; } }
+    else if (n.ants[c] > 0 && antsOf(n) > 1) { n.ants[c]--; S.coins += antSell(c); n._dirty = true; }
+  }
+  else if (a === 'goNest') { closeMarket(); openNest(nestById(+b.dataset.id)); return; }
+  else if (a === 'sellNest') {
+    const id = +b.dataset.id;
+    if (confirmSell !== id) confirmSell = id;
+    else {
+      const n = nestById(id), v = nestValue(n);
+      S.coins += v; S.nests = S.nests.filter(x => x !== n); S.tiles[key(n.q, n.r)].obj = null;
+      keepers.forEach(k => { k.queue = k.queue.filter(q => q !== id); if (k.task?.nestId === id) k.task = null; });
+      confirmSell = null; toast(`${n.name} ${fmt(v)} altına satıldı`, 'good'); S._tl = null;
+    }
+  }
+  renderMarket(true); renderHud();
+});
+
+$('bMarket').addEventListener('click', () => openMarket('products'));
+$('bColonies').addEventListener('click', () => openMarket('colonies'));
+$('hInv').addEventListener('click', () => openMarket('products'));
+$('bSpeed').addEventListener('click', () => { S.speed = S.speed >= 3 ? 1 : S.speed + 1; renderHud(); });
+$('bFar').addEventListener('click', () => { if (cam.zoom < 0.62) animateCam(cam.x, cam.y, 1.05, 0.45); else animateCam(0, -10, 0.44, 0.45); });
+$('bIn').addEventListener('click', () => animateCam(cam.x, cam.y, clamp(cam.zoom * 1.35, ZMIN, ZMAX), 0.25));
+
+/* ============================================================
+   Loop
+   ============================================================ */
+let last = performance.now(), uiT = 0, saveT = 0;
+function frame(ts) {
+  const rdt = Math.min(0.05, (ts - last) / 1000); last = ts; now = ts;
+  const dt = rdt * S.speed;
+  updateWorld(dt);
+  checkGoals(rdt);
+  updateAmbient(rdt);
+  stepCam(rdt);
+  if (nestOpen) { syncInAnts(nestOpen); stepInAnts(nestOpen, rdt); renderInner(nestOpen); }
+  else render();
+  uiT += rdt; saveT += rdt;
+  if (uiT > 0.3) { uiT = 0; renderHud(); renderSheet(); renderNestPanel(); renderMarket(); }
+  if (saveT > 5) { saveT = 0; save(); }
+  requestAnimationFrame(frame);
+}
+
+function start(data) {
+  if (!load(data && data.save)) newGame();
+  S.lastSeason = seasonIdx();
+  resize();
+  ensureKeepers();
+  cam.x = 20; cam.y = -10; cam.zoom = W < 600 ? 1.05 : 1.55;
+  renderHud();
+  if (S.goal === 0) setTimeout(() => toast('Hoş geldin! Karınca yuvana dokunup içini gör.'), 600);
+  window.addEventListener('beforeunload', save);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
+  requestAnimationFrame(ts => { last = ts; frame(ts); });
+}
+
+try { window.claude?.hot?.snapshot?.(() => ({ save: serialize() })); } catch (e) { /* optional */ }
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+})();
+</script>
