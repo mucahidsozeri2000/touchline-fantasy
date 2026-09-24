@@ -312,6 +312,29 @@ const TRAITS = {
 const NAMES = ['Rıza Dayı', 'Hatice', 'Temel', 'Nuri', 'Zeynep', 'Cemal', 'Elif', 'İsmail', 'Sevim', 'Dursun', 'Fadime', 'Kemal', 'Aysel', 'Hasan', 'Nermin', 'Yusuf', 'Şükrü', 'Gülten'];
 const HATS = ['#e8c872', '#4b88b8', '#e25b4a', '#6aa84f', '#f2f2f2', '#8e6bbf'];
 const SEASONS = ['İlkbahar', 'Yaz', 'Sonbahar', 'Kış'];
+const RECIPES = [
+  { id: 'ekmek',   n: 'Balık Ekmek',        p: 34,  time: 14, ing: [{ sp: ['uskumru', 'istavrit', 'palamut'], n: 2 }], d: 'İskelenin klasiği, bol soğanlı.' },
+  { id: 'hamsi',   n: 'Hamsi Tava',         p: 46,  time: 18, ing: [{ sp: ['hamsi'], n: 5 }], d: 'Mısır ununa bulanmış çıtır hamsi.' },
+  { id: 'bugulama',n: 'Çipura Buğulama',    p: 78,  time: 28, ing: [{ sp: ['cipura', 'levrek'], n: 2 }], d: 'Domates ve defne yaprağıyla ağır ateşte.' },
+  { id: 'barbunya',n: 'Barbunya Tava',      p: 82,  time: 24, ing: [{ sp: ['barbunya'], n: 3 }], d: 'Limonla servis edilir.' },
+  { id: 'tropik',  n: 'Tropik Tabak',       p: 120, time: 30, ing: [{ sp: ['papagan'], n: 1 }, { sp: ['cerrah', 'palyaco'], n: 2 }], d: 'Hindistan cevizli, renk renk.' },
+  { id: 'lufer',   n: 'Lüfer Izgara',       p: 110, time: 26, ing: [{ sp: ['lufer'], n: 2 }], d: 'Sonbaharın kralı, közde.' },
+  { id: 'corba',   n: 'Morina Çorbası',     p: 96,  time: 32, ing: [{ sp: ['morina'], n: 2 }, { sp: ['ringa'], n: 1 }], d: 'Kuzey usulü, sütlü ve patatesli.' },
+  { id: 'ahtapot', n: 'Ahtapot Salatası',   p: 150, time: 34, ing: [{ sp: ['ahtapot'], n: 1 }], d: 'Zeytinyağlı, kekikli, meze tabağı.' },
+  { id: 'fume',    n: 'Somon Füme',         p: 150, time: 40, ing: [{ sp: ['somon'], n: 2 }], d: 'Ardıç dumanında bekletilir.' },
+  { id: 'susi',    n: 'Orkinos Suşi',       p: 270, time: 36, ing: [{ sp: ['orkinos'], n: 1 }], d: 'İnce dilim, bol wasabi.' },
+  { id: 'sofra',   n: 'Kaptanın Sofrası',   p: 430, time: 45, ing: [{ sp: ['kilic'], n: 1 }, { sp: ['kalkan'], n: 1 }, { sp: ['lufer', 'palamut'], n: 1 }], d: 'Şişte kılıç, tavada kalkan, yanında lüfer.' },
+  { id: 'yengec',  n: 'Yengeç Ziyafeti',    p: 400, time: 42, ing: [{ sp: ['yengec'], n: 1 }, { sp: ['somon', 'morina'], n: 1 }], d: 'Tereyağlı bacaklar ve füme yanında.' },
+  { id: 'kalamar', n: 'Dev Kalamar Tava',   p: 560, time: 50, ing: [{ sp: ['kalamar'], n: 1 }], d: 'Bir kalamar, yirmi kişilik tabak.' },
+  { id: 'fener',   n: 'Derin Deniz Tabağı', p: 330, time: 44, ing: [{ sp: ['fener', 'engerek'], n: 2 }, { sp: ['balta'], n: 2 }], d: 'Karanlıkta parlayan tuhaf bir lezzet.' },
+];
+const RESTO_UP = {
+  kitchen: { n: 'Ocak',        costs: [350, 1000],        d: 'Aynı anda pişen yemek sayısı.' },
+  chef:    { n: 'Aşçı',        costs: [250, 700, 1800],   d: 'Yemekler daha çabuk pişer.' },
+  salon:   { n: 'Salon',       costs: [200, 600, 1500],   d: 'Daha çok masa: daha çok müşteri ve daha büyük vitrin.' },
+  decor:   { n: 'Dekorasyon',  costs: [300, 900, 2500],   d: 'Fenerler, çiçekler, deniz manzarası: müşteri daha çok öder.' },
+};
+const RESTO_COST = 400;
 const REQUESTERS = ['Balıkçı Nine', 'Lokantacı Hüsnü', 'Fırıncı Şaziye', 'Muhtar Cevdet', 'Aşçı Pervin', 'Kaptan Nazım', 'Öğretmen Leman', 'Otelci Behzat', 'Kedici Melahat', 'Ressam Orhan'];
 const REQ_LINES = ['Akşama misafirim var', 'Lokantada bu hafta özel menü var', 'Torunlar geliyor', 'Köy şenliği için lazım', 'Kedilerim açlıktan miyavlıyor', 'Tablom için model arıyorum', 'Otelde yabancı konuklar var', 'Eski usul bir çorba yapacağım'];
 const RIVALS = ['Kaptan Hayri', 'Deli Nusret', 'Olta Kraliçesi Nazlı', 'Yaşlı Kurt Sabri', 'Hızlı Remzi'];
@@ -326,7 +349,9 @@ const GOALS = [
   { t: 'Mercan Resifi\'ni keşfet',            r: 60,   c: () => S.zonesSeen.resif },
   { t: 'Bir batık gemi bul',                  r: 80,   c: () => S.wrecks.length >= 1 },
   { t: '10 farklı tür tut',                   r: 120,  c: () => Object.keys(S.dex).length >= 10 },
+  { t: 'Balık lokantasını aç',                r: 80,   c: () => S.resto.open },
   { t: 'Balıkçı Teknesi al',                  r: 150,  c: () => S.boat >= 2 },
+  { t: 'Lokantada 20 tabak sat',              r: 200,  c: () => S.resto.sold >= 20 },
   { t: 'Akvaryuma 5 tür bağışla',             r: 200,  c: () => Object.keys(S.aqua).length >= 5 },
   { t: 'Buzul Sularına ulaş',                 r: 250,  c: () => S.zonesSeen.buzul },
   { t: 'Bir balık turnuvası kazan',           r: 300,  c: () => (S.stats.tours || 0) >= 1 },
@@ -427,7 +452,7 @@ function newGame() {
     dex: {}, aqua: {}, market: {}, demand: {}, day: 1,
     stats: { caught: 0, sold: 0, school: 0 }, goal: 0,
     weather: { k: 'calm', t: 60, warn: 0 }, schools: [], nextId: 1,
-    orders: [], tour: null, sound: true,
+    orders: [], tour: null, sound: true, resto: newResto(),
   };
   FKEYS.forEach(k => { S.market[k] = 1; S.demand[k] = 1; });
   rollMarket(); rollCands();
@@ -446,6 +471,7 @@ function load(raw) {
     FKEYS.forEach(k => { if (S.market[k] == null) S.market[k] = 1; if (S.demand[k] == null) S.demand[k] = 1; });
     if (!S.orders) S.orders = [];
     if (S.sound == null) S.sound = true;
+    if (!S.resto) S.resto = newResto();
     fillOrders(); if (!S.tour) newTour();
     return true;
   } catch (e) { return false; }
@@ -480,6 +506,60 @@ function rollCands() {
     return { name: pick(NAMES.filter(n => !S.crew.some(c => c.name === n))), trait, hat: Math.floor(Math.random() * HATS.length), fee: Math.round(80 + S.crew.length * 60 + Math.random() * 40) };
   });
   S.candDay = S.day;
+}
+function newResto() { return { open: false, kitchen: 1, chef: 1, salon: 1, decor: 0, slots: [], vit: [], till: 0, sold: 0, missed: 0, cooked: {}, custT: 0, earned: 0 }; }
+const restoStars = () => Math.min(5, Math.floor(Object.keys(S.resto.cooked).length / 2));
+const vitCap = () => 4 + S.resto.salon * 4;
+const custRate = () => 0.035 * (1 + 0.45 * (S.resto.salon - 1)) * (1 + 0.1 * restoStars());
+const cookDur = R => R.time / (1 + 0.35 * (S.resto.chef - 1));
+const dishMult = () => (1 + 0.12 * S.resto.decor) * (1 + 0.08 * restoStars());
+// pick hold items for a recipe, stalest first; null if short
+function recipeItems(R) {
+  const used = new Set(), out = [];
+  const sorted = S.hold.map((it, i) => ({ it, i })).sort((a, b) => a.it.t - b.it.t);
+  for (const g of R.ing) {
+    let n = g.n;
+    for (const x of sorted) { if (n <= 0) break; if (!used.has(x.i) && g.sp.includes(x.it.sp)) { used.add(x.i); out.push(x); n--; } }
+    if (n > 0) return null;
+  }
+  return out;
+}
+function rawValue(items) { return items.reduce((s, x) => s + itemValue(x.it), 0); }
+function cook(R) {
+  const r = S.resto;
+  if (r.slots.length >= r.kitchen) { toast('Bütün ocaklar dolu'); return; }
+  if (r.vit.length + r.slots.length >= vitCap()) { toast('Vitrin dolu. Müşteriler yedikçe yer açılır ya da salonu büyüt.'); return; }
+  const items = recipeItems(R);
+  if (!items) { toast('Ambarda bu tarif için yeterli balık yok'); return; }
+  const fr = items.reduce((s, x) => s + freshness(x.it), 0) / items.length;
+  const drop = new Set(items.map(x => x.i));
+  S.hold = S.hold.filter((_, i) => !drop.has(i));
+  r.slots.push({ r: R.id, t: 0, dur: cookDur(R), fr });
+  sfx('splash');
+  toast(`${R.n} ocakta!`);
+}
+function restoTick(dt) {
+  const r = S.resto;
+  if (!r.open) return;
+  for (const sl of r.slots) sl.t += dt;
+  const done = r.slots.filter(sl => sl.t >= sl.dur);
+  if (done.length) {
+    r.slots = r.slots.filter(sl => sl.t < sl.dur);
+    for (const sl of done) {
+      const R = RECIPES.find(x => x.id === sl.r);
+      if (!r.cooked[R.id]) { r.cooked[R.id] = true; toast(`Yeni tarif menüde: ${R.n}! Lokanta ${restoStars()} yıldız.`, 'good'); }
+      r.vit.push({ r: R.id, v: R.p * (0.6 + 0.4 * sl.fr) });
+    }
+  }
+  r.custT += dt * custRate();
+  while (r.custT >= 1) {
+    r.custT -= 1;
+    if (r.vit.length) {
+      const i = Math.floor(Math.random() * r.vit.length), d = r.vit.splice(i, 1)[0];
+      const pay = Math.round(d.v * dishMult());
+      r.till += pay; r.sold++; r.earned += pay;
+    } else r.missed++;
+  }
 }
 function orderPool() { return FKEYS.filter(k => { const f = FISH[k]; return !f.legend && S.zonesSeen[f.z] && ZONES[f.z].boat <= S.boat && (f.r < 2 || S.dex[k]); }); }
 function fillOrders() {
@@ -831,6 +911,7 @@ function update(dt) {
   }
   FKEYS.forEach(k => { S.demand[k] += (1 - S.demand[k]) * Math.min(1, dt * 0.01); });
   updateWeather(dt);
+  restoTick(dt);
   spawnSchools(dt);
   updateBoat(dt);
   updateCrew(dt);
@@ -975,7 +1056,7 @@ function drawDecoTile(t, x, y) {
   if (t.deco === 'palm') drawPalm(x - 4, y + 2);
   else if (t.deco === 'rock') drawRocks(x, y);
   else if (t.deco === 'ice') drawIceberg(x, y);
-  else if (t.deco === 'grass') { drawPalm(x + 8, y + 4); ell(x - 12, y, 5, 3, '#6aae50'); }
+  else if (t.deco === 'grass') { if (S.resto.open) drawResto(x, y); else { drawPalm(x + 12, y + 4); ctx.fillStyle = '#8a6238'; ctx.fillRect(x - 10, y - 14, 2, 14); ctx.fillStyle = '#f3e2c0'; ctx.fillRect(x - 20, y - 20, 22, 9); ctx.fillStyle = '#c9523f'; ctx.font = '900 5.5px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('LOKANTA?', x - 9, y - 13.5); } }
   else if (t.deco === 'houses') { drawHouse(x - 12, y + 2, '#f4efe6', '#d65a4a', lit); drawHouse(x + 12, y - 4, '#f7e2b8', '#3f7fa8', lit); }
   else if (t.deco === 'market') {
     ctx.fillStyle = '#8a6238'; ctx.fillRect(x - 14, y - 16, 2, 16); ctx.fillRect(x + 12, y - 16, 2, 16);
@@ -990,6 +1071,28 @@ function drawDecoTile(t, x, y) {
     ctx.fillStyle = '#34495e'; ctx.fillRect(x - 5, y - 40, 10, 6); ctx.fillStyle = '#d65a4a'; ctx.beginPath(); ctx.moveTo(x - 6, y - 40); ctx.lineTo(x, y - 46); ctx.lineTo(x + 6, y - 40); ctx.fill();
     ctx.fillStyle = '#ffe28a'; ctx.fillRect(x - 3, y - 39, 6, 4);
   }
+}
+function drawResto(x, y) {
+  const r = S.resto, lit = isNight();
+  // terrace tables with umbrellas
+  const tables = Math.min(3, r.salon);
+  for (let i = 0; i < tables; i++) {
+    const tx = x - 14 + i * 13, ty = y + 8 - (i % 2) * 3;
+    ctx.fillStyle = '#f4efe6'; ctx.fillRect(tx - 3, ty - 4, 6, 1.6); ctx.fillStyle = '#8a6238'; ctx.fillRect(tx - 0.5, ty - 4, 1, 4);
+    ctx.fillStyle = '#6b4a2e'; ctx.fillRect(tx - 0.4, ty - 13, 0.8, 9);
+    ctx.fillStyle = i % 2 ? '#2f6fa0' : '#e25b4a'; ctx.beginPath(); ctx.moveTo(tx - 6, ty - 12); ctx.quadraticCurveTo(tx, ty - 17, tx + 6, ty - 12); ctx.fill();
+    if (r.vit.length && (i + Math.floor(now / 4000)) % 3 !== 2) { ell(tx - 4, ty - 5, 1.6, 1.6, '#f1c6a0'); ctx.fillStyle = HATS[(i + 2) % HATS.length]; ctx.fillRect(tx - 5.5, ty - 4, 3, 3.5); }
+  }
+  // building
+  ctx.fillStyle = '#fbf3e4'; ctx.fillRect(x - 4, y - 20, 22, 16);
+  ctx.fillStyle = '#2f6fa0'; ctx.beginPath(); ctx.moveTo(x - 7, y - 19); ctx.lineTo(x + 7, y - 30); ctx.lineTo(x + 21, y - 19); ctx.closePath(); ctx.fill();
+  for (let i = 0; i < 5; i++) { ctx.fillStyle = i % 2 ? '#fff' : '#2f6fa0'; ctx.fillRect(x - 4 + i * 4.4, y - 11, 4.4, 2.6); }
+  ctx.fillStyle = lit ? '#ffd970' : '#a9d3e6'; ctx.fillRect(x - 1, y - 17, 5, 5); ctx.fillRect(x + 10, y - 17, 5, 5);
+  ctx.fillStyle = '#6b4a2e'; ctx.fillRect(x + 5, y - 9, 4, 5);
+  ctx.fillStyle = '#f3e2c0'; ctx.fillRect(x - 3, y - 36, 20, 6); ctx.fillStyle = '#2f6fa0'; ctx.font = '900 4.6px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('LOKANTA', x + 7, y - 31.6);
+  ctx.fillStyle = '#7a5a44'; ctx.fillRect(x + 13, y - 30, 3, 6);
+  if (r.slots.length) for (let i = 0; i < 3; i++) { const p = (now * 0.0005 + i / 3) % 1; ell(x + 14.5 + Math.sin(p * 6 + i) * 3, y - 32 - p * 20, 2 + p * 4, 1.6 + p * 3, `rgba(255,255,255,${0.6 * (1 - p)})`); }
+  if (r.till > 0 && cam.zoom > 0.6) { const by = y - 44 + Math.sin(now * 0.005) * 2; ell(x + 7, by, 6, 6, '#ffcf4a'); ctx.fillStyle = '#3a2a05'; ctx.font = '900 8px Nunito, sans-serif'; ctx.fillText('₺', x + 7, by + 3); }
 }
 function drawPier(t, x, y) {
   ctx.fillStyle = '#8a6238';
@@ -1335,7 +1438,7 @@ function renderBar(force) {
     h = `<div class="barrow"><div class="grow"><div class="where">${port.name}</div><div class="hint">Haritada bir yere dokun, tekne oraya gitsin. Ambarda ${S.hold.length} balık (≈${fmt(holdValue())} altın).</div></div></div>
       <div class="btnrow" style="margin-top:10px">
         <button class="btn" data-act="open" data-m="market">Balık Pazarı</button>
-        ${port.full ? `<button class="btn" data-act="open" data-m="board">Pano${readyOrders().length ? ` <span class="badge">${readyOrders().length}</span>` : ''}</button><button class="btn foam" data-act="open" data-m="yard">Tersane</button><button class="btn foam" data-act="open" data-m="tackle">Olta Dükkânı</button><button class="btn ghost" data-act="open" data-m="cafe">Kahvehane</button><button class="btn ghost" data-act="open" data-m="aqua">Akvaryum</button>` : '<span class="chip">Küçük liman: sadece pazar ve yakıt</span>'}
+        ${port.full ? `<button class="btn" data-act="open" data-m="board">Pano${readyOrders().length ? ` <span class="badge">${readyOrders().length}</span>` : ''}</button><button class="btn" data-act="open" data-m="resto">Lokanta${S.resto.till > 0 ? ` <span class="badge">${fmt(S.resto.till)}</span>` : ''}</button><button class="btn foam" data-act="open" data-m="yard">Tersane</button><button class="btn foam" data-act="open" data-m="tackle">Olta Dükkânı</button><button class="btn ghost" data-act="open" data-m="cafe">Kahvehane</button><button class="btn ghost" data-act="open" data-m="aqua">Akvaryum</button>` : '<span class="chip">Küçük liman: sadece pazar ve yakıt</span>'}
       </div>`;
   } else {
     const sc = schoolHere(), leg = atLegend(), z = ZONES[zoneHere()];
@@ -1371,7 +1474,7 @@ function closeModal() { modalKind = null; $('modal').hidden = true; }
 $('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
 function tabs(active) {
   const port = docked(), list = [['market', 'Pazar']];
-  if (!port || port.full) list.push(['board', 'Pano'], ['yard', 'Tersane'], ['tackle', 'Olta Dükkânı'], ['cafe', 'Kahvehane'], ['aqua', 'Akvaryum']);
+  if (!port || port.full) list.push(['board', 'Pano'], ['resto', 'Lokanta'], ['yard', 'Tersane'], ['tackle', 'Olta Dükkânı'], ['cafe', 'Kahvehane'], ['aqua', 'Akvaryum']);
   list.push(['dex', 'Balık Defteri']);
   return `<div class="tabs">${list.map(([k, l]) => `<button class="tab ${active === k ? 'on' : ''}" data-act="tab" data-m="${k}">${l}</button>`).join('')}</div>`;
 }
@@ -1380,7 +1483,7 @@ function renderModal(force) {
   if (uiDown && !force) return;
   const k = modalKind, port = docked();
   const shopLocked = k !== 'dex' && k !== 'board' && (!port || (!port.full && k !== 'market'));
-  const title = { board: 'Sipariş Panosu', market: 'Balık Pazarı', yard: 'Tersane', tackle: 'Olta Dükkânı', cafe: 'Kahvehane', aqua: 'Akvaryum', dex: 'Balık Defteri' }[k];
+  const title = { resto: 'Martı Lokantası', board: 'Sipariş Panosu', market: 'Balık Pazarı', yard: 'Tersane', tackle: 'Olta Dükkânı', cafe: 'Kahvehane', aqua: 'Akvaryum', dex: 'Balık Defteri' }[k];
   let h = `<div class="shead"><h2>${title}</h2><button class="x" data-act="close" aria-label="Kapat">×</button></div>${tabs(k)}`;
   if (shopLocked) {
     h += `<p class="note">${k === 'market' ? 'Balık satmak için bir limana yanaşmalısın.' : 'Bu dükkân sadece Martı Limanı\'nda var.'}</p>`;
@@ -1400,6 +1503,41 @@ function renderModal(force) {
     if (tr) {
       const f = FISH[tr.sp];
       h += `<div class="zhead">Balık Turnuvası</div><div class="ocard">${fishSvg(tr.sp, !S.dex[tr.sp])}<div class="grow"><div class="who">${tr.end - S.day + 1} gün kaldı · ${ZONES[f.z].name}</div><div class="t" style="font-weight:900">En büyük ${f.n}</div><div class="d" style="font-size:12px;color:var(--muted)">Lider: ${esc(tr.rivalName)}, ${tr.rival} cm. Senin rekorun: ${tr.best ? tr.best + ' cm' : 'henüz yok'}. Kusursuz çekiş daha iri balık getirir.</div></div><span class="price num">${fmt(tr.prize)}</span></div>`;
+    }
+  } else if (k === 'resto') {
+    const r = S.resto;
+    if (!r.open) {
+      h += `<p class="sub">İskelenin yanındaki çayır boş duruyor. Burada küçük bir balık lokantası açarsan, tuttuğun balıkları pişirip pazardan çok daha iyi fiyata satarsın. Bayatlamaya yüz tutmuş balıklar da burada değerlenir. Müşteriler sen denizdeyken de gelir, kazanç kasada birikir.</p>
+        <div class="btnrow">${costBtn('Lokantayı Aç', RESTO_COST, 'rOpen')}</div>`;
+    } else {
+      const stars = restoStars();
+      h += `<div class="ocard"><div class="grow"><div class="who">${'★'.repeat(stars)}${'☆'.repeat(5 - stars)} · ${Object.keys(r.cooked).length} tarif denendi</div>
+          <div class="t" style="font-weight:900">Kasada <span class="price num">${fmt(r.till)}</span> altın</div>
+          <div class="d" style="font-size:12px;color:var(--muted)">Günde yaklaşık ${Math.round(custRate() * DAY)} müşteri · ${r.sold} tabak satıldı${r.missed ? ` · ${r.missed} müşteri vitrin boş diye döndü` : ''}</div></div>
+          <button class="btn" data-act="rCollect" ${r.till > 0 ? '' : 'disabled'}>Kasayı Topla</button></div>`;
+      h += `<div class="zhead">Ocaklar · ${r.slots.length}/${r.kitchen}</div><div class="chips">`;
+      for (let i = 0; i < r.kitchen; i++) {
+        const sl = r.slots[i];
+        if (sl) { const R = RECIPES.find(x => x.id === sl.r), pc = Math.min(100, sl.t / sl.dur * 100); h += `<span class="chip" style="min-width:150px;flex-direction:column;align-items:stretch;gap:4px">${R.n} <span class="fuel" style="width:auto"><i style="width:${pc}%;background:var(--buoy)"></i></span></span>`; }
+        else h += '<span class="chip" style="opacity:.6">Boş ocak</span>';
+      }
+      h += `</div><div class="zhead">Vitrin · ${r.vit.length}/${vitCap()}</div>`;
+      if (!r.vit.length) h += '<p class="note">Vitrin boş. Müşteriler bir şey bulamazsa geri döner.</p>';
+      else { const cnt = {}; r.vit.forEach(d => cnt[d.r] = (cnt[d.r] || 0) + 1); h += `<div class="chips">${Object.keys(cnt).map(id => `<span class="chip">${RECIPES.find(x => x.id === id).n} ×${cnt[id]}</span>`).join('')}</div>`; }
+      h += `<div class="zhead">Menü</div><p class="sub">Pişirirken ambardaki en eski balıklar kullanılır. Yemeğin fiyatı balıkların tazeliğine göre değişir.</p>`;
+      const full = r.slots.length >= r.kitchen || r.vit.length + r.slots.length >= vitCap();
+      for (const R of RECIPES) {
+        const items = recipeItems(R), known = R.ing.every(g => g.sp.some(sp => S.dex[sp]));
+        const need = R.ing.map(g => { const have = S.hold.filter(it => g.sp.includes(it.sp)).length; return `<span class="chip" style="padding:3px 8px">${g.n} × ${g.sp.map(sp => S.dex[sp] ? FISH[sp].n : '???').join(' / ')} <b style="color:${have >= g.n ? 'var(--foam)' : 'var(--muted)'}">${Math.min(have, g.n)}/${g.n}</b></span>`; }).join('');
+        const price = Math.round(R.p * dishMult()), raw = items ? rawValue(items) : 0;
+        h += `<div class="rowline" style="${known ? '' : 'opacity:.55'}"><div class="grow"><div class="t">${R.n} ${r.cooked[R.id] ? '' : '<span class="lvl">YENİ</span>'}</div><div class="d">${R.d} ${Math.round(cookDur(R))} sn.</div><div class="chips" style="margin-top:5px">${need}</div>${items ? `<div class="d" style="margin-top:4px">Pazarda bu balıklar ≈${fmt(raw)} eder</div>` : ''}</div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="price num">≈${fmt(price)}</span><button class="btn" data-act="rCook" data-r="${R.id}" ${items && !full ? '' : 'disabled'}>Pişir</button></div></div>`;
+      }
+      h += '<div class="zhead">Lokantayı Geliştir</div>';
+      for (const u of Object.keys(RESTO_UP)) {
+        const U = RESTO_UP[u], lv = r[u], base = u === 'decor' ? 0 : 1, c = U.costs[lv - base];
+        h += `<div class="rowline"><div class="grow"><div class="t">${U.n} <span class="lvl">SV ${lv}${u === 'decor' ? '' : ''}/${U.costs.length + base}</span></div><div class="d">${U.d}</div></div>${c != null ? costBtn('Geliştir', c, 'rUp', `data-u="${u}"`) : '<span class="chip">En üst</span>'}</div>`;
+      }
     }
   } else if (k === 'yard') {
     const nb = BOATS[S.boat];
@@ -1465,6 +1603,10 @@ $('mcard').addEventListener('click', e => {
   if (a === 'close') return closeModal();
   if (a === 'tab') { modalKind = b.dataset.m; confirmX = null; }
   else if (a === 'sell') sell(it => it.sp === b.dataset.s);
+  else if (a === 'rOpen') { if (spend(RESTO_COST)) { S.resto.open = true; toast('Martı Lokantası açıldı! İlk yemeğini pişir.', 'good'); sfx('gold'); } }
+  else if (a === 'rCollect') { const v = S.resto.till; if (v > 0) { S.coins += v; S.resto.till = 0; sfx('coin'); toast(`Kasadan +${fmt(v)} altın`, 'good'); } }
+  else if (a === 'rCook') { const R = RECIPES.find(x => x.id === b.dataset.r); if (R) cook(R); }
+  else if (a === 'rUp') { const u = b.dataset.u, base = u === 'decor' ? 0 : 1, c = RESTO_UP[u].costs[S.resto[u] - base]; if (c != null && spend(c)) { S.resto[u]++; toast(`${RESTO_UP[u].n} geliştirildi`, 'good'); } }
   else if (a === 'deliver') {
     const o = S.orders.find(x => x.id === +b.dataset.id);
     if (o) {
