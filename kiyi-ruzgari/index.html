@@ -1,0 +1,1441 @@
+<title>Kıyı Rüzgârı</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;600;700;800;900&display=swap">
+<style>
+  :root {
+    color-scheme: light;
+    --panel: rgba(17, 44, 60, 0.93);
+    --panel-solid: #16384b;
+    --panel-2: rgba(255, 255, 255, 0.07);
+    --line: rgba(255, 255, 255, 0.11);
+    --ink: #f3f1e8;
+    --muted: #a9c3cc;
+    --buoy: #ff8a5b;
+    --buoy-deep: #d9623a;
+    --foam: #9be3dc;
+    --sand: #f3d9a4;
+    --gold: #ffcf4a;
+    --danger: #ff7a6b;
+    --sea: #1f5f86;
+    --display: "Fredoka", "Trebuchet MS", system-ui, sans-serif;
+    --body: "Nunito", "Segoe UI", system-ui, sans-serif;
+  }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; overflow: hidden; background: var(--sea); color: var(--ink);
+    font-family: var(--body); font-size: 14px; -webkit-user-select: none; user-select: none; touch-action: none;
+  }
+  button { font-family: inherit; color: inherit; cursor: pointer; }
+  button:focus-visible { outline: 2px solid var(--buoy); outline-offset: 2px; }
+  .num { font-variant-numeric: tabular-nums; }
+  #sea { position: fixed; inset: 0; width: 100%; height: 100%; display: block; cursor: pointer; }
+  #sea.dragging { cursor: grabbing; }
+
+  #hud {
+    position: fixed; left: 0; right: 0; top: 0; z-index: 5; pointer-events: none;
+    padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 0;
+    display: flex; gap: 10px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap;
+  }
+  #hud > * { pointer-events: auto; }
+  .stack { display: flex; flex-direction: column; gap: 8px; }
+  .pills { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 14px 0 8px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 18px; font-weight: 800; font-size: 15px;
+    box-shadow: 0 4px 14px rgba(5, 25, 40, 0.3);
+  }
+  .ico { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; flex: none; }
+  .coin { background: radial-gradient(circle at 35% 30%, #ffe595, #e7a72a 70%, #b97a12); box-shadow: inset 0 -2px 0 rgba(0,0,0,.2); }
+  .ico svg { width: 14px; height: 14px; }
+  .fuel { width: 64px; height: 7px; border-radius: 4px; background: rgba(255,255,255,.14); overflow: hidden; }
+  .fuel i { display: block; height: 100%; border-radius: 4px; background: var(--foam); }
+  .fuel.low i { background: var(--danger); }
+
+  .clock {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 8px 14px 9px;
+    min-width: 210px; box-shadow: 0 4px 14px rgba(5, 25, 40, 0.3);
+  }
+  .clock .row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .clock b { font-family: var(--display); font-size: 20px; font-weight: 600; line-height: 1; }
+  .clock small { color: var(--muted); font-weight: 800; }
+  .clock .w { margin-top: 3px; font-size: 12px; color: var(--muted); font-weight: 700; }
+  .clock .w.storm { color: var(--danger); }
+
+  .goal {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 8px 12px;
+    max-width: 270px; font-size: 13px; box-shadow: 0 4px 14px rgba(5, 25, 40, 0.3);
+  }
+  .goal .lbl { font-size: 10.5px; letter-spacing: 1px; text-transform: uppercase; color: var(--foam); font-weight: 900; }
+  .goal .rw { color: var(--gold); font-weight: 900; white-space: nowrap; }
+
+  .tools { display: flex; gap: 8px; }
+  .rbtn {
+    width: 44px; height: 44px; border-radius: 50%; border: 3px solid #fff; display: grid; place-items: center;
+    background: var(--buoy); color: #fff; font-weight: 900; font-size: 14px; box-shadow: 0 4px 12px rgba(5,25,40,.3);
+    background-image: linear-gradient(90deg, transparent 38%, rgba(255,255,255,.9) 38%, rgba(255,255,255,.9) 62%, transparent 62%);
+    transition: transform .12s;
+  }
+  .rbtn span { background: var(--buoy); border-radius: 8px; padding: 1px 3px; line-height: 1; display: grid; place-items: center; }
+  .rbtn svg { width: 17px; height: 17px; }
+  .rbtn:hover { transform: rotate(-8deg); }
+  .rbtn:active { transform: scale(.93); }
+  .rbtn.on span { background: var(--sea); }
+
+  /* bottom bar */
+  #bar {
+    position: fixed; left: 50%; transform: translateX(-50%); z-index: 6;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); width: min(560px, calc(100% - 32px));
+    background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 12px 14px;
+    box-shadow: 0 12px 34px rgba(5, 25, 40, 0.45);
+  }
+  .barrow { display: flex; gap: 10px; align-items: center; }
+  .barrow .grow { flex: 1; min-width: 0; }
+  .where { font-family: var(--display); font-weight: 600; font-size: 17px; line-height: 1.15; }
+  .hint { font-size: 12px; color: var(--muted); line-height: 1.35; margin-top: 2px; }
+  .meter { position: relative; height: 22px; border-radius: 11px; background: rgba(0,0,0,.3); margin-top: 10px; overflow: hidden; border: 1px solid var(--line); }
+  .meter .g { position: absolute; top: 0; bottom: 0; background: rgba(155, 227, 220, .45); }
+  .meter .a { position: absolute; top: 0; bottom: 0; background: var(--gold); }
+  .meter .n { position: absolute; top: -2px; bottom: -2px; width: 4px; margin-left: -2px; background: #fff; border-radius: 2px; box-shadow: 0 0 6px rgba(0,0,0,.5); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px;
+    background: rgba(255,255,255,.08); border: 1px solid var(--line); font-size: 12px; font-weight: 800;
+  }
+  button.chip.on { background: var(--foam); color: #0f3340; border-color: transparent; }
+  button.chip:disabled { opacity: .45; cursor: not-allowed; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 0 14px;
+    border-radius: 12px; border: none; background: var(--buoy); color: #fff; font-weight: 900; font-size: 13px;
+    box-shadow: inset 0 -3px 0 rgba(0,0,0,.18); transition: transform .1s, filter .1s; white-space: nowrap;
+  }
+  .btn:hover { filter: brightness(1.07); }
+  .btn:active { transform: translateY(1px); }
+  .btn.big { min-height: 52px; min-width: 132px; font-size: 16px; font-family: var(--display); font-weight: 600; border-radius: 16px; }
+  .btn.pull { background: var(--gold); color: #3a2a05; animation: pulse .5s ease-in-out infinite alternate; }
+  .btn.foam { background: var(--foam); color: #0f3340; }
+  .btn.ghost { background: rgba(255,255,255,.1); color: var(--ink); box-shadow: none; border: 1px solid var(--line); }
+  .btn.warn { background: var(--danger); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; filter: none; transform: none; animation: none; }
+  .btn .coin { width: 14px; height: 14px; }
+  @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.06); } }
+
+  #log {
+    position: fixed; z-index: 4; left: 16px; bottom: calc(env(safe-area-inset-bottom, 0px) + 150px);
+    display: flex; flex-direction: column; gap: 4px; pointer-events: none; max-width: 300px;
+  }
+  .li { background: rgba(12, 34, 48, .78); border-radius: 10px; padding: 5px 10px; font-size: 12px; font-weight: 700; display: flex; gap: 7px; align-items: center; animation: tin .25s ease both; }
+  .li svg { width: 26px; height: 14px; flex: none; }
+
+  /* modal */
+  #modal { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px; background: rgba(6, 22, 34, .55); }
+  .mcard {
+    width: min(620px, 100%); max-height: min(86vh, 760px); overflow: auto; background: var(--panel-solid);
+    border: 1px solid var(--line); border-radius: 22px; padding: 16px 18px 18px; box-shadow: 0 20px 50px rgba(0,0,0,.45);
+  }
+  .shead { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .shead h2 { margin: 0; font-family: var(--display); font-weight: 600; font-size: 24px; line-height: 1.1; flex: 1; text-wrap: balance; }
+  .x { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--panel-2); font-size: 19px; line-height: 1; flex: none; }
+  .sub { color: var(--muted); font-size: 13px; line-height: 1.45; margin: 0 0 10px; }
+  .tabs { display: flex; gap: 6px; margin: 6px 0 12px; flex-wrap: wrap; }
+  .tab { padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.06); font-weight: 900; font-size: 13px; }
+  .tab.on { background: var(--buoy); color: #fff; border-color: transparent; }
+  .rowline { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); }
+  .rowline:first-of-type { border-top: none; }
+  .rowline .grow { flex: 1; min-width: 0; }
+  .rowline .t { font-weight: 900; }
+  .rowline .d { font-size: 12px; color: var(--muted); line-height: 1.35; }
+  .rowline svg.fish { width: 46px; height: 24px; flex: none; }
+  .lvl { font-size: 11px; font-weight: 900; color: var(--foam); letter-spacing: .5px; }
+  .price { font-weight: 900; color: var(--gold); white-space: nowrap; }
+  .note { font-size: 12px; color: var(--muted); padding: 8px 10px; border-radius: 10px; background: rgba(0,0,0,.2); line-height: 1.4; }
+  .btnrow { display: flex; gap: 8px; flex-wrap: wrap; }
+  .rar0 { color: #cfd8dc; } .rar1 { color: #6fc3ff; } .rar2 { color: #c79bff; } .rar3 { color: var(--gold); }
+  .dex { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 8px; }
+  .dcard { background: var(--panel-2); border: 1px solid var(--line); border-radius: 14px; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; }
+  .dcard svg { width: 100%; height: 38px; }
+  .dcard .t { font-weight: 900; font-size: 13px; }
+  .dcard .d { font-size: 11px; color: var(--muted); }
+  .dcard.unk { opacity: .55; }
+  .zhead { font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--foam); font-weight: 900; margin: 14px 0 6px; }
+
+  #toasts {
+    position: fixed; z-index: 30; left: 50%; transform: translateX(-50%); top: calc(env(safe-area-inset-top, 0px) + 120px);
+    display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; width: calc(100% - 32px);
+  }
+  .toast {
+    background: rgba(12, 34, 48, .95); border: 1px solid var(--line); padding: 8px 14px; border-radius: 12px;
+    font-weight: 800; font-size: 13px; max-width: 440px; text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,.3); animation: tin .25s ease both;
+  }
+  .toast.good { border-color: rgba(155, 227, 220, .55); }
+  .toast.bad { border-color: rgba(255, 122, 107, .65); }
+  .toast.gold { border-color: var(--gold); color: var(--gold); }
+  @keyframes tin { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+  @media (max-width: 760px) {
+    .clock { min-width: 0; }
+    .goal { max-width: 220px; }
+    #log { display: none; }
+    #toasts { top: calc(env(safe-area-inset-top, 0px) + 150px); }
+  }
+  @media (max-width: 460px) {
+    .hideS { display: none !important; }
+    .btn.big { min-width: 108px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .btn.pull { animation: none; }
+    .toast, .li { animation: none; }
+  }
+</style>
+
+<canvas id="sea" aria-label="Okyanus haritası"></canvas>
+
+<div id="hud">
+  <div class="stack">
+    <div class="pills">
+      <div class="pill num" title="Altın"><span class="ico coin"></span><span id="hCoins">0</span></div>
+      <button class="pill num" id="hHold" title="Ambar"><span class="ico" style="background:#3e7fa0"><svg viewBox="0 0 20 20" fill="#fff"><path d="M3 8h14l-1.6 8.2a1.5 1.5 0 0 1-1.5 1.3H6.1a1.5 1.5 0 0 1-1.5-1.3z"/><path d="M6 8l2-4h4l2 4" stroke="#fff" stroke-width="1.6" fill="none"/></svg></span><span id="hHoldT">0/0</span></button>
+      <div class="pill num" title="Yakıt"><span class="ico" style="background:#c9523f"><svg viewBox="0 0 20 20" fill="#fff"><path d="M10 2c3 4 5 6.5 5 9.5a5 5 0 0 1-10 0C5 8.5 7 6 10 2z"/></svg></span><span class="fuel" id="hFuelBar"><i></i></span><span id="hFuel">0</span></div>
+    </div>
+    <div class="goal" id="goal"></div>
+  </div>
+  <div class="clock" id="clock"></div>
+  <div class="tools">
+    <button class="rbtn" id="bSpeed" title="Oyun hızı"><span>1×</span></button>
+    <button class="rbtn" id="bDex" title="Balık defteri"><span><svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M3 4h5a2 2 0 0 1 2 2v10a2 2 0 0 0-2-2H3zM17 4h-5a2 2 0 0 0-2 2v10a2 2 0 0 1 2-2h5z"/></svg></span></button>
+    <button class="rbtn" id="bFar" title="Uzak görünüm"><span><svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><circle cx="9" cy="9" r="5.5"/><path d="M13 13l4 4M6.5 9h5"/></svg></span></button>
+    <button class="rbtn" id="bFollow" title="Tekneyi takip et"><span><svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><circle cx="10" cy="10" r="3"/><path d="M10 1.5v3M10 15.5v3M1.5 10h3M15.5 10h3"/></svg></span></button>
+  </div>
+</div>
+
+<div id="log"></div>
+<div id="bar"></div>
+<div id="modal" hidden><div class="mcard" id="mcard"></div></div>
+<div id="toasts"></div>
+
+<script>
+(() => {
+'use strict';
+
+/* ============================================================
+   Data
+   ============================================================ */
+const RAR = ['Yaygın', 'Nadir', 'Çok Nadir', 'Efsanevi'];
+const ZONES = {
+  koy:   { name: 'Sığ Koy',       c: ['#6fd6cf', '#66cfc9', '#79dcd3'], boat: 1, desc: 'Turkuaz, sakin sular. Limanın hemen önü.' },
+  resif: { name: 'Mercan Resifi', c: ['#3fc0c6', '#38b8c2', '#48c7cb'], boat: 1, desc: 'Rengârenk tropik balıklar ve ahtapotlar.' },
+  acik:  { name: 'Açık Deniz',    c: ['#2e8cc0', '#2a85b9', '#3493c6'], boat: 1, desc: 'Orkinos ve kılıç balığı sürülerinin yolu.' },
+  buzul: { name: 'Buzul Suları',  c: ['#8ccbe0', '#84c3da', '#95d1e4'], boat: 2, desc: 'Soğuk kuzey. Balıkçı Teknesi gerekir.' },
+  derin: { name: 'Derin Çukur',   c: ['#1d4c86', '#1a467f', '#22538d'], boat: 3, desc: 'Işığın inmediği derinlik. Trol Teknesi gerekir.' },
+};
+const ZORDER = ['koy', 'resif', 'acik', 'buzul', 'derin'];
+
+// sh: fish | stripe | octo | crab | squid | eel | tall | flat
+const FISH = {
+  hamsi:    { n: 'Hamsi',            z: 'koy',   r: 0, p: 3,   cm: [8, 15],     c: '#a9c0d0', f: '#5f7a8e', sh: 'fish' },
+  istavrit: { n: 'İstavrit',         z: 'koy',   r: 0, p: 4,   cm: [12, 25],    c: '#b8c8d0', f: '#71879a', sh: 'fish' },
+  cipura:   { n: 'Çipura',           z: 'koy',   r: 1, p: 10,  cm: [18, 40],    c: '#d7dde0', f: '#e2b64a', sh: 'tall' },
+  levrek:   { n: 'Levrek',           z: 'koy',   r: 1, p: 12,  cm: [25, 60],    c: '#bfc9cf', f: '#6d7c86', sh: 'fish', rain: 2 },
+  barbunya: { n: 'Barbunya',         z: 'koy',   r: 1, p: 11,  cm: [12, 28],    c: '#ec8f7c', f: '#f5c7a3', sh: 'fish' },
+  kalkan:   { n: 'Kalkan',           z: 'koy',   r: 2, p: 34,  cm: [35, 70],    c: '#9a8a6f', f: '#6d5f49', sh: 'flat', night: 1 },
+  palyaco:  { n: 'Palyaço Balığı',   z: 'resif', r: 0, p: 8,   cm: [7, 11],     c: '#ff8a3d', f: '#ffffff', sh: 'stripe' },
+  cerrah:   { n: 'Mavi Cerrah',      z: 'resif', r: 0, p: 10,  cm: [15, 30],    c: '#3d7fe0', f: '#f7d23a', sh: 'tall' },
+  papagan:  { n: 'Papağan Balığı',   z: 'resif', r: 1, p: 18,  cm: [30, 60],    c: '#4fc6a4', f: '#f07aa8', sh: 'fish' },
+  aslan:    { n: 'Aslan Balığı',     z: 'resif', r: 1, p: 24,  cm: [20, 38],    c: '#e8a38a', f: '#fff1e6', sh: 'stripe' },
+  hani:     { n: 'Mercan Hanisi',    z: 'resif', r: 2, p: 40,  cm: [12, 20],    c: '#f5b641', f: '#b83f7d', sh: 'tall', season: 1 },
+  ahtapot:  { n: 'Ahtapot',          z: 'resif', r: 2, p: 46,  cm: [40, 120],   c: '#d9707a', f: '#f3a3a8', sh: 'octo', night: 1 },
+  uskumru:  { n: 'Uskumru',          z: 'acik',  r: 0, p: 7,   cm: [20, 40],    c: '#4f8fa6', f: '#c9dbe0', sh: 'stripe' },
+  palamut:  { n: 'Palamut',          z: 'acik',  r: 0, p: 9,   cm: [30, 60],    c: '#5a7fa0', f: '#d0dce4', sh: 'fish', season: 2 },
+  lufer:    { n: 'Lüfer',            z: 'acik',  r: 1, p: 22,  cm: [30, 70],    c: '#6f9fb8', f: '#dfe7ea', sh: 'fish', season: 2 },
+  orkinos:  { n: 'Orkinos',          z: 'acik',  r: 2, p: 80,  cm: [100, 250],  c: '#2f4f7a', f: '#f3d36b', sh: 'fish' },
+  kilic:    { n: 'Kılıç Balığı',     z: 'acik',  r: 2, p: 95,  cm: [120, 300],  c: '#3c5b82', f: '#a8bfd6', sh: 'sword' },
+  ringa:    { n: 'Ringa',            z: 'buzul', r: 0, p: 11,  cm: [20, 35],    c: '#9fb9c8', f: '#e5eef2', sh: 'fish' },
+  morina:   { n: 'Morina',           z: 'buzul', r: 0, p: 15,  cm: [40, 90],    c: '#a3936a', f: '#e4d8b4', sh: 'fish' },
+  somon:    { n: 'Somon',            z: 'buzul', r: 1, p: 32,  cm: [50, 100],   c: '#c88776', f: '#f4b39b', sh: 'fish', rain: 2 },
+  buzb:     { n: 'Buz Balığı',       z: 'buzul', r: 1, p: 38,  cm: [25, 50],    c: '#d9eef5', f: '#9fc6d6', sh: 'fish', season: 3 },
+  yengec:   { n: 'Kral Yengeci',     z: 'buzul', r: 2, p: 120, cm: [40, 90],    c: '#d0553f', f: '#f2a07c', sh: 'crab' },
+  balta:    { n: 'Balta Balığı',     z: 'derin', r: 0, p: 28,  cm: [3, 9],      c: '#b7c2cc', f: '#6a7a8a', sh: 'tall' },
+  engerek:  { n: 'Engerek Balığı',   z: 'derin', r: 1, p: 55,  cm: [20, 35],    c: '#303c55', f: '#7ad8ff', sh: 'eel' },
+  fener:    { n: 'Fener Balığı',     z: 'derin', r: 1, p: 65,  cm: [20, 60],    c: '#3b3346', f: '#9ff7ff', sh: 'lure', night: 1 },
+  kurdele:  { n: 'Kürek Balığı',     z: 'derin', r: 2, p: 180, cm: [300, 800],  c: '#d8dee6', f: '#e0453a', sh: 'eel' },
+  kalamar:  { n: 'Dev Kalamar',      z: 'derin', r: 2, p: 240, cm: [300, 1200], c: '#b04f5a', f: '#f09aa0', sh: 'squid' },
+  L_koy:    { n: 'Altın Çipura',         z: 'koy',   r: 3, p: 600,  cm: [60, 80],   c: '#ffd35a', f: '#ff9f1c', sh: 'tall',  legend: 1 },
+  L_resif:  { n: 'Gökkuşağı Balığı',     z: 'resif', r: 3, p: 900,  cm: [40, 60],   c: '#ff7ab8', f: '#6fe3ff', sh: 'stripe', legend: 1 },
+  L_acik:   { n: 'Poseidon\'un Kılıcı',  z: 'acik',  r: 3, p: 1500, cm: [350, 450], c: '#1f3f8a', f: '#ffd35a', sh: 'sword', legend: 1 },
+  L_buzul:  { n: 'Buzul Hayaleti',       z: 'buzul', r: 3, p: 2000, cm: [120, 160], c: '#f2fbff', f: '#b7e9ff', sh: 'fish',  legend: 1 },
+  L_derin:  { n: 'Derinlerin Işığı',     z: 'derin', r: 3, p: 3500, cm: [200, 300], c: '#2a1d4a', f: '#aaffef', sh: 'lure',  legend: 1 },
+};
+const FKEYS = Object.keys(FISH);
+
+const BOATS = [
+  { n: 'Sandal',          c: 0,    crew: 1, hold: 20,  fuel: 25,  spd: 1.0 },
+  { n: 'Balıkçı Teknesi', c: 700,  crew: 2, hold: 45,  fuel: 45,  spd: 1.2 },
+  { n: 'Trol Teknesi',    c: 3000, crew: 4, hold: 90,  fuel: 80,  spd: 1.35 },
+  { n: 'Keşif Gemisi',    c: 9000, crew: 6, hold: 160, fuel: 140, spd: 1.6 },
+];
+const RODS = [
+  { n: 'Bambu Olta', c: 0 }, { n: 'Cam Elyaf Olta', c: 150 }, { n: 'Karbon Olta', c: 600 }, { n: 'Usta Oltası', c: 2000 }, { n: 'Efsane Olta', c: 6000 },
+];
+const GEAR = {
+  net:    { n: 'Balık Ağı',  costs: [250, 900, 2500], d: 'Sürünün üstündeyken ağ düzenli olarak toplu balık çeker.' },
+  cooler: { n: 'Buzluk',     costs: [200, 700, 2000], d: 'Balıklar daha uzun taze kalır, fiyatları düşmez.' },
+  binoc:  { n: 'Dürbün',     costs: [120, 500],       d: 'Sisi daha geniş bir alanda açarsın.' },
+  lamp:   { n: 'Gemi Feneri', costs: [300],           d: 'Gece avı: gece balıkları çıkar, ekip karanlıkta da hızlı tutar.' },
+  sonar:  { n: 'Sonar',      costs: [1200],           d: 'Sisin içindeki sürüleri gösterir; Derin Çukur sürülerini görmek için şart.' },
+};
+const BAITS = {
+  bread:  { n: 'Ekmek İçi',   pack: 0,   d: 'Bedava. Sıradan balıklar için.' },
+  shrimp: { n: 'Karides',     pack: 30,  d: 'Nadir balık şansı artar.' },
+  glow:   { n: 'Parlak Yem',  pack: 120, d: 'Çok nadir balıklar ve gece avı için.' },
+};
+const TRAITS = {
+  sabir: { n: 'Sabırlı',     d: 'Nadir balık şansı yüksek' },
+  gece:  { n: 'Gece Kuşu',   d: 'Gece çok daha hızlı tutar' },
+  cevik: { n: 'Çevik',       d: 'Oltayı daha hızlı çeker' },
+  sans:  { n: 'Şanslı',      d: 'Çok nadir balık şansı iki kat' },
+  ag:    { n: 'Ağ Ustası',   d: 'Ağdan iki kat balık çıkar' },
+};
+const NAMES = ['Rıza Dayı', 'Hatice', 'Temel', 'Nuri', 'Zeynep', 'Cemal', 'Elif', 'İsmail', 'Sevim', 'Dursun', 'Fadime', 'Kemal', 'Aysel', 'Hasan', 'Nermin', 'Yusuf', 'Şükrü', 'Gülten'];
+const HATS = ['#e8c872', '#4b88b8', '#e25b4a', '#6aa84f', '#f2f2f2', '#8e6bbf'];
+const SEASONS = ['İlkbahar', 'Yaz', 'Sonbahar', 'Kış'];
+const DAY = 150;
+
+const GOALS = [
+  { t: 'İlk balığını tut',                    r: 20,   c: () => S.stats.caught >= 1 },
+  { t: 'Limanda balık sat',                   r: 30,   c: () => S.stats.sold >= 1 },
+  { t: 'Bir balık sürüsünde 5 balık tut',     r: 40,   c: () => S.stats.school >= 5 },
+  { t: 'Oltanı geliştir',                     r: 50,   c: () => S.rod >= 2 },
+  { t: 'Mercan Resifi\'ni keşfet',            r: 60,   c: () => S.zonesSeen.resif },
+  { t: 'Bir batık gemi bul',                  r: 80,   c: () => S.wrecks.length >= 1 },
+  { t: '10 farklı tür tut',                   r: 120,  c: () => Object.keys(S.dex).length >= 10 },
+  { t: 'Balıkçı Teknesi al',                  r: 150,  c: () => S.boat >= 2 },
+  { t: 'Akvaryuma 5 tür bağışla',             r: 200,  c: () => Object.keys(S.aqua).length >= 5 },
+  { t: 'Buzul Sularına ulaş',                 r: 250,  c: () => S.zonesSeen.buzul },
+  { t: 'İlk efsane balığını yakala',          r: 500,  c: () => Object.keys(S.dex).some(k => FISH[k].legend) },
+  { t: 'Derin Çukur\'u keşfet',               r: 400,  c: () => S.zonesSeen.derin },
+  { t: 'Beş efsanenin hepsini yakala',        r: 3000, c: () => FKEYS.filter(k => FISH[k].legend).every(k => S.dex[k]) },
+];
+
+/* ============================================================
+   Hex math
+   ============================================================ */
+const SQ3 = Math.sqrt(3);
+const HS = 40, TILT = 0.6, DEPTH = 12, MAPR = 14;
+const key = (q, r) => q + ',' + r;
+const h2w = (q, r) => ({ x: HS * SQ3 * (q + r / 2), y: HS * 1.5 * r * TILT });
+function hexRound(q, r) {
+  let x = q, z = r, y = -x - z;
+  let rx = Math.round(x), ry = Math.round(y), rz = Math.round(z);
+  const dx = Math.abs(rx - x), dy = Math.abs(ry - y), dz = Math.abs(rz - z);
+  if (dx > dy && dx > dz) rx = -ry - rz; else if (dy > dz) ry = -rx - rz; else rz = -rx - ry;
+  return { q: rx, r: rz };
+}
+const w2h = (x, y) => { const yy = y / TILT; return hexRound((SQ3 / 3 * x - yy / 3) / HS, (2 / 3 * yy) / HS); };
+const hd = (a, b) => { const dq = a.q - b.q, dr = a.r - b.r; return (Math.abs(dq) + Math.abs(dr) + Math.abs(dq + dr)) / 2; };
+const NB = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]];
+const CORNERS = [...Array(6)].map((_, i) => { const a = Math.PI / 180 * (60 * i - 30); return [Math.cos(a) * HS, Math.sin(a) * HS * TILT]; });
+function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const rnd = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const fmt = n => Math.floor(n).toLocaleString('tr-TR');
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+/* ============================================================
+   Map (deterministic, not saved)
+   ============================================================ */
+const T = {};
+const PORTS = [{ id: 'main', q: 0, r: 0, name: 'Martı Limanı', full: true }, { id: 'fener', q: -9, r: 4, name: 'Fener Adası', full: false }];
+let WRECKS = [], BOTTLES = [], LEGENDS = {};
+function zoneOf(q, r) {
+  const d = hd({ q, r }, { q: 0, r: 0 }), x = SQ3 * (q + r / 2), y = 1.5 * r;
+  if (d <= 4) return 'koy';
+  if (d <= 9) return x > 0 ? 'resif' : 'acik';
+  return y < 0 ? 'buzul' : 'derin';
+}
+function buildMap() {
+  const rng = mulberry(2026);
+  for (let q = -MAPR; q <= MAPR; q++) for (let r = -MAPR; r <= MAPR; r++) {
+    const d = hd({ q, r }, { q: 0, r: 0 });
+    if (d > MAPR) continue;
+    T[key(q, r)] = { q, r, d, z: zoneOf(q, r), land: false, port: null, v: Math.floor(rng() * 3), deco: null };
+  }
+  const land = (q, r, deco) => { const t = T[key(q, r)]; if (t) { t.land = true; t.deco = deco; } };
+  // home island
+  land(-1, 0, 'houses'); land(0, -1, 'market'); land(-1, 1, 'palm'); land(-2, 1, 'grass');
+  T[key(0, 0)].port = 'main'; T[key(0, 0)].land = true;
+  // lighthouse island
+  land(-10, 4, 'lighthouse'); land(-9, 3, 'palm');
+  T[key(-9, 4)].port = 'fener'; T[key(-9, 4)].land = true;
+  const busy = t => t.land || NB.some(([a, b]) => T[key(t.q + a, t.r + b)]?.land);
+  const free = (minD, maxD, zone) => {
+    for (let i = 0; i < 400; i++) {
+      const q = Math.floor(rng() * (MAPR * 2 + 1)) - MAPR, r = Math.floor(rng() * (MAPR * 2 + 1)) - MAPR, t = T[key(q, r)];
+      if (!t || t.d < minD || t.d > maxD || busy(t) || (zone && t.z !== zone)) continue;
+      if (WRECKS.concat(BOTTLES).some(o => o.q === q && o.r === r) || Object.values(LEGENDS).some(o => o.q === q && o.r === r)) continue;
+      return t;
+    }
+    return null;
+  };
+  // islands
+  for (let i = 0; i < 9; i++) {
+    const t = free(5, MAPR - 1); if (!t) continue;
+    const ice = t.z === 'buzul';
+    land(t.q, t.r, ice ? 'ice' : rng() < 0.6 ? 'palm' : 'rock');
+    if (rng() < 0.5) { const [a, b] = NB[Math.floor(rng() * 6)]; const o = T[key(t.q + a, t.r + b)]; if (o && !o.port && o.d > 4) land(o.q, o.r, ice ? 'ice' : 'rock'); }
+  }
+  for (const z of ZORDER) { const t = free(z === 'koy' ? 3 : 6, MAPR, z); if (t) LEGENDS[z] = { q: t.q, r: t.r, z }; }
+  for (let i = 0; i < 7; i++) { const t = free(3, MAPR); if (t) WRECKS.push({ id: i, q: t.q, r: t.r }); }
+  const bz = ['koy', 'resif', 'acik', 'buzul', 'derin'];
+  for (let i = 0; i < 5; i++) { const t = free(2, MAPR, i === 0 ? 'koy' : i === 1 ? 'resif' : 'acik'); if (t) BOTTLES.push({ id: i, q: t.q, r: t.r, leg: bz[i] }); }
+}
+buildMap();
+const tileAt = (q, r) => T[key(q, r)];
+const portAt = (q, r) => PORTS.find(p => p.q === q && p.r === r);
+
+/* ============================================================
+   State
+   ============================================================ */
+let S;
+const SAVE_KEY = 'kiyi-ruzgari-v1';
+function newGame() {
+  S = {
+    coins: 60, t: DAY * 0.04, speed: 1,
+    boat: 1, rod: 1, gear: { net: 0, cooler: 0, binoc: 0, lamp: 0, sonar: 0 },
+    bait: { shrimp: 5, glow: 0 }, baitSel: 'bread',
+    pos: { q: 0, r: 0 }, fuel: 25,
+    crew: [{ name: 'Rıza Dayı', trait: 'sabir', hat: 0 }], cands: [], candDay: 0,
+    hold: [], seen: {}, zonesSeen: { koy: true }, wrecks: [], bottles: [], legSeen: {},
+    dex: {}, aqua: {}, market: {}, demand: {}, day: 1,
+    stats: { caught: 0, sold: 0, school: 0 }, goal: 0,
+    weather: { k: 'calm', t: 60, warn: 0 }, schools: [], nextId: 1,
+  };
+  FKEYS.forEach(k => { S.market[k] = 1; S.demand[k] = 1; });
+  rollMarket(); rollCands();
+  reveal(0, 0, 3);
+}
+function serialize() { return JSON.stringify(S); }
+function save() { try { localStorage.setItem(SAVE_KEY, serialize()); } catch (e) { /* storage unavailable */ } }
+function load(raw) {
+  try {
+    const src = raw || localStorage.getItem(SAVE_KEY);
+    if (!src) return false;
+    const s = JSON.parse(src);
+    if (!s || !s.pos || !s.seen) return false;
+    S = s;
+    FKEYS.forEach(k => { if (S.market[k] == null) S.market[k] = 1; if (S.demand[k] == null) S.demand[k] = 1; });
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ============================================================
+   Derived
+   ============================================================ */
+const boatDef = () => BOATS[S.boat - 1];
+const holdCap = () => boatDef().hold;
+const fuelCap = () => boatDef().fuel;
+const revealR = () => 2 + S.gear.binoc;
+const freshDur = () => [DAY, DAY * 2, DAY * 4, DAY * 8][S.gear.cooler];
+const dayPhase = () => (S.t % DAY) / DAY;
+const hour = () => (dayPhase() * 24 + 6) % 24;
+function darkness() { const h = hour(); if (h >= 20.5 || h < 4.5) return 1; if (h < 6.5) return 1 - (h - 4.5) / 2; if (h >= 18.5) return (h - 18.5) / 2; return 0; }
+const isNight = () => darkness() > 0.6;
+const seasonIdx = () => Math.floor((S.day - 1) / 3) % 4;
+const docked = () => !B.moving && portAt(S.pos.q, S.pos.r);
+function freshness(it) { return clamp(1 - (S.t - it.t) / freshDur(), 0, 1); }
+function itemValue(it) {
+  const f = FISH[it.sp], sz = (it.cm - f.cm[0]) / Math.max(1, f.cm[1] - f.cm[0]);
+  return f.p * (0.75 + 0.5 * sz) * S.market[it.sp] * S.demand[it.sp] * (0.35 + 0.65 * freshness(it)) * (seasonIdx() === 3 ? 1.15 : 1);
+}
+const holdValue = () => S.hold.reduce((s, it) => s + itemValue(it), 0);
+function canAfford(c) { return S.coins >= c; }
+function spend(c) { if (S.coins < c) { toast('Yeterli altının yok', 'bad'); return false; } S.coins -= c; return true; }
+function rollMarket() { FKEYS.forEach(k => { S.market[k] = FISH[k].legend ? 1 : +(0.8 + Math.random() * 0.5).toFixed(2); }); }
+function rollCands() {
+  S.cands = [0, 1, 2].map(() => {
+    const trait = pick(Object.keys(TRAITS));
+    return { name: pick(NAMES.filter(n => !S.crew.some(c => c.name === n))), trait, hat: Math.floor(Math.random() * HATS.length), fee: Math.round(80 + S.crew.length * 60 + Math.random() * 40) };
+  });
+  S.candDay = S.day;
+}
+function reveal(q, r, rad) {
+  for (let dq = -rad; dq <= rad; dq++) for (let dr = -rad; dr <= rad; dr++) {
+    if (Math.abs(dq + dr) > rad) continue;
+    const t = tileAt(q + dq, r + dr); if (!t) continue;
+    if (!S.seen[key(t.q, t.r)]) {
+      S.seen[key(t.q, t.r)] = 1;
+      if (!t.land && !S.zonesSeen[t.z]) { S.zonesSeen[t.z] = true; toast(`Yeni bölge keşfedildi: ${ZONES[t.z].name}. ${ZONES[t.z].desc}`, 'good'); }
+    }
+  }
+}
+
+/* ============================================================
+   Canvas
+   ============================================================ */
+const cv = document.getElementById('sea');
+const ctx = cv.getContext('2d');
+const dark = document.createElement('canvas'), dctx = dark.getContext('2d');
+let W = 0, H = 0, DPR = 1;
+const cam = { x: 0, y: 0, zoom: 1.3, follow: true };
+function resize() {
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  W = window.innerWidth; H = window.innerHeight;
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  dark.width = cv.width; dark.height = cv.height;
+}
+window.addEventListener('resize', resize);
+
+/* ============================================================
+   Boat runtime
+   ============================================================ */
+const B = { x: 0, y: 0, path: [], moving: false, face: 1, wake: [], tow: 0 };
+const dockPos = (q, r) => { const p = h2w(q, r); return { x: p.x + 20, y: p.y + 8 }; };
+function placeBoat() { const p = portAt(S.pos.q, S.pos.r) ? dockPos(S.pos.q, S.pos.r) : h2w(S.pos.q, S.pos.r); B.x = p.x; B.y = p.y; }
+
+function passable(t) { return t && (!t.land || t.port) && ZONES[t.z].boat <= S.boat; }
+function findPath(from, to) {
+  const start = key(from.q, from.r), goal = key(to.q, to.r);
+  const prev = { [start]: null }, queue = [from];
+  while (queue.length) {
+    const c = queue.shift(), ck = key(c.q, c.r);
+    if (ck === goal) break;
+    for (const [a, b] of NB) {
+      const n = tileAt(c.q + a, c.r + b); if (!n) continue;
+      const nk = key(n.q, n.r);
+      if (nk in prev || !passable(n)) continue;
+      // ports are only entered as a destination
+      if (n.port && nk !== goal) continue;
+      prev[nk] = ck; queue.push({ q: n.q, r: n.r });
+    }
+  }
+  if (!(goal in prev)) return null;
+  const out = []; let k = goal;
+  while (k) { const [q, r] = k.split(',').map(Number); out.unshift({ q, r }); k = prev[k]; }
+  return out;
+}
+function goTo(q, r, quiet) {
+  const t = tileAt(q, r);
+  if (!t) return;
+  if (t.land && !t.port) { if (!quiet) toast('Tekne karaya çıkamaz'); return; }
+  if (ZONES[t.z].boat > S.boat) { toast(`${ZONES[t.z].name} için ${BOATS[ZONES[t.z].boat - 1].n} gerekir`, 'bad'); return; }
+  const from = B.moving && B.path.length ? B.path[0] : S.pos;
+  const p = findPath(from, { q, r });
+  if (!p) { toast('Oraya giden bir rota yok'); return; }
+  B.path = B.moving && B.path.length ? [B.path[0], ...p.slice(1)] : p.slice(1);
+  if (!B.path.length) return;
+  B.moving = true;
+  cancelPlayerCast();
+  if (portAt(S.pos.q, S.pos.r) && !B.leftPort) { B.leftPort = true; }
+  closeModal();
+}
+function nearestPortPath() {
+  let best = null;
+  for (const p of PORTS) { const path = findPath(S.pos, p); if (path && (!best || path.length < best.length)) best = path; }
+  return best;
+}
+
+function arrive(t) {
+  S.pos = { q: t.q, r: t.r };
+  const storm = S.weather.k === 'storm';
+  const port = portAt(t.q, t.r);
+  if (!port) S.fuel = Math.max(0, S.fuel - (storm ? 2 : 1));
+  reveal(t.q, t.r, revealR());
+  const w = WRECKS.find(o => o.q === t.q && o.r === t.r);
+  if (w && !S.wrecks.includes(w.id)) {
+    S.wrecks.push(w.id);
+    const loot = Math.round(60 + tileAt(w.q, w.r).d * 22 + Math.random() * 80);
+    S.coins += loot; floatText(B.x, B.y - 40, `+${loot} altın`, '#ffcf4a');
+    toast(`Batık gemide bir sandık buldun: +${loot} altın!`, 'gold');
+  }
+  const b = BOTTLES.find(o => o.q === t.q && o.r === t.r);
+  if (b && !S.bottles.includes(b.id)) {
+    S.bottles.push(b.id);
+    const L = LEGENDS[b.leg];
+    if (L) { S.legSeen[b.leg] = true; reveal(L.q, L.r, 1); }
+    toast(`Şişede bir harita var! ${FISH['L_' + b.leg].n} ${ZONES[b.leg].name} içinde işaretlendi.`, 'gold');
+  }
+  for (const z in LEGENDS) { const L = LEGENDS[z]; if (hd(L, t) <= revealR()) S.legSeen[z] = true; }
+  if (port) { dock(port); return; }
+  if (S.fuel <= 0) tow();
+}
+function dock(port) {
+  B.path = []; B.moving = false;
+  const need = fuelCap() - S.fuel;
+  if (need > 0) {
+    const buy = Math.min(need, Math.floor(S.coins / 2));
+    if (buy > 0) { S.coins -= buy * 2; S.fuel += buy; }
+    if (buy < need) toast(`Yakıt için yeterli altın yok (${fmt(need - buy)} birim eksik).`, 'bad');
+  }
+  B.leftPort = false;
+  const p = dockPos(port.q, port.r); B.x = p.x; B.y = p.y;
+  toast(`${port.name}'na yanaştın. Depo dolduruldu.`, 'good');
+  if (S.hold.length) openModal('market');
+}
+function tow() {
+  const fee = Math.min(S.coins, 30 + hd(S.pos, { q: 0, r: 0 }) * 8);
+  S.coins -= fee;
+  B.path = []; B.moving = false; B.tow = 1.2;
+  S.pos = { q: 0, r: 0 }; S.fuel = 0;
+  toast(`Yakıtın bitti! Kıyı güvenliği seni Martı Limanı'na çekti (${fmt(fee)} altın).`, 'bad');
+  setTimeout(() => { placeBoat(); dock(PORTS[0]); }, 50);
+}
+
+function updateBoat(dt) {
+  if (B.tow > 0) B.tow -= dt;
+  if (!B.moving || !B.path.length) { B.moving = false; return; }
+  const next = B.path[0], port = portAt(next.q, next.r);
+  const tp = port ? dockPos(next.q, next.r) : h2w(next.q, next.r);
+  const dx = tp.x - B.x, dy = tp.y - B.y, d = Math.hypot(dx, dy);
+  const sp = 58 * boatDef().spd * (S.weather.k === 'storm' ? 0.75 : 1);
+  if (Math.abs(dx) > 1) B.face = dx < 0 ? -1 : 1;
+  if (Math.random() < dt * 14) B.wake.push({ x: B.x - B.face * 16, y: B.y + 4, t: 0 });
+  if (d <= sp * dt) {
+    B.x = tp.x; B.y = tp.y; B.path.shift();
+    arrive(tileAt(next.q, next.r));
+    if (!B.path.length) B.moving = false;
+  } else { B.x += dx / d * sp * dt; B.y += dy / d * sp * dt; }
+}
+
+/* ============================================================
+   Fishing
+   ============================================================ */
+const crewRT = [];
+function schoolHere() { return S.schools.find(s => s.q === S.pos.q && s.r === S.pos.r); }
+const zoneHere = () => tileAt(S.pos.q, S.pos.r).z;
+const atLegend = () => { const z = zoneHere(), L = LEGENDS[z]; return L && L.q === S.pos.q && L.r === S.pos.r && !S.dex['L_' + z] ? z : null; };
+const canFish = () => !B.moving && !docked() && S.weather.k !== 'storm' && B.tow <= 0;
+
+function rollCatch(o = {}) {
+  const z = zoneHere(), night = isNight(), si = seasonIdx(), rain = S.weather.k === 'rain';
+  const sc = schoolHere();
+  if (sc && Math.random() < 0.6 && !o.player) return sc.sp;
+  let w = [100, 22, 4];
+  w[1] *= 1 + 0.25 * (S.rod - 1); w[2] *= 1 + 0.4 * (S.rod - 1);
+  const bait = S.baitSel;
+  if (bait === 'shrimp') { w[1] *= 1.6; w[2] *= 1.4; }
+  if (bait === 'glow') { w[1] *= 1.3; w[2] *= 2.5; }
+  if (o.perfect) { w[0] *= 0.4; w[2] *= 2; }
+  if (o.trait === 'sabir') { w[1] *= 1.3; w[2] *= 1.3; }
+  if (o.trait === 'sans') w[2] *= 2;
+  let x = Math.random() * (w[0] + w[1] + w[2]), rar = x < w[0] ? 0 : x < w[0] + w[1] ? 1 : 2;
+  const nightOk = night && (S.gear.lamp || bait === 'glow' || o.player);
+  for (; rar >= 0; rar--) {
+    const cands = FKEYS.filter(k => { const f = FISH[k]; return f.z === z && f.r === rar && !f.legend && (!f.night || nightOk); });
+    if (!cands.length) continue;
+    const ws = cands.map(k => { const f = FISH[k]; let v = 1; if (rain && f.rain) v *= f.rain; if (f.season != null) v *= f.season === si ? 3 : 0.35; if (f.night) v *= 2; return v; });
+    let y = Math.random() * ws.reduce((a, b) => a + b, 0);
+    for (let i = 0; i < cands.length; i++) { y -= ws[i]; if (y <= 0) return cands[i]; }
+    return cands[cands.length - 1];
+  }
+  return FKEYS.find(k => FISH[k].z === z);
+}
+function sizeOf(sp, perfect) {
+  const f = FISH[sp]; let u = Math.pow(Math.random(), perfect ? 0.8 : 1.7);
+  return Math.round(f.cm[0] + (f.cm[1] - f.cm[0]) * u);
+}
+let fullWarned = 0;
+function addCatch(sp, who, from, perfect) {
+  if (S.hold.length >= holdCap()) {
+    if (S.t - fullWarned > 20) { fullWarned = S.t; toast('Ambar dolu! Balıkları satmak için limana dön.', 'bad'); }
+    return false;
+  }
+  const cm = sizeOf(sp, perfect);
+  S.hold.push({ sp, cm, t: S.t });
+  S.stats.caught++;
+  if (schoolHere() && who !== 'Ağ') S.stats.school++;
+  const f = FISH[sp], d = S.dex[sp];
+  if (!d) { S.dex[sp] = { n: 1, best: cm }; toast(`${f.legend ? 'EFSANE! ' : 'Yeni tür: '}${f.n} (${cm} cm)`, f.legend ? 'gold' : 'good'); }
+  else { d.n++; if (cm > d.best) d.best = cm; }
+  logCatch(who, sp, cm);
+  if (from) jumps.push({ x0: from.x, y0: from.y, x1: B.x, y1: B.y - 14, t: 0, sp });
+  if (S.baitSel !== 'bread' && who !== 'Ağ') {
+    S.bait[S.baitSel]--;
+    if (S.bait[S.baitSel] <= 0) { S.bait[S.baitSel] = 0; toast(`${BAITS[S.baitSel].n} bitti, ekmek içine geçildi.`); S.baitSel = 'bread'; }
+  }
+  const sc = schoolHere();
+  if (sc) { sc.n--; if (sc.n <= 0) { S.schools = S.schools.filter(s => s !== sc); toast('Sürü dağıldı. Yeni sürü ara.'); } }
+  return true;
+}
+
+function updateCrew(dt) {
+  while (crewRT.length < S.crew.length) crewRT.push({ st: 'idle', t: Math.random() * 2, bob: 0 });
+  crewRT.length = S.crew.length;
+  const ok = canFish(), sc = schoolHere();
+  S.crew.forEach((c, i) => {
+    const rt = crewRT[i];
+    if (!ok) { rt.st = 'idle'; rt.t = 1 + Math.random(); return; }
+    rt.t -= dt;
+    if (rt.t > 0) return;
+    if (rt.st === 'idle') { rt.st = 'wait'; rt.t = rnd(5, 11) * Math.pow(0.86, S.rod - 1) * (sc ? 0.4 : 1) * (c.trait === 'cevik' ? 0.7 : 1) * (isNight() && !S.gear.lamp ? (c.trait === 'gece' ? 1 : 2.5) : (isNight() && c.trait === 'gece' ? 0.6 : 1)); }
+    else if (rt.st === 'wait') { rt.st = 'bite'; rt.t = 0.7; }
+    else if (rt.st === 'bite') { rt.st = 'reel'; rt.t = 0.8; }
+    else if (rt.st === 'reel') {
+      const bp = rt.bobPos || { x: B.x, y: B.y + 20 };
+      addCatch(rollCatch({ trait: c.trait }), c.name, bp);
+      rt.st = 'idle'; rt.t = rnd(0.8, 1.6);
+    }
+  });
+  // net
+  if (ok && sc && S.gear.net > 0) {
+    B.netT = (B.netT || 0) + dt;
+    if (B.netT > 16) {
+      B.netT = 0;
+      const n = S.gear.net * 2 * (S.crew.some(c => c.trait === 'ag') ? 2 : 1);
+      let got = 0;
+      for (let i = 0; i < n && schoolHere(); i++) if (addCatch(FISH[sc.sp].r === 0 ? sc.sp : rollCatch({}), 'Ağ', { x: B.x, y: B.y + 24 })) got++;
+      if (got) floatText(B.x, B.y - 50, `Ağ: +${got}`, '#9be3dc');
+    }
+  }
+}
+
+/* player's rod */
+const PM = { st: 'idle', t: 0, needle: 0, sp: 3, g0: 0, g1: 0, a0: 0, a1: 0, msg: '', ph: 0 };
+function cancelPlayerCast() { if (PM.st !== 'idle') { PM.st = 'idle'; PM.msg = ''; } }
+function playerAction() {
+  if (PM.st === 'idle') {
+    if (!canFish()) { toast(docked() ? 'Limandayken balık tutamazsın. Denize açıl!' : S.weather.k === 'storm' ? 'Fırtınada olta atılmaz' : 'Önce tekneyi durdur'); return; }
+    PM.st = 'cast'; PM.t = 0.6;
+  } else if (PM.st === 'bite') {
+    const x = PM.needle;
+    let res = 'miss';
+    if (x >= PM.a0 && x <= PM.a1) res = 'perfect'; else if (x >= PM.g0 && x <= PM.g1) res = 'good';
+    if (res === 'miss') { PM.msg = 'Kaçtı! Tekrar dene.'; }
+    else {
+      const leg = atLegend();
+      let sp;
+      if (leg && res === 'perfect' && S.rod >= 3 && Math.random() < 0.4) sp = 'L_' + leg;
+      else sp = rollCatch({ perfect: res === 'perfect', player: true });
+      const f = FISH[sp];
+      if (addCatch(sp, 'Sen', { x: B.x + B.face * 30, y: B.y + 22 }, res === 'perfect')) PM.msg = `${res === 'perfect' ? 'Kusursuz! ' : ''}${f.n} tuttun!`;
+      else PM.msg = 'Ambar dolu, balığı saldın.';
+      if (leg && res === 'perfect' && S.rod < 3) PM.msg += ' Efsane için en az Karbon Olta gerek.';
+    }
+    PM.st = 'result'; PM.t = 1.6;
+  }
+  renderBar(true);
+}
+function updatePlayer(dt) {
+  if (PM.st !== 'idle' && !canFish()) { PM.st = 'idle'; renderBar(true); return; }
+  PM.ph += dt;
+  if (PM.st === 'cast') { PM.t -= dt; if (PM.t <= 0) { PM.st = 'wait'; PM.t = rnd(1.5, 4.5) * Math.pow(0.88, S.rod - 1) * (schoolHere() ? 0.6 : 1); renderBar(true); } }
+  else if (PM.st === 'wait') { PM.t -= dt; if (PM.t <= 0) {
+    PM.st = 'bite'; PM.t = 2.8; PM.sp = rnd(2.6, 4.2) + (atLegend() ? 1.4 : 0);
+    const gw = 0.2 + 0.05 * (S.rod - 1), aw = 0.05 + 0.015 * (S.rod - 1), c = rnd(gw / 2 + 0.05, 1 - gw / 2 - 0.05);
+    PM.g0 = c - gw / 2; PM.g1 = c + gw / 2; PM.a0 = c - aw / 2; PM.a1 = c + aw / 2; PM.ph = Math.random() * 6;
+    renderBar(true);
+  } }
+  else if (PM.st === 'bite') {
+    PM.t -= dt; PM.needle = 0.5 + 0.5 * Math.sin(PM.ph * PM.sp);
+    const n = document.querySelector('#bar .meter .n'); if (n) n.style.left = (PM.needle * 100) + '%';
+    if (PM.t <= 0) { PM.st = 'result'; PM.t = 1.4; PM.msg = 'Balık yemi kaptı gitti.'; renderBar(true); }
+  }
+  else if (PM.st === 'result') { PM.t -= dt; if (PM.t <= 0) { PM.st = 'idle'; renderBar(true); } }
+}
+
+/* ============================================================
+   World sim
+   ============================================================ */
+function spawnSchools(dt) {
+  S._sp = (S._sp || 0) + dt;
+  S.schools.forEach(s => s.ttl -= dt);
+  S.schools = S.schools.filter(s => s.ttl > 0);
+  if (S._sp < 5 || S.schools.length >= 18) return;
+  S._sp = 0;
+  const tiles = Object.values(T).filter(t => !t.land && t.d >= 2);
+  const t = pick(tiles);
+  if (S.schools.some(s => hd(s, t) < 2) || LEGENDS[t.z]?.q === t.q && LEGENDS[t.z]?.r === t.r) return;
+  const cands = FKEYS.filter(k => FISH[k].z === t.z && FISH[k].r < 2 && !FISH[k].legend && !FISH[k].night);
+  const sp = Math.random() < 0.12 ? (FKEYS.filter(k => FISH[k].z === t.z && FISH[k].r === 2 && !FISH[k].night)[0] || pick(cands)) : pick(cands);
+  S.schools.push({ id: S.nextId++, q: t.q, r: t.r, sp, n: Math.round(rnd(8, 22)), ttl: rnd(150, 300) });
+}
+function updateWeather(dt) {
+  const w = S.weather;
+  w.t -= dt;
+  if (w.warn > 0) { w.warn -= dt; if (w.warn <= 0) { w.k = 'storm'; w.t = rnd(22, 34); toast('Fırtına başladı! Olta atılmaz, yakıt iki kat gider.', 'bad'); } return; }
+  if (w.t > 0) return;
+  if (w.k !== 'calm') { toast(w.k === 'storm' ? 'Fırtına dindi. Deniz yine sakin.' : 'Yağmur dindi.'); w.k = 'calm'; w.t = rnd(60, 110); return; }
+  const roll = Math.random(), stormP = seasonIdx() === 3 ? 0.3 : 0.14;
+  if (roll < stormP) { w.warn = 18; toast('Ufukta kara bulutlar var: fırtına yaklaşıyor! Limana dönmek iyi olabilir.', 'bad'); }
+  else if (roll < stormP + 0.3) { w.k = 'rain'; w.t = rnd(25, 45); toast('Yağmur başladı. Levrek ve somon yağmuru sever.'); }
+  else w.t = rnd(50, 90);
+}
+function update(dt) {
+  S.t += dt;
+  const day = Math.floor(S.t / DAY) + 1;
+  if (day !== S.day) {
+    const oldSeason = seasonIdx();
+    S.day = day; rollMarket();
+    if (S.candDay !== day) rollCands();
+    const inc = Object.keys(S.aqua).reduce((s, k) => s + (FISH[k].r + 1) * 6 + (FISH[k].legend ? 40 : 0), 0);
+    if (inc) { S.coins += inc; toast(`Yeni gün! Akvaryum ziyaretçilerinden +${inc} altın.`, 'good'); }
+    if (seasonIdx() !== oldSeason) toast(`${SEASONS[seasonIdx()]} geldi. ${['Sular ısınıyor.', 'Mercan hanisi resifte bolca görünür.', 'Palamut ve lüfer göçü başladı!', 'Buz balığı kuzeyde. Fırtınalara dikkat.'][seasonIdx()]}`);
+  }
+  FKEYS.forEach(k => { S.demand[k] += (1 - S.demand[k]) * Math.min(1, dt * 0.01); });
+  updateWeather(dt);
+  spawnSchools(dt);
+  updateBoat(dt);
+  updateCrew(dt);
+  updatePlayer(dt);
+}
+let goalT = 0;
+function checkGoals(dt) {
+  goalT += dt; if (goalT < 0.5) return; goalT = 0;
+  const g = GOALS[S.goal];
+  if (g && g.c()) { S.coins += g.r; S.goal++; toast(`Hedef tamam: ${g.t}. +${g.r} altın`, 'good'); }
+}
+
+/* ============================================================
+   Drawing
+   ============================================================ */
+let now = 0;
+const floaters = [], jumps = [];
+function floatText(x, y, text, color) { floaters.push({ x, y, text, color, t: 0 }); }
+function ell(x, y, rx, ry, fill, rot = 0) { ctx.beginPath(); ctx.ellipse(x, y, Math.max(.1, rx), Math.max(.1, ry), rot, 0, Math.PI * 2); ctx.fillStyle = fill; ctx.fill(); }
+function hexPath(cx, cy, s = 1) { ctx.beginPath(); CORNERS.forEach(([x, y], i) => i ? ctx.lineTo(cx + x * s, cy + y * s) : ctx.moveTo(cx + x * s, cy + y * s)); ctx.closePath(); }
+
+function drawFishShape(c, x, y, len, sp, dir = 1, wig = 0) {
+  const f = FISH[sp], h = len * 0.34;
+  c.save(); c.translate(x, y); c.scale(dir, 1);
+  if (f.sh === 'octo') {
+    c.fillStyle = f.c;
+    for (let i = 0; i < 6; i++) { c.beginPath(); c.ellipse(-len * 0.1 + i * len * 0.07, len * 0.18, len * 0.05, len * 0.22, Math.sin(wig + i) * 0.3, 0, Math.PI * 2); c.fill(); }
+    c.beginPath(); c.ellipse(0, -len * 0.08, len * 0.3, len * 0.26, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = '#fff'; c.beginPath(); c.arc(len * 0.1, -len * 0.08, len * 0.05, 0, 7); c.fill();
+    c.fillStyle = '#222'; c.beginPath(); c.arc(len * 0.11, -len * 0.08, len * 0.025, 0, 7); c.fill();
+    c.restore(); return;
+  }
+  if (f.sh === 'crab') {
+    c.strokeStyle = f.c; c.lineWidth = len * 0.05; c.lineCap = 'round';
+    for (let i = -1; i <= 1; i += 2) for (let j = 0; j < 3; j++) { c.beginPath(); c.moveTo(i * len * 0.15, len * 0.05); c.lineTo(i * len * (0.35 + j * 0.04), len * (0.12 + j * 0.08)); c.stroke(); }
+    c.fillStyle = f.c; c.beginPath(); c.ellipse(0, 0, len * 0.3, len * 0.2, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = f.f; c.beginPath(); c.ellipse(-len * 0.38, -len * 0.16, len * 0.12, len * 0.09, -0.5, 0, 7); c.ellipse(len * 0.38, -len * 0.16, len * 0.12, len * 0.09, 0.5, 0, 7); c.fill();
+    c.fillStyle = '#222'; c.beginPath(); c.arc(-len * 0.07, -len * 0.18, len * 0.03, 0, 7); c.arc(len * 0.07, -len * 0.18, len * 0.03, 0, 7); c.fill();
+    c.restore(); return;
+  }
+  if (f.sh === 'squid') {
+    c.fillStyle = f.c;
+    c.beginPath(); c.moveTo(len * 0.5, 0); c.quadraticCurveTo(len * 0.2, -h * 0.9, -len * 0.1, -h * 0.5); c.lineTo(-len * 0.1, h * 0.5); c.quadraticCurveTo(len * 0.2, h * 0.9, len * 0.5, 0); c.fill();
+    c.strokeStyle = f.c; c.lineWidth = len * 0.035; c.lineCap = 'round';
+    for (let i = 0; i < 5; i++) { c.beginPath(); c.moveTo(-len * 0.08, (i - 2) * h * 0.2); c.quadraticCurveTo(-len * 0.3, (i - 2) * h * 0.3 + Math.sin(wig + i) * 3, -len * 0.5, (i - 2) * h * 0.35); c.stroke(); }
+    c.fillStyle = '#fff'; c.beginPath(); c.arc(0, -h * 0.1, len * 0.04, 0, 7); c.fill();
+    c.restore(); return;
+  }
+  const bodyH = f.sh === 'tall' ? h * 1.5 : f.sh === 'flat' ? h * 1.7 : f.sh === 'eel' ? h * 0.5 : h;
+  const tail = f.sh === 'eel' ? 0.1 : 0.22;
+  // tail
+  c.fillStyle = f.f;
+  c.beginPath(); c.moveTo(-len * 0.34, 0); c.lineTo(-len * (0.34 + tail), -bodyH * 0.55 + Math.sin(wig) * 1.5); c.lineTo(-len * (0.34 + tail) + len * 0.05, 0); c.lineTo(-len * (0.34 + tail), bodyH * 0.55 + Math.sin(wig) * 1.5); c.closePath(); c.fill();
+  // dorsal fin
+  c.beginPath(); c.moveTo(-len * 0.12, -bodyH * 0.42); c.quadraticCurveTo(0, -bodyH * 0.9, len * 0.12, -bodyH * 0.42); c.fill();
+  // body
+  c.fillStyle = f.c; c.beginPath(); c.ellipse(0, 0, len * 0.38, bodyH * 0.5, 0, 0, Math.PI * 2); c.fill();
+  if (f.sh === 'stripe') { c.fillStyle = f.f; [-0.12, 0.06, 0.22].forEach(p => { c.fillRect(len * p - len * 0.03, -bodyH * 0.45, len * 0.06, bodyH * 0.9); }); c.fillStyle = f.c; }
+  c.fillStyle = 'rgba(255,255,255,.25)'; c.beginPath(); c.ellipse(-len * 0.02, -bodyH * 0.18, len * 0.24, bodyH * 0.12, 0, 0, Math.PI * 2); c.fill();
+  if (f.sh === 'sword') { c.strokeStyle = f.f; c.lineWidth = Math.max(1, len * 0.03); c.beginPath(); c.moveTo(len * 0.36, -bodyH * 0.05); c.lineTo(len * 0.72, -bodyH * 0.12); c.stroke(); }
+  if (f.sh === 'lure') { c.strokeStyle = f.c; c.lineWidth = Math.max(1, len * 0.025); c.beginPath(); c.moveTo(len * 0.2, -bodyH * 0.4); c.quadraticCurveTo(len * 0.4, -bodyH * 1.1, len * 0.5, -bodyH * 0.6); c.stroke(); c.fillStyle = f.f; c.shadowColor = f.f; c.shadowBlur = 8; c.beginPath(); c.arc(len * 0.5, -bodyH * 0.6, len * 0.06, 0, 7); c.fill(); c.shadowBlur = 0; }
+  // eye
+  c.fillStyle = '#fff'; c.beginPath(); c.arc(len * 0.22, -bodyH * 0.1, Math.max(1, len * 0.05), 0, 7); c.fill();
+  c.fillStyle = '#1b2530'; c.beginPath(); c.arc(len * 0.235, -bodyH * 0.1, Math.max(0.6, len * 0.028), 0, 7); c.fill();
+  c.restore();
+}
+const svgCache = {};
+function fishSvg(sp, unknown) {
+  const k = sp + (unknown ? '?' : '');
+  if (svgCache[k]) return svgCache[k];
+  const c2 = document.createElement('canvas'); c2.width = 120; c2.height = 60;
+  const x = c2.getContext('2d');
+  drawFishShape(x, 62, 32, 80, sp, 1, 0);
+  if (unknown) { x.globalCompositeOperation = 'source-in'; x.fillStyle = '#7d98a4'; x.fillRect(0, 0, 120, 60); }
+  svgCache[k] = `<svg class="fish" viewBox="0 0 120 60"><image href="${c2.toDataURL()}" width="120" height="60"/></svg>`;
+  return svgCache[k];
+}
+
+function waterColor(t) {
+  const base = ZONES[t.z].c[t.v];
+  return base;
+}
+function drawWaterTile(t, x, y) {
+  hexPath(x, y, 1.01);
+  ctx.fillStyle = waterColor(t); ctx.fill();
+  if (t.z === 'resif' && !t.land) {
+    const r = mulberry(t.q * 131 + t.r * 71);
+    for (let i = 0; i < 3; i++) ell(x + (r() - 0.5) * 44, y + (r() - 0.5) * 22, 5 + r() * 5, 3 + r() * 2, ['rgba(255,138,160,.35)', 'rgba(255,190,110,.35)', 'rgba(190,120,230,.3)'][i]);
+  }
+  if (t.z === 'derin' && isNight()) {
+    const r = mulberry(t.q * 17 + t.r * 29);
+    for (let i = 0; i < 2; i++) { const a = 0.4 + 0.4 * Math.sin(now * 0.002 + i + t.q); ell(x + (r() - 0.5) * 50, y + (r() - 0.5) * 24, 1.6, 1.6, `rgba(150,255,240,${a})`); }
+  }
+  if ((t.q * 7 + t.r * 3) % 3 === 0) {
+    const ph = now * 0.0012 + t.q * 0.7 + t.r * 1.3;
+    ctx.strokeStyle = t.z === 'derin' ? 'rgba(255,255,255,.12)' : 'rgba(255,255,255,.35)'; ctx.lineWidth = 1.3;
+    const ox = Math.sin(ph) * 5;
+    ctx.beginPath(); ctx.moveTo(x - 10 + ox, y + 2); ctx.quadraticCurveTo(x - 4 + ox, y - 3, x + 2 + ox, y + 2); ctx.stroke();
+  }
+  if (t.z === 'buzul' && (t.q + t.r * 2) % 4 === 0) {
+    ctx.fillStyle = 'rgba(245,252,255,.9)'; ctx.beginPath();
+    const bx = x + 12 + Math.sin(now * 0.0006 + t.q) * 3, by = y + 4;
+    ctx.moveTo(bx - 8, by); ctx.lineTo(bx - 3, by - 4); ctx.lineTo(bx + 7, by - 3); ctx.lineTo(bx + 9, by + 2); ctx.lineTo(bx, by + 4); ctx.closePath(); ctx.fill();
+  }
+}
+function drawLandTile(t, x, y) {
+  const ice = t.deco === 'ice';
+  const [c1, c2, c3] = [CORNERS[1], CORNERS[2], CORNERS[3]];
+  ctx.fillStyle = ice ? '#9ccbe0' : '#b98c55';
+  ctx.beginPath(); ctx.moveTo(x + c1[0], y + c1[1]); ctx.lineTo(x + c2[0], y + c2[1]); ctx.lineTo(x + c2[0], y + c2[1] + DEPTH); ctx.lineTo(x + c1[0], y + c1[1] + DEPTH); ctx.fill();
+  ctx.fillStyle = ice ? '#b9dcea' : '#d2a86b';
+  ctx.beginPath(); ctx.moveTo(x + c2[0], y + c2[1]); ctx.lineTo(x + c3[0], y + c3[1]); ctx.lineTo(x + c3[0], y + c3[1] + DEPTH); ctx.lineTo(x + c2[0], y + c2[1] + DEPTH); ctx.fill();
+  // foam ring
+  hexPath(x, y + DEPTH * 0.7, 1.04); ctx.strokeStyle = `rgba(255,255,255,${0.35 + 0.15 * Math.sin(now * 0.002 + t.q)})`; ctx.lineWidth = 2; ctx.stroke();
+  hexPath(x, y);
+  ctx.fillStyle = ice ? '#eef8fc' : '#f0dca6'; ctx.fill();
+  if (!ice && t.deco !== 'rock') { hexPath(x, y - 1, 0.7); ctx.fillStyle = seasonIdx() === 3 ? '#e9f1ef' : seasonIdx() === 2 ? '#b9b25c' : '#86c265'; ctx.fill(); }
+}
+
+function drawPalm(x, y) {
+  ell(x, y + 2, 12, 4, 'rgba(0,0,0,.15)');
+  ctx.strokeStyle = '#8a6238'; ctx.lineWidth = 3.4; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + 5, y - 16, x + 2, y - 30); ctx.stroke();
+  const sw = Math.sin(now * 0.0015 + x) * 0.08;
+  ctx.fillStyle = seasonIdx() === 3 ? '#6f9f7c' : '#3f9a4e';
+  for (let i = 0; i < 6; i++) { const a = -Math.PI / 2 + (i - 2.5) * 0.62 + sw; ctx.beginPath(); ctx.ellipse(x + 2 + Math.cos(a) * 11, y - 30 + Math.sin(a) * 6 + 3, 12, 3.2, a, 0, Math.PI * 2); ctx.fill(); }
+  ell(x, y - 28, 2.4, 2.4, '#7a5530'); ell(x + 4, y - 27, 2.4, 2.4, '#7a5530');
+}
+function drawRocks(x, y) { ell(x - 5, y - 2, 11, 8, '#8f9a98'); ell(x + 7, y - 4, 9, 8, '#a9b3b0'); ell(x + 5, y - 9, 4, 2, 'rgba(255,255,255,.35)'); }
+function drawIceberg(x, y) {
+  ctx.fillStyle = '#f6fcff'; ctx.beginPath(); ctx.moveTo(x - 20, y + 4); ctx.lineTo(x - 12, y - 18); ctx.lineTo(x - 2, y - 26); ctx.lineTo(x + 8, y - 14); ctx.lineTo(x + 18, y - 8); ctx.lineTo(x + 20, y + 4); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#cde8f3'; ctx.beginPath(); ctx.moveTo(x - 2, y - 26); ctx.lineTo(x + 8, y - 14); ctx.lineTo(x + 18, y - 8); ctx.lineTo(x + 20, y + 4); ctx.lineTo(x + 2, y + 4); ctx.closePath(); ctx.fill();
+}
+function drawHouse(x, y, wall, roof, lit) {
+  ctx.fillStyle = wall; ctx.fillRect(x - 9, y - 14, 18, 14);
+  ctx.fillStyle = roof; ctx.beginPath(); ctx.moveTo(x - 12, y - 13); ctx.lineTo(x, y - 25); ctx.lineTo(x + 12, y - 13); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#6b4a2e'; ctx.fillRect(x - 2.5, y - 8, 5, 8);
+  ctx.fillStyle = lit ? '#ffd970' : '#a9d3e6'; ctx.fillRect(x + 4, y - 11, 4, 4); ctx.fillRect(x - 8, y - 11, 4, 4);
+}
+function drawDecoTile(t, x, y) {
+  const lit = isNight();
+  if (t.deco === 'palm') drawPalm(x - 4, y + 2);
+  else if (t.deco === 'rock') drawRocks(x, y);
+  else if (t.deco === 'ice') drawIceberg(x, y);
+  else if (t.deco === 'grass') { drawPalm(x + 8, y + 4); ell(x - 12, y, 5, 3, '#6aae50'); }
+  else if (t.deco === 'houses') { drawHouse(x - 12, y + 2, '#f4efe6', '#d65a4a', lit); drawHouse(x + 12, y - 4, '#f7e2b8', '#3f7fa8', lit); }
+  else if (t.deco === 'market') {
+    ctx.fillStyle = '#8a6238'; ctx.fillRect(x - 14, y - 16, 2, 16); ctx.fillRect(x + 12, y - 16, 2, 16);
+    ctx.fillStyle = '#b98c55'; ctx.fillRect(x - 15, y - 7, 30, 6);
+    for (let i = 0; i < 6; i++) { ctx.fillStyle = i % 2 ? '#fff' : '#e25b4a'; ctx.beginPath(); ctx.moveTo(x - 17 + i * 6, y - 16); ctx.lineTo(x - 11 + i * 6, y - 16); ctx.lineTo(x - 11 + i * 6, y - 21); ctx.lineTo(x - 17 + i * 6, y - 21); ctx.fill(); }
+    drawFishShape(ctx, x - 6, y - 9, 10, 'uskumru'); drawFishShape(ctx, x + 6, y - 9, 10, 'barbunya');
+    ctx.fillStyle = '#5a3a1e'; ctx.font = '800 6px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('PAZAR', x, y + 7);
+  }
+  else if (t.deco === 'lighthouse') {
+    ctx.fillStyle = '#f4efe6'; ctx.beginPath(); ctx.moveTo(x - 7, y); ctx.lineTo(x - 4, y - 34); ctx.lineTo(x + 4, y - 34); ctx.lineTo(x + 7, y); ctx.fill();
+    ctx.fillStyle = '#d65a4a'; ctx.fillRect(x - 6, y - 12, 12, 5); ctx.fillRect(x - 5, y - 26, 10, 5);
+    ctx.fillStyle = '#34495e'; ctx.fillRect(x - 5, y - 40, 10, 6); ctx.fillStyle = '#d65a4a'; ctx.beginPath(); ctx.moveTo(x - 6, y - 40); ctx.lineTo(x, y - 46); ctx.lineTo(x + 6, y - 40); ctx.fill();
+    ctx.fillStyle = '#ffe28a'; ctx.fillRect(x - 3, y - 39, 6, 4);
+  }
+}
+function drawPier(t, x, y) {
+  ctx.fillStyle = '#8a6238';
+  for (let i = 0; i < 4; i++) ctx.fillRect(x + 6 + i * 9, y + 2, 2.5, 10);
+  ctx.fillStyle = '#c29a62'; ctx.fillRect(x - 4, y - 2, 44, 6);
+  ctx.strokeStyle = 'rgba(90,60,30,.5)'; ctx.lineWidth = 1; for (let i = 0; i < 9; i++) { ctx.beginPath(); ctx.moveTo(x - 4 + i * 5, y - 2); ctx.lineTo(x - 4 + i * 5, y + 4); ctx.stroke(); }
+  ell(x - 6, y - 4, 4, 3, '#6b4a2e');
+  // lamp post
+  ctx.fillStyle = '#34495e'; ctx.fillRect(x + 36, y - 20, 2, 20);
+  ell(x + 37, y - 21, 3, 3, isNight() ? '#ffe28a' : '#dfe6ea');
+  if (!portAt(t.q, t.r).full) return;
+  // flag
+  ctx.fillStyle = '#e25b4a'; ctx.beginPath(); ctx.moveTo(x - 2, y - 26); ctx.lineTo(x + 10 + Math.sin(now * 0.004) * 2, y - 23); ctx.lineTo(x - 2, y - 19); ctx.fill();
+  ctx.fillStyle = '#6b4a2e'; ctx.fillRect(x - 3, y - 27, 1.6, 25);
+}
+
+function drawPerson(x, y, hat, shirt, scale = 1, face = 1, bob = 0) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(face * scale, scale);
+  ctx.fillStyle = '#2f4a5c'; ctx.beginPath(); ctx.roundRect(-4, -12 - bob, 8, 10, 2.5); ctx.fill();
+  ctx.fillStyle = shirt; ctx.beginPath(); ctx.roundRect(-3.8, -15 - bob, 7.6, 6, 2.5); ctx.fill();
+  ell(0, -19 - bob, 4.2, 4.2, '#f1c6a0');
+  ell(1.8, -19 - bob, 0.6, 0.7, '#3a2a1e');
+  ell(0, -22 - bob, 7, 2.1, hat);
+  ctx.fillStyle = hat; ctx.beginPath(); ctx.ellipse(0, -23 - bob, 4.2, 3.4, 0, Math.PI, 0); ctx.fill();
+  ctx.restore();
+}
+
+function boatDeck() {
+  // local deck slots per level (facing right): captain first, then crew
+  return [
+    [-4, 4],
+    [-8, -2, 6],
+    [-18, -8, 2, 12, 20],
+    [-26, -16, -6, 4, 14, 24, 30],
+  ][S.boat - 1];
+}
+function drawBoat() {
+  const lvl = S.boat, x = B.x, y = B.y, f = B.face;
+  const storm = S.weather.k === 'storm';
+  const bob = Math.sin(now * 0.003) * (storm ? 2.6 : 1.1), tilt = Math.sin(now * 0.0023) * (storm ? 0.08 : 0.025);
+  const L = [26, 34, 44, 54][lvl - 1], Hh = [7, 9, 11, 13][lvl - 1];
+  ell(x, y + 4, L * 0.9, 6, 'rgba(10,40,60,.25)');
+  ctx.save(); ctx.translate(x, y + bob); ctx.rotate(tilt); ctx.scale(f, 1);
+  const hull = ['#9a6a3c', '#f4f1ea', '#2f6fa0', '#f2c14b'][lvl - 1], stripe = ['#7b5230', '#e25b4a', '#f4f1ea', '#d65a4a'][lvl - 1];
+  // hull
+  ctx.fillStyle = hull;
+  ctx.beginPath(); ctx.moveTo(-L, -Hh); ctx.lineTo(L + 6, -Hh - 3); ctx.quadraticCurveTo(L - 4, Hh * 0.9, L - 14, Hh); ctx.lineTo(-L + 8, Hh); ctx.quadraticCurveTo(-L - 2, Hh * 0.2, -L, -Hh); ctx.fill();
+  ctx.fillStyle = stripe; ctx.beginPath(); ctx.moveTo(-L + 1, -Hh + 3); ctx.lineTo(L + 3, -Hh); ctx.lineTo(L + 1, -Hh + 3.4); ctx.lineTo(-L + 1.5, -Hh + 6); ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,.12)'; ctx.beginPath(); ctx.moveTo(-L + 6, Hh * 0.3); ctx.lineTo(L - 8, Hh * 0.3); ctx.lineTo(L - 14, Hh); ctx.lineTo(-L + 8, Hh); ctx.fill();
+  // superstructure
+  if (lvl === 1) {
+    ctx.fillStyle = '#7b5230'; ctx.fillRect(-L + 4, -Hh - 2, 4, 2); ctx.fillRect(-L - 3, -Hh + 2, 5, 8);
+  } else {
+    const cw = [0, 18, 22, 30][lvl - 1], ch = [0, 14, 16, 18][lvl - 1], cx = -cw / 2 - (lvl === 2 ? 8 : 4);
+    ctx.fillStyle = '#f4f1ea'; ctx.fillRect(cx, -Hh - ch, cw, ch);
+    ctx.fillStyle = lvl === 4 ? '#2f6fa0' : '#e25b4a'; ctx.fillRect(cx - 2, -Hh - ch - 3, cw + 4, 4);
+    ctx.fillStyle = isNight() ? '#ffe28a' : '#8fd0ea';
+    for (let i = 0; i < Math.floor(cw / 7); i++) ctx.fillRect(cx + 3 + i * 7, -Hh - ch + 5, 4, 4);
+    if (lvl >= 3) { ctx.strokeStyle = '#34495e'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(L - 12, -Hh); ctx.lineTo(L - 4, -Hh - 26); ctx.lineTo(L + 8, -Hh - 14); ctx.stroke(); }
+    if (lvl === 4) { ctx.fillStyle = '#f4f1ea'; ctx.fillRect(cx + 6, -Hh - ch - 12, cw - 12, 9); ctx.fillStyle = '#34495e'; ctx.fillRect(cx + cw / 2 - 1, -Hh - ch - 26, 2, 14); ctx.fillStyle = '#e25b4a'; ctx.beginPath(); ctx.moveTo(cx + cw / 2 + 1, -Hh - ch - 26); ctx.lineTo(cx + cw / 2 + 11, -Hh - ch - 23); ctx.lineTo(cx + cw / 2 + 1, -Hh - ch - 20); ctx.fill(); }
+    if (S.gear.lamp) { ell(cx + cw / 2, -Hh - ch - 5, 2.2, 2.2, isNight() ? '#fff2b0' : '#dfe6ea'); }
+  }
+  ctx.restore();
+  // people with rods (drawn upright, outside the boat's rotation)
+  const slots = boatDeck();
+  const deckY = y + bob - Hh + 1;
+  const people = [{ hat: '#e25b4a', shirt: '#f3e2c0', player: true }].concat(S.crew.map(c => ({ hat: HATS[c.hat], shirt: '#e6ecef', c })));
+  people.forEach((p, i) => {
+    if (i >= slots.length) return;
+    const px = x + slots[i] * f;
+    const rt = p.player ? null : crewRT[i - 1];
+    const fishing = p.player ? (PM.st !== 'idle') : rt && rt.st !== 'idle';
+    drawPerson(px, deckY, p.hat, p.shirt, 0.9, f);
+    if (fishing) {
+      const tipX = px + f * 16, tipY = deckY - 24;
+      ctx.strokeStyle = '#6b4a2e'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(px + f * 3, deckY - 10); ctx.lineTo(tipX, tipY); ctx.stroke();
+      const bite = p.player ? PM.st === 'bite' : rt.st === 'bite' || rt.st === 'reel';
+      const bx = px + f * (26 + i * 3), by = y + 16 + (i % 2) * 6 + (bite ? 3 + Math.sin(now * 0.04) * 2 : Math.sin(now * 0.004 + i) * 1.2);
+      if (rt) rt.bobPos = { x: bx, y: by };
+      ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.moveTo(tipX, tipY); ctx.quadraticCurveTo(bx, tipY + 4, bx, by); ctx.stroke();
+      ell(bx, by, 2.4, 2, '#fff'); ell(bx, by - 1, 2.4, 1.1, '#e25b4a');
+      if (bite) { ctx.fillStyle = '#ffcf4a'; ctx.font = '900 13px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('!', bx, by - 8); ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.beginPath(); ctx.ellipse(bx, by + 1, 6 + Math.sin(now * 0.02) * 2, 2.5, 0, 0, 7); ctx.stroke(); }
+    }
+  });
+}
+
+function drawSchool(s, x, y, ghost) {
+  const t = now * 0.001;
+  if (ghost) {
+    const p = (now * 0.001) % 1.6 / 1.6;
+    ctx.strokeStyle = `rgba(155,227,220,${0.8 * (1 - p)})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(x, y, 6 + p * 22, (6 + p * 22) * TILT, 0, 0, 7); ctx.stroke();
+    ell(x, y, 3, 3, '#9be3dc'); return;
+  }
+  for (let i = 0; i < 6; i++) {
+    const a = t * 0.8 + i * 1.05, rx = 18 + (i % 3) * 3;
+    const fx = x + Math.cos(a) * rx, fy = y + Math.sin(a) * rx * TILT * 0.8;
+    ctx.save(); ctx.globalAlpha = 0.32; drawFishShape(ctx, fx, fy, 12, s.sp, Math.sin(a) > 0 ? -1 : 1, t * 8 + i); ctx.restore();
+  }
+  for (let i = 0; i < 3; i++) { const p = (t * 0.7 + i / 3) % 1; ctx.strokeStyle = `rgba(255,255,255,${0.5 * (1 - p)})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(x + (i - 1) * 8, y, 3 + p * 9, (3 + p * 9) * 0.45, 0, 0, 7); ctx.stroke(); }
+  // gulls
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.6; ctx.lineCap = 'round';
+  for (let i = 0; i < 2; i++) {
+    const a = t * 1.2 + i * Math.PI, gx = x + Math.cos(a) * 16, gy = y - 34 + Math.sin(a) * 6, fl = Math.sin(now * 0.012 + i) * 3;
+    ctx.beginPath(); ctx.moveTo(gx - 6, gy - fl); ctx.quadraticCurveTo(gx - 3, gy - 3, gx, gy); ctx.quadraticCurveTo(gx + 3, gy - 3, gx + 6, gy - fl); ctx.stroke();
+  }
+}
+function drawWreck(x, y) {
+  ctx.fillStyle = 'rgba(60,40,25,.45)'; ctx.beginPath(); ctx.ellipse(x, y + 2, 16, 5, 0, 0, 7); ctx.fill();
+  ctx.strokeStyle = '#6b4a2e'; ctx.lineWidth = 2.6; ctx.beginPath(); ctx.moveTo(x - 2, y + 2); ctx.lineTo(x + 4, y - 26); ctx.stroke();
+  ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(x - 6, y - 16); ctx.lineTo(x + 12, y - 12); ctx.stroke();
+  ctx.fillStyle = 'rgba(240,230,210,.8)'; ctx.beginPath(); ctx.moveTo(x + 3, y - 24); ctx.lineTo(x + 12, y - 20 + Math.sin(now * 0.003) * 1.5); ctx.lineTo(x + 2, y - 17); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(x, y + 2, 10 + Math.sin(now * 0.003) * 2, 3, 0, 0, 7); ctx.stroke();
+}
+function drawBottle(x, y) {
+  const b = Math.sin(now * 0.004) * 2;
+  ctx.save(); ctx.translate(x, y + b); ctx.rotate(-0.5 + Math.sin(now * 0.002) * 0.15);
+  ctx.fillStyle = 'rgba(160,220,190,.85)'; ctx.beginPath(); ctx.roundRect(-8, -4, 13, 8, 3); ctx.fill(); ctx.fillRect(4, -2, 5, 4);
+  ctx.fillStyle = '#b98c55'; ctx.fillRect(8.5, -2, 2.5, 4);
+  ctx.fillStyle = '#f3e2c0'; ctx.fillRect(-5, -2, 7, 3);
+  ctx.restore();
+  ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(x, y + 4, 9, 2.6, 0, 0, 7); ctx.stroke();
+}
+function drawLegend(x, y) {
+  const t = now * 0.002;
+  for (let i = 0; i < 2; i++) { const p = (t * 0.5 + i / 2) % 1; ctx.strokeStyle = `rgba(255,207,74,${0.9 * (1 - p)})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(x, y, 8 + p * 26, (8 + p * 26) * TILT, 0, 0, 7); ctx.stroke(); }
+  for (let i = 0; i < 5; i++) { const a = t + i * 1.26; ell(x + Math.cos(a) * 18, y + Math.sin(a) * 9 - 6 - Math.sin(t * 2 + i) * 4, 1.6, 1.6, '#fff4c2'); }
+}
+
+function drawFog(t, x, y) {
+  hexPath(x, y, 1.03);
+  ctx.fillStyle = '#dde8ec'; ctx.fill();
+  const r = mulberry(t.q * 311 + t.r * 7);
+  for (let i = 0; i < 3; i++) ell(x + (r() - 0.5) * 40 + Math.sin(now * 0.0005 + i + t.q) * 3, y + (r() - 0.5) * 18 - 4, 16 + r() * 8, 9 + r() * 4, 'rgba(255,255,255,.75)');
+}
+
+const W2S = (wx, wy) => ({ x: (wx - cam.x) * cam.zoom + W / 2, y: (wy - cam.y) * cam.zoom + H / 2 });
+const S2W = (sx, sy) => ({ x: (sx - W / 2) / cam.zoom + cam.x, y: (sy - H / 2) / cam.zoom + cam.y });
+
+function render() {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const bg = ctx.createRadialGradient(W / 2, H / 2, 50, W / 2, H / 2, Math.max(W, H));
+  bg.addColorStop(0, '#2a78a8'); bg.addColorStop(1, '#154a6e');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  ctx.save();
+  ctx.translate(W / 2 - cam.x * cam.zoom, H / 2 - cam.y * cam.zoom);
+  ctx.scale(cam.zoom, cam.zoom);
+  const tl = S2W(-80, -80), br = S2W(W + 80, H + 120);
+  const vis = t => { const p = h2w(t.q, t.r); return p.x > tl.x && p.x < br.x && p.y > tl.y && p.y < br.y; };
+  const tiles = TL.filter(vis);
+  for (const t of tiles) { const p = h2w(t.q, t.r); drawWaterTile(t, p.x, p.y); }
+  // path
+  if (B.path.length) {
+    ctx.setLineDash([4, 6]); ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.lineWidth = 2.2;
+    ctx.beginPath(); ctx.moveTo(B.x, B.y);
+    for (const s of B.path) { const port = portAt(s.q, s.r), p = port ? dockPos(s.q, s.r) : h2w(s.q, s.r); ctx.lineTo(p.x, p.y); }
+    ctx.stroke(); ctx.setLineDash([]);
+    const e = B.path[B.path.length - 1], ep = h2w(e.q, e.r);
+    hexPath(ep.x, ep.y, 0.9); ctx.strokeStyle = '#ff8a5b'; ctx.lineWidth = 2.5; ctx.stroke();
+  }
+  // wake
+  for (const w of B.wake) { const a = 1 - w.t / 1.4; ctx.strokeStyle = `rgba(255,255,255,${0.6 * a})`; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.ellipse(w.x, w.y, 4 + w.t * 12, (4 + w.t * 12) * 0.35, 0, 0, 7); ctx.stroke(); }
+
+  const items = [];
+  const deepHidden = z => z === 'derin' && !S.gear.sonar;
+  for (const t of tiles) {
+    const p = h2w(t.q, t.r), seen = S.seen[key(t.q, t.r)];
+    if (!seen) continue;
+    if (t.land) items.push({ y: p.y - 1, f: () => { drawLandTile(t, p.x, p.y); if (t.port) drawPier(t, p.x, p.y); drawDecoTile(t, p.x, p.y); } });
+  }
+  for (const s of S.schools) { const t = tileAt(s.q, s.r), p = h2w(s.q, s.r); if (S.seen[key(s.q, s.r)] && !deepHidden(t.z) && vis(t)) items.push({ y: p.y - 5, f: () => drawSchool(s, p.x, p.y) }); }
+  for (const w of WRECKS) { if (S.wrecks.includes(w.id) || !S.seen[key(w.q, w.r)]) continue; const p = h2w(w.q, w.r); items.push({ y: p.y, f: () => drawWreck(p.x, p.y) }); }
+  for (const b of BOTTLES) { if (S.bottles.includes(b.id) || !S.seen[key(b.q, b.r)]) continue; const p = h2w(b.q, b.r); items.push({ y: p.y, f: () => drawBottle(p.x, p.y) }); }
+  for (const z in LEGENDS) { const L = LEGENDS[z]; if (!S.legSeen[z] || S.dex['L_' + z] || !S.seen[key(L.q, L.r)]) continue; const p = h2w(L.q, L.r); items.push({ y: p.y - 6, f: () => drawLegend(p.x, p.y) }); }
+  items.push({ y: B.y, f: drawBoat });
+  items.sort((a, b) => a.y - b.y);
+  for (const it of items) it.f();
+
+  // fog
+  for (const t of tiles) if (!S.seen[key(t.q, t.r)]) { const p = h2w(t.q, t.r); drawFog(t, p.x, p.y); }
+  // sonar pings through fog
+  if (S.gear.sonar) for (const s of S.schools) { if (S.seen[key(s.q, s.r)] || hd(s, S.pos) > 5) continue; const p = h2w(s.q, s.r); drawSchool(s, p.x, p.y, true); }
+
+  // jumps and floaters
+  for (const j of jumps) {
+    const k = Math.min(1, j.t / 0.7), x = j.x0 + (j.x1 - j.x0) * k, y = j.y0 + (j.y1 - j.y0) * k - Math.sin(k * Math.PI) * 30;
+    drawFishShape(ctx, x, y, 14, j.sp, j.x1 < j.x0 ? -1 : 1, now * 0.03);
+  }
+  ctx.textAlign = 'center';
+  for (const f of floaters) { ctx.globalAlpha = Math.max(0, 1 - f.t / 1.8); ctx.font = '900 13px Nunito, sans-serif'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(10,30,45,.7)'; ctx.strokeText(f.text, f.x, f.y - f.t * 22); ctx.fillStyle = f.color; ctx.fillText(f.text, f.x, f.y - f.t * 22); }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+
+  drawSky();
+  drawLabels();
+}
+
+function drawSky() {
+  const dk = darkness(), h = hour();
+  if (dk > 0.01) {
+    dctx.setTransform(1, 0, 0, 1, 0, 0);
+    dctx.globalCompositeOperation = 'source-over';
+    dctx.clearRect(0, 0, dark.width, dark.height);
+    dctx.fillStyle = `rgba(8, 18, 48, ${0.62 * dk})`; dctx.fillRect(0, 0, dark.width, dark.height);
+    dctx.globalCompositeOperation = 'destination-out';
+    const hole = (wx, wy, r) => { const s = W2S(wx, wy); const g = dctx.createRadialGradient(s.x * DPR, s.y * DPR, 0, s.x * DPR, s.y * DPR, r * cam.zoom * DPR); g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(1, 'rgba(0,0,0,0)'); dctx.fillStyle = g; dctx.fillRect(0, 0, dark.width, dark.height); };
+    hole(B.x, B.y, S.gear.lamp ? 150 : 60);
+    for (const p of PORTS) { const w = h2w(p.q, p.r); hole(w.x + 20, w.y, 110); }
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(dark, 0, 0); ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  if ((h > 17.5 && h < 20) || (h > 4.5 && h < 7)) { const a = 0.14 * (1 - Math.abs(((h > 12 ? h - 18.75 : h - 5.75)) / 1.25)); if (a > 0) { ctx.fillStyle = `rgba(255, 140, 80, ${a})`; ctx.fillRect(0, 0, W, H); } }
+  const w = S.weather;
+  if (w.k === 'rain' || w.k === 'storm') {
+    ctx.fillStyle = w.k === 'storm' ? 'rgba(20,30,50,.28)' : 'rgba(30,50,70,.12)'; ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = 'rgba(210,230,245,.5)'; ctx.lineWidth = 1.2; ctx.beginPath();
+    const n = w.k === 'storm' ? 220 : 110, sl = w.k === 'storm' ? 8 : 3;
+    for (let i = 0; i < n; i++) { const x = ((i * 97.3 + now * 0.4) % (W + 40)) - 20, y = ((i * 57.7 + now * 1.0) % (H + 40)) - 20; ctx.moveTo(x, y); ctx.lineTo(x - sl, y + 12); }
+    ctx.stroke();
+    if (w.k === 'storm' && Math.sin(now * 0.0017) > 0.995) { ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(0, 0, W, H); }
+  }
+  if (S.weather.warn > 0) { ctx.fillStyle = `rgba(30,40,60,${0.1 * (1 - S.weather.warn / 18)})`; ctx.fillRect(0, 0, W, H); }
+}
+function drawLabels() {
+  ctx.textBaseline = 'middle';
+  const pill = (x, y, text, bg, fg) => { ctx.font = '800 12px Nunito, sans-serif'; const w = ctx.measureText(text).width + 18; ctx.fillStyle = bg; ctx.beginPath(); ctx.roundRect(x - w / 2, y - 11, w, 22, 11); ctx.fill(); ctx.fillStyle = fg; ctx.textAlign = 'center'; ctx.fillText(text, x, y + 0.5); };
+  for (const p of PORTS) { if (!S.seen[key(p.q, p.r)]) continue; const w = h2w(p.q, p.r), s = W2S(w.x, w.y + 30); pill(s.x, s.y, p.name, 'rgba(226,91,74,.92)', '#fff'); }
+  if (cam.zoom < 0.7) {
+    for (const z of ZORDER) {
+      if (!S.zonesSeen[z]) continue;
+      const pos = { koy: [0, -3], resif: [7, 0], acik: [-7, 0], buzul: [3, -12], derin: [-3, 12] }[z];
+      const w = h2w(pos[0], pos[1]), s = W2S(w.x, w.y);
+      ctx.font = '600 20px Fredoka, sans-serif'; ctx.textAlign = 'center'; ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(10,30,45,.5)'; ctx.strokeText(ZONES[z].name, s.x, s.y); ctx.fillStyle = '#fff'; ctx.fillText(ZONES[z].name, s.x, s.y);
+    }
+  }
+  if (hoverTile && !B.moving && S.seen[key(hoverTile.q, hoverTile.r)] && !hoverTile.land) {
+    const z = ZONES[hoverTile.z];
+    if (z.boat > S.boat) { const w = h2w(hoverTile.q, hoverTile.r), s = W2S(w.x, w.y - 26); pill(s.x, s.y, `${BOATS[z.boat - 1].n} gerekir`, 'rgba(255,122,107,.95)', '#fff'); }
+  }
+  ctx.textBaseline = 'alphabetic';
+}
+
+/* ============================================================
+   Input
+   ============================================================ */
+const TL = Object.values(T).sort((a, b) => a.r - b.r || a.q - b.q);
+const pointers = new Map();
+let drag = null, pinch = null, hoverTile = null, camAnim = null;
+const ZMIN = 0.32, ZMAX = 2.2;
+function clampCam() { const ex = HS * SQ3 * MAPR, ey = HS * 1.5 * MAPR * TILT; cam.x = clamp(cam.x, -ex, ex); cam.y = clamp(cam.y, -ey, ey); }
+function zoomAt(sx, sy, z) { const a = S2W(sx, sy); cam.zoom = clamp(z, ZMIN, ZMAX); const b = S2W(sx, sy); cam.x += a.x - b.x; cam.y += a.y - b.y; clampCam(); }
+cv.addEventListener('pointerdown', e => {
+  cv.setPointerCapture(e.pointerId); pointers.set(e.pointerId, { x: e.clientX, y: e.clientY }); camAnim = null;
+  if (pointers.size === 1) drag = { sx: e.clientX, sy: e.clientY, cx: cam.x, cy: cam.y, moved: false };
+  else if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), z: cam.zoom }; if (drag) drag.moved = true; }
+});
+cv.addEventListener('pointermove', e => {
+  if (pointers.has(e.pointerId)) pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pinch && pointers.size >= 2) { const [a, b] = [...pointers.values()]; zoomAt((a.x + b.x) / 2, (a.y + b.y) / 2, pinch.z * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d); return; }
+  if (drag) {
+    const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+    if (Math.hypot(dx, dy) > 6) { drag.moved = true; cam.follow = false; cv.classList.add('dragging'); }
+    if (drag.moved) { cam.x = drag.cx - dx / cam.zoom; cam.y = drag.cy - dy / cam.zoom; clampCam(); }
+  } else if (e.pointerType === 'mouse') { const w = S2W(e.clientX, e.clientY), h = w2h(w.x, w.y); hoverTile = tileAt(h.q, h.r) || null; }
+});
+const endP = e => {
+  pointers.delete(e.pointerId); if (pointers.size < 2) pinch = null;
+  if (drag && pointers.size === 0) { if (!drag.moved && e.type === 'pointerup') tap(e.clientX, e.clientY); drag = null; cv.classList.remove('dragging'); }
+};
+cv.addEventListener('pointerup', endP); cv.addEventListener('pointercancel', endP);
+cv.addEventListener('pointerleave', () => { hoverTile = null; });
+cv.addEventListener('wheel', e => { e.preventDefault(); camAnim = null; zoomAt(e.clientX, e.clientY, cam.zoom * Math.exp(-e.deltaY * 0.0015)); }, { passive: false });
+function tap(sx, sy) {
+  const w = S2W(sx, sy), h = w2h(w.x, w.y), t = tileAt(h.q, h.r);
+  if (!t) return;
+  if (t.q === S.pos.q && t.r === S.pos.r && !B.moving) { if (docked()) openModal('market'); return; }
+  goTo(t.q, t.r);
+}
+function animateCam(x, y, z, dur) { camAnim = { fx: cam.x, fy: cam.y, fz: cam.zoom, x, y, z, t: 0, dur }; }
+function stepCam(dt) {
+  if (camAnim) {
+    camAnim.t += dt; const k = Math.min(1, camAnim.t / camAnim.dur), e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+    cam.x = camAnim.fx + (camAnim.x - camAnim.fx) * e; cam.y = camAnim.fy + (camAnim.y - camAnim.fy) * e; cam.zoom = camAnim.fz + (camAnim.z - camAnim.fz) * e;
+    if (k >= 1) camAnim = null; return;
+  }
+  if (cam.follow) { cam.x += (B.x - cam.x) * Math.min(1, dt * 3); cam.y += (B.y - cam.y) * Math.min(1, dt * 3); }
+}
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' && !e.repeat && $('modal').hidden) { e.preventDefault(); playerAction(); }
+  if (e.key === 'Escape') closeModal();
+});
+
+/* ============================================================
+   UI
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const coin = '<span class="ico coin" style="width:14px;height:14px"></span>';
+const costBtn = (label, cost, act, extra = '', cls = '') => `<button class="btn ${cls}" data-act="${act}" ${extra} ${canAfford(cost) ? '' : 'disabled'}>${label} ${coin}<span class="num">${fmt(cost)}</span></button>`;
+function toast(msg, kind = '') {
+  const el = document.createElement('div'); el.className = 'toast ' + kind; el.textContent = msg;
+  const box = $('toasts'); box.appendChild(el); while (box.children.length > 3) box.firstChild.remove();
+  setTimeout(() => { el.style.transition = 'opacity .4s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 400); }, 3800);
+}
+function logCatch(who, sp, cm) {
+  const f = FISH[sp], el = document.createElement('div');
+  el.className = 'li';
+  el.innerHTML = `${fishSvg(sp)}<span><b>${esc(who)}</b> · <span class="rar${f.r}">${f.n}</span> ${cm} cm</span>`;
+  const box = $('log'); box.appendChild(el); while (box.children.length > 5) box.firstChild.remove();
+  setTimeout(() => { el.style.transition = 'opacity .6s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 600); }, 7000);
+}
+let uiDown = false;
+document.addEventListener('pointerdown', e => { if (e.target.closest('#bar,#mcard')) uiDown = true; });
+document.addEventListener('pointerup', () => setTimeout(() => { uiDown = false; }, 0));
+function setHtml(el, html) { if (el._h !== html) { el._h = html; el.innerHTML = html; } }
+
+function renderHud() {
+  $('hCoins').textContent = fmt(S.coins);
+  $('hHoldT').textContent = `${S.hold.length}/${holdCap()}`;
+  $('hFuel').textContent = `${S.fuel}/${fuelCap()}`;
+  const fb = $('hFuelBar'); fb.querySelector('i').style.width = (S.fuel / fuelCap() * 100) + '%'; fb.classList.toggle('low', S.fuel / fuelCap() < 0.3);
+  const h = hour(), hh = String(Math.floor(h)).padStart(2, '0'), mm = String(Math.floor((h % 1) * 6) * 10).padStart(2, '0');
+  const w = S.weather, wtxt = w.warn > 0 ? 'Fırtına yaklaşıyor!' : w.k === 'storm' ? 'Fırtına' : w.k === 'rain' ? 'Yağmurlu' : isNight() ? 'Açık, yıldızlı gece' : 'Sakin deniz';
+  const zone = ZONES[zoneHere()].name;
+  setHtml($('clock'), `<div class="row"><b class="num">${hh}:${mm}</b><small>Gün ${S.day} · ${SEASONS[seasonIdx()]}</small></div><div class="w ${w.k === 'storm' || w.warn > 0 ? 'storm' : ''}">${wtxt} · ${zone}</div>`);
+  const g = GOALS[S.goal];
+  setHtml($('goal'), g ? `<div class="lbl">Hedef ${S.goal + 1}/${GOALS.length}</div><div style="display:flex;gap:8px;justify-content:space-between;align-items:baseline"><span>${g.t}</span><span class="rw">+${g.r}</span></div>` : '<div class="lbl">Tüm hedefler tamam</div><div>Yedi denizin efsanesi sensin.</div>');
+  $('bSpeed').querySelector('span').textContent = S.speed + '×';
+  $('bFollow').classList.toggle('on', cam.follow);
+  $('bFar').classList.toggle('on', cam.zoom < 0.7);
+}
+
+function renderBar(force) {
+  if (uiDown && !force) return;
+  const port = docked();
+  let h = '';
+  if (port) {
+    h = `<div class="barrow"><div class="grow"><div class="where">${port.name}</div><div class="hint">Haritada bir yere dokun, tekne oraya gitsin. Ambarda ${S.hold.length} balık (≈${fmt(holdValue())} altın).</div></div></div>
+      <div class="btnrow" style="margin-top:10px">
+        <button class="btn" data-act="open" data-m="market">Balık Pazarı</button>
+        ${port.full ? `<button class="btn foam" data-act="open" data-m="yard">Tersane</button><button class="btn foam" data-act="open" data-m="tackle">Olta Dükkânı</button><button class="btn ghost" data-act="open" data-m="cafe">Kahvehane</button><button class="btn ghost" data-act="open" data-m="aqua">Akvaryum</button>` : '<span class="chip">Küçük liman: sadece pazar ve yakıt</span>'}
+      </div>`;
+  } else {
+    const sc = schoolHere(), leg = atLegend(), z = ZONES[zoneHere()];
+    let where = B.moving ? `Yolda · ${B.path.length} kare kaldı` : sc ? `${FISH[sc.sp].n} sürüsünün üstündesin` : leg ? 'Efsane noktası!' : `${z.name} · demir atıldı`;
+    let hint = B.moving ? 'Tekne dururken ekip olta atar.' : S.weather.k === 'storm' ? 'Fırtına dinene kadar olta atılmaz.' : leg ? (S.rod >= 3 ? 'Kusursuz çekişle (altın bölge) efsane balığı yakalayabilirsin.' : 'Efsane için en az Karbon Olta (Sv 3) gerekir.') : sc ? `Sürüde ${sc.n} balık kaldı. Ekip çok daha hızlı tutuyor.` : 'Kıpırdayan balık gölgeleri ve martılar sürüyü gösterir.';
+    let btn, meter = '';
+    if (PM.st === 'idle') btn = `<button class="btn big" data-act="rod" ${canFish() ? '' : 'disabled'}>Oltayı At</button>`;
+    else if (PM.st === 'cast') btn = '<button class="btn big" disabled>Atılıyor…</button>';
+    else if (PM.st === 'wait') btn = '<button class="btn big ghost" disabled>Bekle…</button>';
+    else if (PM.st === 'bite') { btn = '<button class="btn big pull" data-act="rod">ÇEK!</button>'; meter = `<div class="meter"><div class="g" style="left:${PM.g0 * 100}%;width:${(PM.g1 - PM.g0) * 100}%"></div><div class="a" style="left:${PM.a0 * 100}%;width:${(PM.a1 - PM.a0) * 100}%"></div><div class="n" style="left:${PM.needle * 100}%"></div></div>`; hint = 'İbre yeşildeyken çek; altın bölge kusursuz sayılır.'; }
+    else btn = `<button class="btn big ghost" disabled>${PM.msg.length > 22 ? 'Tamam' : esc(PM.msg)}</button>`;
+    if (PM.st === 'result') hint = PM.msg;
+    const baits = Object.keys(BAITS).map(k => `<button class="chip ${S.baitSel === k ? 'on' : ''}" data-act="bait" data-b="${k}" ${k !== 'bread' && !S.bait[k] ? 'disabled' : ''}>${BAITS[k].n}${k !== 'bread' ? ' · ' + (S.bait[k] || 0) : ''}</button>`).join('');
+    h = `<div class="barrow"><div class="grow"><div class="where">${where}</div><div class="hint">${esc(hint)}</div></div>${btn}</div>${meter}
+      <div class="barrow" style="margin-top:10px;flex-wrap:wrap"><div class="chips grow">${baits}</div><button class="btn ghost" data-act="home">Limana Dön</button></div>`;
+  }
+  setHtml($('bar'), h);
+}
+$('bar').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
+  const a = b.dataset.act;
+  if (a === 'rod') playerAction();
+  else if (a === 'open') openModal(b.dataset.m);
+  else if (a === 'bait') { S.baitSel = b.dataset.b; }
+  else if (a === 'home') { const p = nearestPortPath(); if (p) { const e2 = p[p.length - 1]; goTo(e2.q, e2.r); cam.follow = true; } else toast('Limana giden bir rota bulunamadı'); }
+  renderBar(true);
+});
+
+/* ---------- modal ---------- */
+let modalKind = null, confirmX = null;
+function openModal(kind) { modalKind = kind; confirmX = null; $('modal').hidden = false; renderModal(true); }
+function closeModal() { modalKind = null; $('modal').hidden = true; }
+$('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+function tabs(active) {
+  const port = docked(), list = [['market', 'Pazar']];
+  if (!port || port.full) list.push(['yard', 'Tersane'], ['tackle', 'Olta Dükkânı'], ['cafe', 'Kahvehane'], ['aqua', 'Akvaryum']);
+  list.push(['dex', 'Balık Defteri']);
+  return `<div class="tabs">${list.map(([k, l]) => `<button class="tab ${active === k ? 'on' : ''}" data-act="tab" data-m="${k}">${l}</button>`).join('')}</div>`;
+}
+function renderModal(force) {
+  if ($('modal').hidden) return;
+  if (uiDown && !force) return;
+  const k = modalKind, port = docked();
+  const shopLocked = k !== 'dex' && (!port || (!port.full && k !== 'market'));
+  const title = { market: 'Balık Pazarı', yard: 'Tersane', tackle: 'Olta Dükkânı', cafe: 'Kahvehane', aqua: 'Akvaryum', dex: 'Balık Defteri' }[k];
+  let h = `<div class="shead"><h2>${title}</h2><button class="x" data-act="close" aria-label="Kapat">×</button></div>${tabs(k)}`;
+  if (shopLocked) {
+    h += `<p class="note">${k === 'market' ? 'Balık satmak için bir limana yanaşmalısın.' : 'Bu dükkân sadece Martı Limanı\'nda var.'}</p>`;
+    if (k === 'market') h += holdList(false);
+  } else if (k === 'market') {
+    const star = FKEYS.filter(x => !FISH[x].legend && S.dex[x]).sort((a, b) => S.market[b] - S.market[a])[0];
+    h += `<p class="sub">Fiyatlar her gün değişir; bol satılan balığın fiyatı bir süre düşer. Tazelik fiyatı etkiler${seasonIdx() === 3 ? '. Kışın her şey %15 daha değerli' : ''}.${star ? ` Günün gözdesi: <b>${FISH[star].n}</b> ×${S.market[star].toFixed(2)}` : ''}</p>`;
+    h += holdList(true);
+  } else if (k === 'yard') {
+    const nb = BOATS[S.boat];
+    h += `<p class="sub">Şu anki teknen: <b>${boatDef().n}</b> · ${boatDef().crew} tayfa · ${boatDef().hold} balık ambarı · ${boatDef().fuel} yakıt.</p>`;
+    h += nb ? `<div class="rowline"><div class="grow"><div class="t">${nb.n}</div><div class="d">${nb.crew} tayfa · ${nb.hold} ambar · ${nb.fuel} yakıt · %${Math.round((nb.spd - 1) * 100)} daha hızlı${S.boat + 1 === 2 ? ' · Buzul Suları açılır' : S.boat + 1 === 3 ? ' · Derin Çukur açılır' : ''}</div></div>${costBtn('Satın Al', nb.c, 'boat')}</div>` : '<p class="note">Limandaki en iyi gemi senin.</p>';
+    for (const g of ['cooler', 'binoc', 'lamp', 'sonar', 'net']) {
+      const G = GEAR[g], lv = S.gear[g], c = G.costs[lv];
+      h += `<div class="rowline"><div class="grow"><div class="t">${G.n} <span class="lvl">${lv ? 'SV ' + lv + '/' + G.costs.length : 'YOK'}</span></div><div class="d">${G.d}</div></div>${c != null ? costBtn(lv ? 'Geliştir' : 'Al', c, 'gear', `data-g="${g}"`) : '<span class="chip">En üst</span>'}</div>`;
+    }
+  } else if (k === 'tackle') {
+    const nr = RODS[S.rod];
+    h += `<p class="sub">Oltan: <b>${RODS[S.rod - 1].n}</b>. Daha iyi olta daha hızlı vurur, nadir balık şansını ve yeşil bölgeyi büyütür. Ekibin de aynı oltaları kullanır.</p>`;
+    h += nr ? `<div class="rowline"><div class="grow"><div class="t">${nr.n}</div><div class="d">${S.rod + 1 === 3 ? 'Efsane balıkları yakalayabilecek ilk olta.' : 'Daha hızlı vuruş, daha çok nadir balık.'}</div></div>${costBtn('Satın Al', nr.c, 'rod')}</div>` : '<p class="note">Efsane Olta elinde. Daha iyisi yok.</p>';
+    for (const b of ['shrimp', 'glow']) h += `<div class="rowline"><div class="grow"><div class="t">${BAITS[b].n} <span class="lvl num">×${S.bait[b] || 0}</span></div><div class="d">${BAITS[b].d} 20'lik paket. Her balıkta bir tane gider.</div></div>${costBtn('Paket Al', BAITS[b].pack, 'bait', `data-b="${b}"`)}</div>`;
+  } else if (k === 'cafe') {
+    const full = S.crew.length >= boatDef().crew;
+    h += `<p class="sub">Tayfa: ${S.crew.length}/${boatDef().crew}. ${full ? 'Teknede yer yok; daha büyük tekne al.' : 'Masalardaki balıkçılar iş arıyor. Her gün yeni yüzler gelir.'}</p>`;
+    S.crew.forEach((c, i) => { h += `<div class="rowline"><span class="ico" style="background:${HATS[c.hat]};width:26px;height:26px"></span><div class="grow"><div class="t">${esc(c.name)}</div><div class="d">${TRAITS[c.trait].n}: ${TRAITS[c.trait].d}</div></div>${S.crew.length > 1 ? `<button class="btn ghost" data-act="fire" data-i="${i}">Yolla</button>` : '<span class="chip">Tayfan</span>'}</div>`; });
+    h += '<div class="zhead">İş arayanlar</div>';
+    S.cands.forEach((c, i) => { h += `<div class="rowline"><span class="ico" style="background:${HATS[c.hat]};width:26px;height:26px"></span><div class="grow"><div class="t">${esc(c.name)}</div><div class="d">${TRAITS[c.trait].n}: ${TRAITS[c.trait].d}</div></div>${costBtn('İşe Al', c.fee, 'hire', `data-i="${i}" ${full ? 'disabled' : ''}`)}</div>`; });
+    if (!S.cands.length) h += '<p class="note">Bugün kimse yok. Yarın tekrar uğra.</p>';
+  } else if (k === 'aqua') {
+    const inc = Object.keys(S.aqua).reduce((s, x) => s + (FISH[x].r + 1) * 6 + (FISH[x].legend ? 40 : 0), 0);
+    h += `<p class="sub">Her türden bir balık bağışla. Ziyaretçiler her sabah bilet parası bırakır: şu an günde <b class="price">${inc} altın</b>. Bağışlanan tür sayısı: ${Object.keys(S.aqua).length}/${FKEYS.length}.</p>`;
+    const can = [...new Set(S.hold.map(it => it.sp))].filter(sp => !S.aqua[sp]);
+    if (!can.length) h += '<p class="note">Ambarında akvaryumda olmayan bir tür yok.</p>';
+    for (const sp of can) { const f = FISH[sp]; h += `<div class="rowline">${fishSvg(sp)}<div class="grow"><div class="t">${f.n} <span class="rar${f.r}" style="font-size:11px">${RAR[f.r]}</span></div><div class="d">Günde +${(f.r + 1) * 6 + (f.legend ? 40 : 0)} altın getirir</div></div><button class="btn foam" data-act="donate" data-s="${sp}">Bağışla</button></div>`; }
+  } else if (k === 'dex') {
+    h += `<p class="sub">${Object.keys(S.dex).length}/${FKEYS.length} tür bulundu.</p>`;
+    for (const z of ZORDER) {
+      h += `<div class="zhead">${ZONES[z].name}${S.zonesSeen[z] ? '' : ' · keşfedilmedi'}</div><div class="dex">`;
+      for (const sp of FKEYS.filter(x => FISH[x].z === z)) {
+        const f = FISH[sp], d = S.dex[sp];
+        const cond = [f.night ? 'gece' : '', f.rain ? 'yağmur sever' : '', f.season != null ? SEASONS[f.season].toLowerCase() : '', f.legend ? 'efsane noktasında' : ''].filter(Boolean).join(', ');
+        h += `<div class="dcard ${d ? '' : 'unk'}">${fishSvg(sp, !d)}<div class="t ${d ? 'rar' + f.r : ''}">${d ? f.n : '???'}</div><div class="d">${RAR[f.r]}${cond ? ' · ' + cond : ''}</div>${d ? `<div class="d num">Rekor ${d.best} cm · ${d.n} adet</div>` : ''}</div>`;
+      }
+      h += '</div>';
+    }
+  }
+  setHtml($('mcard'), h);
+}
+function holdList(sellable) {
+  if (!S.hold.length) return '<p class="note">Ambar boş. Denize açıl!</p>';
+  const groups = {};
+  for (const it of S.hold) { const g = groups[it.sp] || (groups[it.sp] = { n: 0, v: 0, fr: 0, best: 0 }); g.n++; g.v += itemValue(it); g.fr += freshness(it); g.best = Math.max(g.best, it.cm); }
+  let h = '', tot = 0;
+  for (const sp of Object.keys(groups).sort((a, b) => groups[b].v - groups[a].v)) {
+    const g = groups[sp], f = FISH[sp], fr = g.fr / g.n; tot += g.v;
+    const dem = S.demand[sp], mk = S.market[sp];
+    h += `<div class="rowline">${fishSvg(sp)}<div class="grow"><div class="t">${f.n} <span class="lvl num">×${g.n}</span> <span class="rar${f.r}" style="font-size:11px">${RAR[f.r]}</span></div><div class="d num">En büyüğü ${g.best} cm · tazelik %${Math.round(fr * 100)} · piyasa ×${(mk * dem).toFixed(2)}</div></div><span class="price num">${fmt(g.v)}</span>${sellable ? `<button class="btn" data-act="sell" data-s="${sp}">Sat</button>` : ''}</div>`;
+  }
+  if (sellable) h += `<div class="btnrow" style="margin-top:12px;justify-content:flex-end"><button class="btn foam" data-act="sellAll">Hepsini sat · ${fmt(tot)} altın</button></div>`;
+  return h;
+}
+function sell(filter) {
+  let got = 0, n = 0;
+  S.hold = S.hold.filter(it => { if (!filter(it)) return true; got += itemValue(it); S.demand[it.sp] = Math.max(0.5, S.demand[it.sp] - 0.02); n++; return false; });
+  if (n) { S.coins += got; S.stats.sold += n; toast(`${n} balık satıldı: +${fmt(got)} altın`, 'good'); floatText(B.x, B.y - 40, `+${fmt(got)}`, '#ffcf4a'); }
+}
+$('mcard').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
+  const a = b.dataset.act;
+  if (a === 'close') return closeModal();
+  if (a === 'tab') { modalKind = b.dataset.m; confirmX = null; }
+  else if (a === 'sell') sell(it => it.sp === b.dataset.s);
+  else if (a === 'sellAll') sell(() => true);
+  else if (a === 'boat') { const nb = BOATS[S.boat]; if (nb && spend(nb.c)) { S.boat++; S.fuel = fuelCap(); toast(`${nb.n} artık senin! Depo dolu, yola hazır.`, 'good'); } }
+  else if (a === 'gear') { const g = b.dataset.g, c = GEAR[g].costs[S.gear[g]]; if (c != null && spend(c)) { S.gear[g]++; toast(`${GEAR[g].n} ${S.gear[g] > 1 ? 'geliştirildi' : 'alındı'}`, 'good'); } }
+  else if (a === 'rod') { const nr = RODS[S.rod]; if (nr && spend(nr.c)) { S.rod++; toast(`${nr.n} alındı!`, 'good'); } }
+  else if (a === 'bait') { const bb = b.dataset.b; if (spend(BAITS[bb].pack)) { S.bait[bb] = (S.bait[bb] || 0) + 20; toast(`20 ${BAITS[bb].n} alındı`); } }
+  else if (a === 'hire') { const c = S.cands[+b.dataset.i]; if (c && S.crew.length < boatDef().crew && spend(c.fee)) { S.crew.push({ name: c.name, trait: c.trait, hat: c.hat }); S.cands.splice(+b.dataset.i, 1); toast(`${c.name} tayfaya katıldı!`, 'good'); } }
+  else if (a === 'fire') { const i = +b.dataset.i; if (confirmX !== 'f' + i) { confirmX = 'f' + i; b.textContent = 'Emin misin?'; b.classList.add('warn'); return; } const c = S.crew.splice(i, 1)[0]; crewRT.splice(i, 1); toast(`${c.name} karaya çıktı. Yolun açık olsun!`); confirmX = null; }
+  else if (a === 'donate') { const sp = b.dataset.s, idx = S.hold.findIndex(it => it.sp === sp); if (idx >= 0) { S.hold.splice(idx, 1); S.aqua[sp] = true; toast(`${FISH[sp].n} akvaryuma yerleşti. Ziyaretçiler bayılacak!`, 'good'); } }
+  renderModal(true); renderHud(); renderBar(true);
+});
+
+$('bSpeed').addEventListener('click', () => { S.speed = S.speed >= 3 ? 1 : S.speed + 1; renderHud(); });
+$('bDex').addEventListener('click', () => openModal('dex'));
+$('hHold').addEventListener('click', () => openModal('market'));
+$('bFar').addEventListener('click', () => { cam.follow = false; if (cam.zoom < 0.7) { cam.follow = true; animateCam(B.x, B.y, 1.3, 0.45); } else animateCam(0, 0, 0.36, 0.5); });
+$('bFollow').addEventListener('click', () => { cam.follow = true; animateCam(B.x, B.y, Math.max(cam.zoom, 1.1), 0.4); });
+
+/* ============================================================
+   Loop
+   ============================================================ */
+let last = performance.now(), uiT = 0, saveT = 0, lastState = '';
+function frame(ts) {
+  const rdt = Math.min(0.05, (ts - last) / 1000); last = ts; now = ts;
+  update(rdt * S.speed);
+  checkGoals(rdt);
+  stepCam(rdt);
+  for (const w of B.wake) w.t += rdt; while (B.wake.length && B.wake[0].t > 1.4) B.wake.shift();
+  for (let i = jumps.length - 1; i >= 0; i--) { jumps[i].t += rdt; if (jumps[i].t > 0.7) jumps.splice(i, 1); }
+  for (let i = floaters.length - 1; i >= 0; i--) { floaters[i].t += rdt; if (floaters[i].t > 1.8) floaters.splice(i, 1); }
+  render();
+  const st = `${!!docked()}|${B.moving}|${PM.st}|${S.weather.k}`;
+  if (st !== lastState) { lastState = st; renderBar(true); }
+  uiT += rdt; saveT += rdt;
+  if (uiT > 0.3) { uiT = 0; renderHud(); renderBar(); renderModal(); }
+  if (saveT > 5) { saveT = 0; save(); }
+  requestAnimationFrame(frame);
+}
+function start(data) {
+  if (!load(data && data.save)) newGame();
+  resize(); placeBoat();
+  cam.x = B.x; cam.y = B.y; cam.zoom = W < 600 ? 1.1 : 1.45;
+  renderHud(); renderBar(true);
+  if (S.stats.caught === 0) setTimeout(() => toast('Hoş geldin kaptan! Haritada bir yere dokun, teknen oraya gitsin.'), 700);
+  window.addEventListener('beforeunload', save);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
+  requestAnimationFrame(ts => { last = ts; frame(ts); });
+}
+try { window.claude?.hot?.snapshot?.(() => ({ save: serialize() })); } catch (e) { /* optional */ }
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+})();
+</script>
