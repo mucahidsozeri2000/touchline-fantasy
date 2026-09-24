@@ -69,6 +69,15 @@
   }
   .goal .lbl { font-size: 10.5px; letter-spacing: 1px; text-transform: uppercase; color: var(--foam); font-weight: 900; }
   .goal .rw { color: var(--gold); font-weight: 900; white-space: nowrap; }
+  .tourc { text-align: left; color: var(--ink); cursor: pointer; }
+  .tourc .lbl { color: var(--gold); }
+  .tourc .lead { color: var(--foam); font-weight: 900; }
+  .tourc .lose { color: var(--danger); font-weight: 900; }
+  .badge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--gold); color: #3a2a05; font-size: 11px; font-weight: 900; }
+  .ocard { background: var(--panel-2); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+  .ocard .grow { flex: 1; min-width: 0; }
+  .ocard .who { font-size: 11px; letter-spacing: .8px; text-transform: uppercase; color: var(--foam); font-weight: 900; }
+  .ocard.ready { border-color: rgba(255, 207, 74, .6); }
 
   .tools { display: flex; gap: 8px; }
   .rbtn {
@@ -147,7 +156,8 @@
   .rowline .grow { flex: 1; min-width: 0; }
   .rowline .t { font-weight: 900; }
   .rowline .d { font-size: 12px; color: var(--muted); line-height: 1.35; }
-  .rowline svg.fish { width: 46px; height: 24px; flex: none; }
+  svg.fish { width: 46px; height: 24px; flex: none; }
+  .ocard svg.fish { width: 56px; height: 28px; }
   .lvl { font-size: 11px; font-weight: 900; color: var(--foam); letter-spacing: .5px; }
   .price { font-weight: 900; color: var(--gold); white-space: nowrap; }
   .note { font-size: 12px; color: var(--muted); padding: 8px 10px; border-radius: 10px; background: rgba(0,0,0,.2); line-height: 1.4; }
@@ -200,9 +210,11 @@
       <div class="pill num" title="Yakıt"><span class="ico" style="background:#c9523f"><svg viewBox="0 0 20 20" fill="#fff"><path d="M10 2c3 4 5 6.5 5 9.5a5 5 0 0 1-10 0C5 8.5 7 6 10 2z"/></svg></span><span class="fuel" id="hFuelBar"><i></i></span><span id="hFuel">0</span></div>
     </div>
     <div class="goal" id="goal"></div>
+    <button class="goal tourc" id="tour" title="Turnuva"></button>
   </div>
   <div class="clock" id="clock"></div>
   <div class="tools">
+    <button class="rbtn" id="bSound" title="Ses"><span><svg viewBox="0 0 20 20" fill="#fff"><path d="M3 8h3l4-3.5v11L6 12H3z"/><path id="sndWave" d="M13 7a4 4 0 0 1 0 6M15.5 5a7 7 0 0 1 0 10" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg></span></button>
     <button class="rbtn" id="bSpeed" title="Oyun hızı"><span>1×</span></button>
     <button class="rbtn" id="bDex" title="Balık defteri"><span><svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M3 4h5a2 2 0 0 1 2 2v10a2 2 0 0 0-2-2H3zM17 4h-5a2 2 0 0 0-2 2v10a2 2 0 0 1 2-2h5z"/></svg></span></button>
     <button class="rbtn" id="bFar" title="Uzak görünüm"><span><svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><circle cx="9" cy="9" r="5.5"/><path d="M13 13l4 4M6.5 9h5"/></svg></span></button>
@@ -300,11 +312,15 @@ const TRAITS = {
 const NAMES = ['Rıza Dayı', 'Hatice', 'Temel', 'Nuri', 'Zeynep', 'Cemal', 'Elif', 'İsmail', 'Sevim', 'Dursun', 'Fadime', 'Kemal', 'Aysel', 'Hasan', 'Nermin', 'Yusuf', 'Şükrü', 'Gülten'];
 const HATS = ['#e8c872', '#4b88b8', '#e25b4a', '#6aa84f', '#f2f2f2', '#8e6bbf'];
 const SEASONS = ['İlkbahar', 'Yaz', 'Sonbahar', 'Kış'];
+const REQUESTERS = ['Balıkçı Nine', 'Lokantacı Hüsnü', 'Fırıncı Şaziye', 'Muhtar Cevdet', 'Aşçı Pervin', 'Kaptan Nazım', 'Öğretmen Leman', 'Otelci Behzat', 'Kedici Melahat', 'Ressam Orhan'];
+const REQ_LINES = ['Akşama misafirim var', 'Lokantada bu hafta özel menü var', 'Torunlar geliyor', 'Köy şenliği için lazım', 'Kedilerim açlıktan miyavlıyor', 'Tablom için model arıyorum', 'Otelde yabancı konuklar var', 'Eski usul bir çorba yapacağım'];
+const RIVALS = ['Kaptan Hayri', 'Deli Nusret', 'Olta Kraliçesi Nazlı', 'Yaşlı Kurt Sabri', 'Hızlı Remzi'];
 const DAY = 150;
 
 const GOALS = [
   { t: 'İlk balığını tut',                    r: 20,   c: () => S.stats.caught >= 1 },
   { t: 'Limanda balık sat',                   r: 30,   c: () => S.stats.sold >= 1 },
+  { t: 'Panodan bir siparişi teslim et',      r: 40,   c: () => (S.stats.orders || 0) >= 1 },
   { t: 'Bir balık sürüsünde 5 balık tut',     r: 40,   c: () => S.stats.school >= 5 },
   { t: 'Oltanı geliştir',                     r: 50,   c: () => S.rod >= 2 },
   { t: 'Mercan Resifi\'ni keşfet',            r: 60,   c: () => S.zonesSeen.resif },
@@ -313,6 +329,7 @@ const GOALS = [
   { t: 'Balıkçı Teknesi al',                  r: 150,  c: () => S.boat >= 2 },
   { t: 'Akvaryuma 5 tür bağışla',             r: 200,  c: () => Object.keys(S.aqua).length >= 5 },
   { t: 'Buzul Sularına ulaş',                 r: 250,  c: () => S.zonesSeen.buzul },
+  { t: 'Bir balık turnuvası kazan',           r: 300,  c: () => (S.stats.tours || 0) >= 1 },
   { t: 'İlk efsane balığını yakala',          r: 500,  c: () => Object.keys(S.dex).some(k => FISH[k].legend) },
   { t: 'Derin Çukur\'u keşfet',               r: 400,  c: () => S.zonesSeen.derin },
   { t: 'Beş efsanenin hepsini yakala',        r: 3000, c: () => FKEYS.filter(k => FISH[k].legend).every(k => S.dex[k]) },
@@ -410,10 +427,12 @@ function newGame() {
     dex: {}, aqua: {}, market: {}, demand: {}, day: 1,
     stats: { caught: 0, sold: 0, school: 0 }, goal: 0,
     weather: { k: 'calm', t: 60, warn: 0 }, schools: [], nextId: 1,
+    orders: [], tour: null, sound: true,
   };
   FKEYS.forEach(k => { S.market[k] = 1; S.demand[k] = 1; });
   rollMarket(); rollCands();
   reveal(0, 0, 3);
+  fillOrders(); newTour();
 }
 function serialize() { return JSON.stringify(S); }
 function save() { try { localStorage.setItem(SAVE_KEY, serialize()); } catch (e) { /* storage unavailable */ } }
@@ -425,6 +444,9 @@ function load(raw) {
     if (!s || !s.pos || !s.seen) return false;
     S = s;
     FKEYS.forEach(k => { if (S.market[k] == null) S.market[k] = 1; if (S.demand[k] == null) S.demand[k] = 1; });
+    if (!S.orders) S.orders = [];
+    if (S.sound == null) S.sound = true;
+    fillOrders(); if (!S.tour) newTour();
     return true;
   } catch (e) { return false; }
 }
@@ -459,6 +481,31 @@ function rollCands() {
   });
   S.candDay = S.day;
 }
+function orderPool() { return FKEYS.filter(k => { const f = FISH[k]; return !f.legend && S.zonesSeen[f.z] && ZONES[f.z].boat <= S.boat && (f.r < 2 || S.dex[k]); }); }
+function fillOrders() {
+  S.orders = S.orders.filter(o => o.due >= S.day);
+  let guard = 0;
+  while (S.orders.length < 3 && guard++ < 20) {
+    const sp = pick(orderPool()), f = FISH[sp];
+    if (S.orders.some(o => o.sp === sp)) continue;
+    const qty = f.r === 0 ? 3 + Math.floor(Math.random() * 6) : f.r === 1 ? 1 + Math.floor(Math.random() * 3) : 1;
+    S.orders.push({ id: S.nextId++, who: pick(REQUESTERS), line: pick(REQ_LINES), sp, qty, reward: Math.round(f.p * qty * rnd(1.7, 2.3) + 15), due: S.day + 1 + Math.floor(Math.random() * 2) });
+  }
+}
+function newTour() {
+  const pool = FKEYS.filter(k => { const f = FISH[k]; return !f.legend && f.r <= 1 && !f.night && S.zonesSeen[f.z] && ZONES[f.z].boat <= S.boat; });
+  const sp = pick(pool), f = FISH[sp];
+  S.tour = { sp, end: S.day + 1, best: 0, rivalName: pick(RIVALS), rival: Math.round(f.cm[0] + (f.cm[1] - f.cm[0]) * rnd(0.5, 0.78)), prize: Math.round(90 + f.p * 14), led: false };
+}
+function resolveTour() {
+  const t = S.tour; if (!t) return;
+  const f = FISH[t.sp];
+  if (t.best > t.rival) { S.coins += t.prize; S.stats.tours = (S.stats.tours || 0) + 1; toast(`Turnuvayı kazandın! ${t.best} cm ${f.n} ile ${t.rivalName}'yi geçtin. +${fmt(t.prize)} altın`, 'gold'); sfx('gold'); }
+  else toast(`Turnuva bitti. ${t.rivalName} ${t.rival} cm ${f.n} ile kazandı${t.best ? `, seninki ${t.best} cm` : ''}. Yeni turnuva başladı!`);
+  newTour();
+}
+function readyOrders() { return S.orders.filter(o => S.hold.filter(it => it.sp === o.sp).length >= o.qty); }
+
 function reveal(q, r, rad) {
   for (let dq = -rad; dq <= rad; dq++) for (let dr = -rad; dr <= rad; dr++) {
     if (Math.abs(dq + dr) > rad) continue;
@@ -545,7 +592,7 @@ function arrive(t) {
   if (w && !S.wrecks.includes(w.id)) {
     S.wrecks.push(w.id);
     const loot = Math.round(60 + tileAt(w.q, w.r).d * 22 + Math.random() * 80);
-    S.coins += loot; floatText(B.x, B.y - 40, `+${loot} altın`, '#ffcf4a');
+    S.coins += loot; sfx('coin'); floatText(B.x, B.y - 40, `+${loot} altın`, '#ffcf4a');
     toast(`Batık gemide bir sandık buldun: +${loot} altın!`, 'gold');
   }
   const b = BOTTLES.find(o => o.q === t.q && o.r === t.r);
@@ -569,7 +616,7 @@ function dock(port) {
   }
   B.leftPort = false;
   const p = dockPos(port.q, port.r); B.x = p.x; B.y = p.y;
-  toast(`${port.name}'na yanaştın. Depo dolduruldu.`, 'good');
+  toast(`${port.name}'na yanaştın. Depo dolduruldu.`, 'good'); sfx('horn');
   if (S.hold.length) openModal('market');
 }
 function tow() {
@@ -648,6 +695,13 @@ function addCatch(sp, who, from, perfect) {
   if (!d) { S.dex[sp] = { n: 1, best: cm }; toast(`${f.legend ? 'EFSANE! ' : 'Yeni tür: '}${f.n} (${cm} cm)`, f.legend ? 'gold' : 'good'); }
   else { d.n++; if (cm > d.best) d.best = cm; }
   logCatch(who, sp, cm);
+  const tr = S.tour;
+  if (tr && tr.sp === sp && cm > tr.best) {
+    tr.best = cm;
+    if (cm > tr.rival && !tr.led) { tr.led = true; toast(`Turnuvada liderliğe geçtin: ${cm} cm ${f.n}!`, 'gold'); }
+  }
+  if (who === 'Sen') sfx(f.legend ? 'gold' : 'catch', f.r);
+  else if (who !== 'Ağ') sfx('plink');
   if (from) jumps.push({ x0: from.x, y0: from.y, x1: B.x, y1: B.y - 14, t: 0, sp });
   if (S.baitSel !== 'bread' && who !== 'Ağ') {
     S.bait[S.baitSel]--;
@@ -695,12 +749,12 @@ function cancelPlayerCast() { if (PM.st !== 'idle') { PM.st = 'idle'; PM.msg = '
 function playerAction() {
   if (PM.st === 'idle') {
     if (!canFish()) { toast(docked() ? 'Limandayken balık tutamazsın. Denize açıl!' : S.weather.k === 'storm' ? 'Fırtınada olta atılmaz' : 'Önce tekneyi durdur'); return; }
-    PM.st = 'cast'; PM.t = 0.6;
+    PM.st = 'cast'; PM.t = 0.6; sfx('splash');
   } else if (PM.st === 'bite') {
     const x = PM.needle;
     let res = 'miss';
     if (x >= PM.a0 && x <= PM.a1) res = 'perfect'; else if (x >= PM.g0 && x <= PM.g1) res = 'good';
-    if (res === 'miss') { PM.msg = 'Kaçtı! Tekrar dene.'; }
+    if (res === 'miss') { PM.msg = 'Kaçtı! Tekrar dene.'; sfx('miss'); }
     else {
       const leg = atLegend();
       let sp;
@@ -722,13 +776,13 @@ function updatePlayer(dt) {
   else if (PM.st === 'wait') { PM.t -= dt; if (PM.t <= 0) {
     PM.st = 'bite'; PM.t = 2.8; PM.sp = rnd(2.6, 4.2) + (atLegend() ? 1.4 : 0);
     const gw = 0.2 + 0.05 * (S.rod - 1), aw = 0.05 + 0.015 * (S.rod - 1), c = rnd(gw / 2 + 0.05, 1 - gw / 2 - 0.05);
-    PM.g0 = c - gw / 2; PM.g1 = c + gw / 2; PM.a0 = c - aw / 2; PM.a1 = c + aw / 2; PM.ph = Math.random() * 6;
+    PM.g0 = c - gw / 2; PM.g1 = c + gw / 2; PM.a0 = c - aw / 2; PM.a1 = c + aw / 2; PM.ph = Math.random() * 6; sfx('bite');
     renderBar(true);
   } }
   else if (PM.st === 'bite') {
     PM.t -= dt; PM.needle = 0.5 + 0.5 * Math.sin(PM.ph * PM.sp);
     const n = document.querySelector('#bar .meter .n'); if (n) n.style.left = (PM.needle * 100) + '%';
-    if (PM.t <= 0) { PM.st = 'result'; PM.t = 1.4; PM.msg = 'Balık yemi kaptı gitti.'; renderBar(true); }
+    if (PM.t <= 0) { PM.st = 'result'; PM.t = 1.4; PM.msg = 'Balık yemi kaptı gitti.'; sfx('miss'); renderBar(true); }
   }
   else if (PM.st === 'result') { PM.t -= dt; if (PM.t <= 0) { PM.st = 'idle'; renderBar(true); } }
 }
@@ -752,7 +806,7 @@ function spawnSchools(dt) {
 function updateWeather(dt) {
   const w = S.weather;
   w.t -= dt;
-  if (w.warn > 0) { w.warn -= dt; if (w.warn <= 0) { w.k = 'storm'; w.t = rnd(22, 34); toast('Fırtına başladı! Olta atılmaz, yakıt iki kat gider.', 'bad'); } return; }
+  if (w.warn > 0) { w.warn -= dt; if (w.warn <= 0) { w.k = 'storm'; w.t = rnd(22, 34); sfx('thunder'); toast('Fırtına başladı! Olta atılmaz, yakıt iki kat gider.', 'bad'); } return; }
   if (w.t > 0) return;
   if (w.k !== 'calm') { toast(w.k === 'storm' ? 'Fırtına dindi. Deniz yine sakin.' : 'Yağmur dindi.'); w.k = 'calm'; w.t = rnd(60, 110); return; }
   const roll = Math.random(), stormP = seasonIdx() === 3 ? 0.3 : 0.14;
@@ -767,6 +821,10 @@ function update(dt) {
     const oldSeason = seasonIdx();
     S.day = day; rollMarket();
     if (S.candDay !== day) rollCands();
+    const expired = S.orders.filter(o => o.due < day).length;
+    fillOrders();
+    if (expired) toast(`${expired} sipariş zamanında gelmedi; panoda yeni siparişler var.`);
+    if (S.tour && day > S.tour.end) resolveTour();
     const inc = Object.keys(S.aqua).reduce((s, k) => s + (FISH[k].r + 1) * 6 + (FISH[k].legend ? 40 : 0), 0);
     if (inc) { S.coins += inc; toast(`Yeni gün! Akvaryum ziyaretçilerinden +${inc} altın.`, 'good'); }
     if (seasonIdx() !== oldSeason) toast(`${SEASONS[seasonIdx()]} geldi. ${['Sular ısınıyor.', 'Mercan hanisi resifte bolca görünür.', 'Palamut ve lüfer göçü başladı!', 'Buz balığı kuzeyde. Fırtınalara dikkat.'][seasonIdx()]}`);
@@ -1149,7 +1207,7 @@ function drawSky() {
     const n = w.k === 'storm' ? 220 : 110, sl = w.k === 'storm' ? 8 : 3;
     for (let i = 0; i < n; i++) { const x = ((i * 97.3 + now * 0.4) % (W + 40)) - 20, y = ((i * 57.7 + now * 1.0) % (H + 40)) - 20; ctx.moveTo(x, y); ctx.lineTo(x - sl, y + 12); }
     ctx.stroke();
-    if (w.k === 'storm' && Math.sin(now * 0.0017) > 0.995) { ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(0, 0, W, H); }
+    if (w.k === 'storm' && Math.sin(now * 0.0017) > 0.995) { ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(0, 0, W, H); if (now - lastThunder > 3000) { lastThunder = now; setTimeout(() => sfx('thunder'), 400); } }
   }
   if (S.weather.warn > 0) { ctx.fillStyle = `rgba(30,40,60,${0.1 * (1 - S.weather.warn / 18)})`; ctx.fillRect(0, 0, W, H); }
 }
@@ -1257,6 +1315,13 @@ function renderHud() {
   setHtml($('clock'), `<div class="row"><b class="num">${hh}:${mm}</b><small>Gün ${S.day} · ${SEASONS[seasonIdx()]}</small></div><div class="w ${w.k === 'storm' || w.warn > 0 ? 'storm' : ''}">${wtxt} · ${zone}</div>`);
   const g = GOALS[S.goal];
   setHtml($('goal'), g ? `<div class="lbl">Hedef ${S.goal + 1}/${GOALS.length}</div><div style="display:flex;gap:8px;justify-content:space-between;align-items:baseline"><span>${g.t}</span><span class="rw">+${g.r}</span></div>` : '<div class="lbl">Tüm hedefler tamam</div><div>Yedi denizin efsanesi sensin.</div>');
+  const tr = S.tour;
+  if (tr) {
+    const left = tr.end - S.day + 1, f = FISH[tr.sp], lead = tr.best > tr.rival;
+    setHtml($('tour'), `<div class="lbl">Turnuva · ${left} gün kaldı · ödül ${fmt(tr.prize)}</div><div>En büyük <b>${f.n}</b>: sen <span class="${lead ? 'lead' : 'lose'}">${tr.best || '–'} cm</span> · ${esc(tr.rivalName)} ${tr.rival} cm</div>`);
+  }
+  $('sndWave').style.opacity = S.sound ? 1 : 0.15;
+  $('bSound').classList.toggle('on', !S.sound);
   $('bSpeed').querySelector('span').textContent = S.speed + '×';
   $('bFollow').classList.toggle('on', cam.follow);
   $('bFar').classList.toggle('on', cam.zoom < 0.7);
@@ -1270,7 +1335,7 @@ function renderBar(force) {
     h = `<div class="barrow"><div class="grow"><div class="where">${port.name}</div><div class="hint">Haritada bir yere dokun, tekne oraya gitsin. Ambarda ${S.hold.length} balık (≈${fmt(holdValue())} altın).</div></div></div>
       <div class="btnrow" style="margin-top:10px">
         <button class="btn" data-act="open" data-m="market">Balık Pazarı</button>
-        ${port.full ? `<button class="btn foam" data-act="open" data-m="yard">Tersane</button><button class="btn foam" data-act="open" data-m="tackle">Olta Dükkânı</button><button class="btn ghost" data-act="open" data-m="cafe">Kahvehane</button><button class="btn ghost" data-act="open" data-m="aqua">Akvaryum</button>` : '<span class="chip">Küçük liman: sadece pazar ve yakıt</span>'}
+        ${port.full ? `<button class="btn" data-act="open" data-m="board">Pano${readyOrders().length ? ` <span class="badge">${readyOrders().length}</span>` : ''}</button><button class="btn foam" data-act="open" data-m="yard">Tersane</button><button class="btn foam" data-act="open" data-m="tackle">Olta Dükkânı</button><button class="btn ghost" data-act="open" data-m="cafe">Kahvehane</button><button class="btn ghost" data-act="open" data-m="aqua">Akvaryum</button>` : '<span class="chip">Küçük liman: sadece pazar ve yakıt</span>'}
       </div>`;
   } else {
     const sc = schoolHere(), leg = atLegend(), z = ZONES[zoneHere()];
@@ -1306,7 +1371,7 @@ function closeModal() { modalKind = null; $('modal').hidden = true; }
 $('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
 function tabs(active) {
   const port = docked(), list = [['market', 'Pazar']];
-  if (!port || port.full) list.push(['yard', 'Tersane'], ['tackle', 'Olta Dükkânı'], ['cafe', 'Kahvehane'], ['aqua', 'Akvaryum']);
+  if (!port || port.full) list.push(['board', 'Pano'], ['yard', 'Tersane'], ['tackle', 'Olta Dükkânı'], ['cafe', 'Kahvehane'], ['aqua', 'Akvaryum']);
   list.push(['dex', 'Balık Defteri']);
   return `<div class="tabs">${list.map(([k, l]) => `<button class="tab ${active === k ? 'on' : ''}" data-act="tab" data-m="${k}">${l}</button>`).join('')}</div>`;
 }
@@ -1314,8 +1379,8 @@ function renderModal(force) {
   if ($('modal').hidden) return;
   if (uiDown && !force) return;
   const k = modalKind, port = docked();
-  const shopLocked = k !== 'dex' && (!port || (!port.full && k !== 'market'));
-  const title = { market: 'Balık Pazarı', yard: 'Tersane', tackle: 'Olta Dükkânı', cafe: 'Kahvehane', aqua: 'Akvaryum', dex: 'Balık Defteri' }[k];
+  const shopLocked = k !== 'dex' && k !== 'board' && (!port || (!port.full && k !== 'market'));
+  const title = { board: 'Sipariş Panosu', market: 'Balık Pazarı', yard: 'Tersane', tackle: 'Olta Dükkânı', cafe: 'Kahvehane', aqua: 'Akvaryum', dex: 'Balık Defteri' }[k];
   let h = `<div class="shead"><h2>${title}</h2><button class="x" data-act="close" aria-label="Kapat">×</button></div>${tabs(k)}`;
   if (shopLocked) {
     h += `<p class="note">${k === 'market' ? 'Balık satmak için bir limana yanaşmalısın.' : 'Bu dükkân sadece Martı Limanı\'nda var.'}</p>`;
@@ -1324,6 +1389,18 @@ function renderModal(force) {
     const star = FKEYS.filter(x => !FISH[x].legend && S.dex[x]).sort((a, b) => S.market[b] - S.market[a])[0];
     h += `<p class="sub">Fiyatlar her gün değişir; bol satılan balığın fiyatı bir süre düşer. Tazelik fiyatı etkiler${seasonIdx() === 3 ? '. Kışın her şey %15 daha değerli' : ''}.${star ? ` Günün gözdesi: <b>${FISH[star].n}</b> ×${S.market[star].toFixed(2)}` : ''}</p>`;
     h += holdList(true);
+  } else if (k === 'board') {
+    const canDeliver = port && port.full;
+    h += `<p class="sub">Kasabalılar balık ısmarlıyor ve pazardan iyi ödüyor. Teslim için ambarında yeterli balık olmalı${canDeliver ? '' : '; teslimat Martı Limanı\'nda yapılır'}.</p>`;
+    for (const o of S.orders) {
+      const f = FISH[o.sp], have = S.hold.filter(it => it.sp === o.sp).length, ok = have >= o.qty, left = o.due - S.day;
+      h += `<div class="ocard ${ok ? 'ready' : ''}">${fishSvg(o.sp, !S.dex[o.sp])}<div class="grow"><div class="who">${esc(o.who)} · ${left <= 0 ? 'bugün son gün' : left + ' gün kaldı'}</div><div class="t" style="font-weight:900">${o.qty} × ${f.n} <span class="rar${f.r}" style="font-size:11px">${RAR[f.r]}</span></div><div class="d" style="font-size:12px;color:var(--muted)">"${esc(o.line)}." · ${ZONES[f.z].name} · ambarda ${have}</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="price num">${fmt(o.reward)}</span><button class="btn ${ok ? '' : 'ghost'}" data-act="deliver" data-id="${o.id}" ${ok && canDeliver ? '' : 'disabled'}>Teslim Et</button></div></div>`;
+    }
+    const tr = S.tour;
+    if (tr) {
+      const f = FISH[tr.sp];
+      h += `<div class="zhead">Balık Turnuvası</div><div class="ocard">${fishSvg(tr.sp, !S.dex[tr.sp])}<div class="grow"><div class="who">${tr.end - S.day + 1} gün kaldı · ${ZONES[f.z].name}</div><div class="t" style="font-weight:900">En büyük ${f.n}</div><div class="d" style="font-size:12px;color:var(--muted)">Lider: ${esc(tr.rivalName)}, ${tr.rival} cm. Senin rekorun: ${tr.best ? tr.best + ' cm' : 'henüz yok'}. Kusursuz çekiş daha iri balık getirir.</div></div><span class="price num">${fmt(tr.prize)}</span></div>`;
+    }
   } else if (k === 'yard') {
     const nb = BOATS[S.boat];
     h += `<p class="sub">Şu anki teknen: <b>${boatDef().n}</b> · ${boatDef().crew} tayfa · ${boatDef().hold} balık ambarı · ${boatDef().fuel} yakıt.</p>`;
@@ -1380,7 +1457,7 @@ function holdList(sellable) {
 function sell(filter) {
   let got = 0, n = 0;
   S.hold = S.hold.filter(it => { if (!filter(it)) return true; got += itemValue(it); S.demand[it.sp] = Math.max(0.5, S.demand[it.sp] - 0.02); n++; return false; });
-  if (n) { S.coins += got; S.stats.sold += n; toast(`${n} balık satıldı: +${fmt(got)} altın`, 'good'); floatText(B.x, B.y - 40, `+${fmt(got)}`, '#ffcf4a'); }
+  if (n) { sfx('coin'); S.coins += got; S.stats.sold += n; toast(`${n} balık satıldı: +${fmt(got)} altın`, 'good'); floatText(B.x, B.y - 40, `+${fmt(got)}`, '#ffcf4a'); }
 }
 $('mcard').addEventListener('click', e => {
   const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
@@ -1388,6 +1465,16 @@ $('mcard').addEventListener('click', e => {
   if (a === 'close') return closeModal();
   if (a === 'tab') { modalKind = b.dataset.m; confirmX = null; }
   else if (a === 'sell') sell(it => it.sp === b.dataset.s);
+  else if (a === 'deliver') {
+    const o = S.orders.find(x => x.id === +b.dataset.id);
+    if (o) {
+      let n = o.qty;
+      S.hold = S.hold.filter(it => { if (n > 0 && it.sp === o.sp) { n--; return false; } return true; });
+      S.coins += o.reward; S.stats.orders = (S.stats.orders || 0) + 1; sfx('coin');
+      S.orders = S.orders.filter(x => x !== o);
+      toast(`${o.who} çok mutlu! +${fmt(o.reward)} altın`, 'good');
+    }
+  }
   else if (a === 'sellAll') sell(() => true);
   else if (a === 'boat') { const nb = BOATS[S.boat]; if (nb && spend(nb.c)) { S.boat++; S.fuel = fuelCap(); toast(`${nb.n} artık senin! Depo dolu, yola hazır.`, 'good'); } }
   else if (a === 'gear') { const g = b.dataset.g, c = GEAR[g].costs[S.gear[g]]; if (c != null && spend(c)) { S.gear[g]++; toast(`${GEAR[g].n} ${S.gear[g] > 1 ? 'geliştirildi' : 'alındı'}`, 'good'); } }
@@ -1399,11 +1486,72 @@ $('mcard').addEventListener('click', e => {
   renderModal(true); renderHud(); renderBar(true);
 });
 
+$('bSound').addEventListener('click', () => { S.sound = !S.sound; audioInit(); ambience(); renderHud(); });
+$('tour').addEventListener('click', () => openModal('board'));
 $('bSpeed').addEventListener('click', () => { S.speed = S.speed >= 3 ? 1 : S.speed + 1; renderHud(); });
 $('bDex').addEventListener('click', () => openModal('dex'));
 $('hHold').addEventListener('click', () => openModal('market'));
 $('bFar').addEventListener('click', () => { cam.follow = false; if (cam.zoom < 0.7) { cam.follow = true; animateCam(B.x, B.y, 1.3, 0.45); } else animateCam(0, 0, 0.36, 0.5); });
 $('bFollow').addEventListener('click', () => { cam.follow = true; animateCam(B.x, B.y, Math.max(cam.zoom, 1.1), 0.4); });
+
+/* ============================================================
+   Sound (synthesised, no files)
+   ============================================================ */
+let AC = null, master = null, ambGain = null, lastThunder = 0, lastPlink = 0;
+function audioInit() {
+  if (!AC) {
+    try {
+      AC = new (window.AudioContext || window.webkitAudioContext)();
+      master = AC.createGain(); master.gain.value = 0.55; master.connect(AC.destination);
+      // looping surf: filtered noise with a slow swell
+      const buf = AC.createBuffer(1, AC.sampleRate * 4, AC.sampleRate), d = buf.getChannelData(0);
+      let last = 0; for (let i = 0; i < d.length; i++) { last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02; d[i] = last * 3.2; }
+      const src = AC.createBufferSource(); src.buffer = buf; src.loop = true;
+      const lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 700;
+      ambGain = AC.createGain(); ambGain.gain.value = 0;
+      const lfo = AC.createOscillator(), lfoG = AC.createGain(); lfo.frequency.value = 0.12; lfoG.gain.value = 0.05;
+      lfo.connect(lfoG); lfoG.connect(ambGain.gain);
+      src.connect(lp); lp.connect(ambGain); ambGain.connect(master); src.start(); lfo.start();
+    } catch (e) { AC = null; return; }
+  }
+  if (AC.state === 'suspended') AC.resume().catch(() => {});
+}
+function ambience() {
+  if (!ambGain) return;
+  const storm = S.weather.k === 'storm' ? 0.2 : S.weather.k === 'rain' ? 0.13 : 0.08;
+  ambGain.gain.setTargetAtTime(S.sound ? storm : 0, AC.currentTime, 0.6);
+}
+function tone(freq, dur, type = 'sine', vol = 0.2, delay = 0, slide = 0) {
+  const t = AC.currentTime + delay, o = AC.createOscillator(), g = AC.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t);
+  if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + 0.05);
+}
+function noise(dur, vol, freq, delay = 0, q = 0.8) {
+  const t = AC.currentTime + delay, buf = AC.createBuffer(1, Math.ceil(AC.sampleRate * dur), AC.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain();
+  s.buffer = buf; f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q;
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  s.connect(f); f.connect(g); g.connect(master); s.start(t);
+}
+function sfx(name, arg) {
+  if (!AC || !S.sound) return;
+  try {
+    if (name === 'splash') { noise(0.4, 0.35, 1100); tone(420, 0.15, 'sine', 0.05, 0, 180); }
+    else if (name === 'bite') { tone(990, 0.07, 'square', 0.05); tone(990, 0.07, 'square', 0.05, 0.11); }
+    else if (name === 'catch') { const notes = [523, 659, 784, 988, 1175]; for (let i = 0; i < 2 + (arg || 0); i++) tone(notes[i], 0.22, 'triangle', 0.14, i * 0.08); noise(0.25, 0.15, 1500); }
+    else if (name === 'plink') { if (now - lastPlink < 400) return; lastPlink = now; tone(784, 0.12, 'triangle', 0.05); noise(0.15, 0.06, 1400); }
+    else if (name === 'miss') tone(330, 0.3, 'sine', 0.12, 0, 170);
+    else if (name === 'coin') { tone(1319, 0.09, 'triangle', 0.13); tone(1760, 0.2, 'triangle', 0.13, 0.07); }
+    else if (name === 'horn') { tone(147, 0.9, 'sawtooth', 0.05); tone(220, 0.9, 'sawtooth', 0.035); }
+    else if (name === 'thunder') { noise(2.2, 0.6, 120, 0, 0.5); noise(1.2, 0.3, 300, 0.1, 0.6); }
+    else if (name === 'gold') { [523, 659, 784, 1047, 784, 1047, 1319].forEach((n, i) => tone(n, 0.3, 'triangle', 0.14, i * 0.1)); }
+  } catch (e) { /* audio is optional */ }
+}
+document.addEventListener('pointerdown', () => { audioInit(); ambience(); }, { once: true });
+document.addEventListener('keydown', () => { audioInit(); ambience(); }, { once: true });
 
 /* ============================================================
    Loop
@@ -1419,7 +1567,7 @@ function frame(ts) {
   for (let i = floaters.length - 1; i >= 0; i--) { floaters[i].t += rdt; if (floaters[i].t > 1.8) floaters.splice(i, 1); }
   render();
   const st = `${!!docked()}|${B.moving}|${PM.st}|${S.weather.k}`;
-  if (st !== lastState) { lastState = st; renderBar(true); }
+  if (st !== lastState) { lastState = st; renderBar(true); ambience(); }
   uiT += rdt; saveT += rdt;
   if (uiT > 0.3) { uiT = 0; renderHud(); renderBar(); renderModal(); }
   if (saveT > 5) { saveT = 0; save(); }
