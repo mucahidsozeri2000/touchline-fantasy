@@ -22,11 +22,11 @@
   }
   [hidden] { display: none !important; }
   html, body { height: 100%; }
-  body { margin: 0; overflow: hidden; background: var(--ground); color: var(--ink); font-family: var(--body); font-size: 14px; -webkit-user-select: none; user-select: none; touch-action: none; }
+  body { margin: 0; overflow: hidden; background: var(--ground); color: var(--ink); font-family: var(--body); font-size: 14px; -webkit-user-select: none; user-select: none; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   button { font-family: inherit; color: inherit; cursor: pointer; }
   button:focus-visible { outline: 2px solid var(--sun); outline-offset: 2px; }
   .num { font-variant-numeric: tabular-nums; }
-  #map { position: fixed; inset: 0; width: 100%; height: 100%; display: block; cursor: pointer; }
+  #map { position: fixed; inset: 0; width: 100%; height: 100%; display: block; cursor: pointer; touch-action: none; }
   #map.dragging { cursor: grabbing; }
   #map.deco { cursor: copy; }
 
@@ -121,7 +121,7 @@
   .li img { width: 22px; height: 22px; flex: none; }
 
   #modal { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px; background: rgba(10, 28, 18, .55); }
-  .mcard { width: min(640px, 100%); max-height: min(86vh, 780px); overflow: auto; background: var(--panel-solid); border: 1px solid var(--line); border-radius: 22px; padding: 16px 18px 18px; box-shadow: 0 20px 50px rgba(0,0,0,.45); }
+  .mcard { width: min(640px, 100%); max-height: min(86vh, 780px); overflow: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-y; background: var(--panel-solid); border: 1px solid var(--line); border-radius: 22px; padding: 16px 18px 18px; box-shadow: 0 20px 50px rgba(0,0,0,.45); }
   .shead { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
   .shead h2 { margin: 0; font-family: var(--display); font-size: 25px; line-height: 1.1; flex: 1; text-wrap: balance; }
   .x { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--panel-2); font-size: 19px; line-height: 1; flex: none; }
@@ -902,7 +902,8 @@ function hexPath(cx, cy, s = 1) { ctx.beginPath(); CORNERS.forEach(([x, y], i) =
 
 /* items: drawn in a 40-unit box */
 function drawItem(c, x, y, size, sp) {
-  const f = ITEMS[sp], col = f.c || '#999';
+  const f = ITEMS[sp]; if (!f) return;
+  const col = f.c || '#999';
   c.save(); c.translate(x, y); c.scale(size / 40, size / 40);
   const E = (ex, ey, rx, ry, fill, rot = 0) => { c.beginPath(); c.ellipse(ex, ey, rx, ry, rot, 0, 7); c.fillStyle = fill; c.fill(); };
   const R = (rx, ry, w, h, fill, rad = 2) => { c.beginPath(); c.roundRect(rx, ry, w, h, rad); c.fillStyle = fill; c.fill(); };
@@ -1038,7 +1039,7 @@ function drawBlock(t, x, y) {
     ctx.fillStyle = '#36a24b'; ctx.beginPath(); ctx.moveTo(x - 17, y - 17); ctx.lineTo(x, y - 28); ctx.lineTo(x + 17, y - 17); ctx.fill();
     ctx.fillStyle = isNight() ? '#ffd970' : '#a9d3e6'; ctx.fillRect(x - 10, y - 13, 8, 6);
     ctx.fillStyle = '#6b4a2e'; ctx.fillRect(x + 3, y - 10, 6, 10);
-    drawItem(ctx, x - 6, y + 3, 8, 'gbottle'); drawItem(ctx, x + 14, y + 2, 8, 'can');
+    drawItem(ctx, x - 6, y + 3, 8, 'camsise'); drawItem(ctx, x + 14, y + 2, 8, 'kutu');
     if (S.ws.slots.length) for (let i = 0; i < 3; i++) { const p = (now * 0.0006 + i / 3) % 1; ell(x + 12, y - 28 - p * 16, 1.4 + p * 3, 1.2 + p * 2, `rgba(255,255,255,${0.55 * (1 - p)})`); }
     if (S.ws.till > 0 && cam.zoom > 0.6) { const by = y - 40 + Math.sin(now * 0.005) * 2; ell(x, by, 6, 6, '#ffd24a'); ctx.fillStyle = '#3a2d05'; ctx.font = '900 8px Nunito, sans-serif'; ctx.fillText('₺', x, by + 3); }
   }
@@ -1281,10 +1282,15 @@ cv.addEventListener('pointermove', e => {
     if (drag.moved) { cam.x = drag.cx - dx / cam.zoom; cam.y = drag.cy - dy / cam.zoom; clampCam(); }
   } else if (e.pointerType === 'mouse') { const w = S2W(e.clientX, e.clientY), h = w2h(w.x, w.y); hoverTile = tileAt(h.q, h.r) || null; }
 });
-const endP = e => { pointers.delete(e.pointerId); if (pointers.size < 2) pinch = null; if (drag && pointers.size === 0) { if (!drag.moved && e.type === 'pointerup') tap(e.clientX, e.clientY); drag = null; cv.classList.remove('dragging'); } };
+const endP = e => { pointers.delete(e.pointerId); if (pointers.size < 2) pinch = null; if (drag && pointers.size === 0) { if (!drag.moved && e.type === 'pointerup') { ghostUntil = performance.now() + 400; tap(e.clientX, e.clientY); }; drag = null; cv.classList.remove('dragging'); } };
 cv.addEventListener('pointerup', endP); cv.addEventListener('pointercancel', endP);
 cv.addEventListener('pointerleave', () => { hoverTile = null; });
 cv.addEventListener('wheel', e => { e.preventDefault(); camAnim = null; zoomAt(e.clientX, e.clientY, cam.zoom * Math.exp(-e.deltaY * 0.0015)); }, { passive: false });
+
+// A tap on the map opens panels under the finger; the browser then fires a
+// click at the same spot, which would press whatever button just appeared.
+let ghostUntil = 0;
+document.addEventListener('click', e => { if (performance.now() < ghostUntil && e.target !== cv) { e.stopPropagation(); e.preventDefault(); } }, true);
 function tap(sx, sy) {
   const w = S2W(sx, sy), h = w2h(w.x, w.y), t = tileAt(h.q, h.r);
   if (!t) return;
@@ -1384,7 +1390,8 @@ function logItem(who, sp) {
 }
 let uiDown = false;
 document.addEventListener('pointerdown', e => { if (e.target.closest('#bar,#mcard')) uiDown = true; });
-document.addEventListener('pointerup', () => setTimeout(() => { uiDown = false; }, 0));
+document.addEventListener('pointerup', () => setTimeout(() => { uiDown = false; }, 350));
+document.addEventListener('pointercancel', () => setTimeout(() => { uiDown = false; }, 350));
 function setHtml(el, html) { if (el._h !== html) { el._h = html; el.innerHTML = html; } }
 
 function renderHud() {
@@ -1452,10 +1459,11 @@ $('bar').addEventListener('click', e => {
 });
 
 /* ---------- modal ---------- */
-let modalKind = null, confirmX = null;
-function openModal(kind) { modalKind = kind; confirmX = null; $('modal').hidden = false; renderModal(true); }
+let modalKind = null, confirmX = null, modalAt = 0;
+function openModal(kind) { modalKind = kind; confirmX = null; modalAt = performance.now(); $('modal').hidden = false; renderModal(true); }
 function closeModal() { modalKind = null; $('modal').hidden = true; }
-$('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+// a tap that opens the modal also produces a click on the new backdrop; ignore it
+$('modal').addEventListener('click', e => { if (e.target.id === 'modal' && performance.now() - modalAt > 450) closeModal(); });
 function tabs(active) {
   if (active === 'deco') return '';
   const port = docked(), list = [['market', 'Pazar']];
@@ -1601,7 +1609,7 @@ $('bFollow').addEventListener('click', () => { cam.follow = true; animateCam(B.x
 /* ============================================================
    Loop
    ============================================================ */
-let last = performance.now(), uiT = 0, saveT = 0, lastState = '';
+let last = performance.now(), uiT = 0, modalT = 0, saveT = 0, lastState = '';
 let frameErr = 0;
 function frame(ts) {
   requestAnimationFrame(frame);
@@ -1619,7 +1627,8 @@ function tick(ts) {
   const st = `${!!docked()}|${B.moving}|${SM.on}|${S.weather.k}|${litterHere()}`;
   if (st !== lastState) { lastState = st; renderBar(true); ambience(); }
   uiT += rdt; saveT += rdt;
-  if (uiT > 0.3) { uiT = 0; renderHud(); if (!SM.on) renderBar(); renderModal(); measureView(); }
+  if (uiT > 0.3) { uiT = 0; renderHud(); if (!SM.on) renderBar(); measureView(); }
+  modalT += rdt; if (modalT > 1) { modalT = 0; renderModal(); }
   if (saveT > 5) { saveT = 0; save(); }
 }
 function start(data) {

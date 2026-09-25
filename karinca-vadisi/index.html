@@ -25,12 +25,12 @@
   body {
     margin: 0; overflow: hidden; background: var(--water); color: var(--ink);
     font-family: var(--body); font-size: 14px; -webkit-user-select: none; user-select: none;
-    touch-action: none;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
   }
   button { font-family: inherit; color: inherit; cursor: pointer; }
   button:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
   .num { font-variant-numeric: tabular-nums; }
-  #world { position: fixed; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; }
+  #world { position: fixed; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
   #world.dragging { cursor: grabbing; }
 
   /* ---------- HUD ---------- */
@@ -161,7 +161,7 @@
   }
   #nestView.open { opacity: 1; transform: none; pointer-events: auto; }
   #innerWrap { flex: 1; position: relative; min-width: 0; }
-  #inner { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: default; }
+  #inner { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: default; touch-action: none; }
   #nestPanel {
     width: 380px; flex: none; overflow: auto; background: var(--panel-solid); border-left: 1px solid var(--line);
     padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px calc(env(safe-area-inset-bottom, 0px) + 20px);
@@ -1309,7 +1309,7 @@ const endPointer = e => {
   pointers.delete(e.pointerId);
   if (pointers.size < 2) pinch = null;
   if (drag && pointers.size === 0) {
-    if (!drag.moved && e.type === 'pointerup') tap(e.clientX, e.clientY);
+    if (!drag.moved && e.type === 'pointerup') { ghostUntil = performance.now() + 400; tap(e.clientX, e.clientY); };
     drag = null; cv.classList.remove('dragging');
   }
 };
@@ -1327,6 +1327,11 @@ function stepCam(dt) {
   if (k >= 1) { const d = camAnim.done; camAnim = null; d && d(); }
 }
 
+
+// A tap on the map opens panels under the finger; the browser then fires a
+// click at the same spot, which would press whatever button just appeared.
+let ghostUntil = 0;
+document.addEventListener('click', e => { if (performance.now() < ghostUntil && e.target !== cv) { e.stopPropagation(); e.preventDefault(); } }, true);
 function tap(sx, sy) {
   const w = toWorld(sx, sy);
   let h = worldToHex(w.x, w.y);
@@ -1359,7 +1364,8 @@ function toast(msg, kind = '') {
 
 let uiDown = false;
 document.addEventListener('pointerdown', e => { if (e.target.closest('#sheet,#nestPanel,#mcard')) uiDown = true; });
-document.addEventListener('pointerup', () => { setTimeout(() => { uiDown = false; }, 0); });
+document.addEventListener('pointerup', () => setTimeout(() => { uiDown = false; }, 350));
+document.addEventListener('pointercancel', () => setTimeout(() => { uiDown = false; }, 350));
 function setHtml(el, html) { if (el._h !== html) { el._h = html; el.innerHTML = html; } }
 
 /* ---------- HUD ---------- */
@@ -1809,7 +1815,7 @@ $('bIn').addEventListener('click', () => animateCam(cam.x, cam.y, clamp(cam.zoom
 /* ============================================================
    Loop
    ============================================================ */
-let last = performance.now(), uiT = 0, saveT = 0;
+let last = performance.now(), uiT = 0, modalT = 0, saveT = 0;
 function frame(ts) {
   const rdt = Math.min(0.05, (ts - last) / 1000); last = ts; now = ts;
   const dt = rdt * S.speed;
@@ -1820,7 +1826,8 @@ function frame(ts) {
   if (nestOpen) { syncInAnts(nestOpen); stepInAnts(nestOpen, rdt); renderInner(nestOpen); }
   else render();
   uiT += rdt; saveT += rdt;
-  if (uiT > 0.3) { uiT = 0; renderHud(); renderSheet(); renderNestPanel(); renderMarket(); }
+  if (uiT > 0.3) { uiT = 0; renderHud(); }
+  modalT += rdt; if (modalT > 1) { modalT = 0; renderSheet(); renderNestPanel(); renderMarket(); }
   if (saveT > 5) { saveT = 0; save(); }
   requestAnimationFrame(frame);
 }

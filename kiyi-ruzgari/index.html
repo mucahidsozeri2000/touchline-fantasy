@@ -25,12 +25,12 @@
   html, body { height: 100%; }
   body {
     margin: 0; overflow: hidden; background: var(--sea); color: var(--ink);
-    font-family: var(--body); font-size: 14px; -webkit-user-select: none; user-select: none; touch-action: none;
+    font-family: var(--body); font-size: 14px; -webkit-user-select: none; user-select: none; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
   }
   button { font-family: inherit; color: inherit; cursor: pointer; }
   button:focus-visible { outline: 2px solid var(--buoy); outline-offset: 2px; }
   .num { font-variant-numeric: tabular-nums; }
-  #sea { position: fixed; inset: 0; width: 100%; height: 100%; display: block; cursor: pointer; }
+  #sea { position: fixed; inset: 0; width: 100%; height: 100%; display: block; cursor: pointer; touch-action: none; }
   #sea.dragging { cursor: grabbing; }
 
   #hud {
@@ -1358,11 +1358,16 @@ cv.addEventListener('pointermove', e => {
 });
 const endP = e => {
   pointers.delete(e.pointerId); if (pointers.size < 2) pinch = null;
-  if (drag && pointers.size === 0) { if (!drag.moved && e.type === 'pointerup') tap(e.clientX, e.clientY); drag = null; cv.classList.remove('dragging'); }
+  if (drag && pointers.size === 0) { if (!drag.moved && e.type === 'pointerup') { ghostUntil = performance.now() + 400; tap(e.clientX, e.clientY); }; drag = null; cv.classList.remove('dragging'); }
 };
 cv.addEventListener('pointerup', endP); cv.addEventListener('pointercancel', endP);
 cv.addEventListener('pointerleave', () => { hoverTile = null; });
 cv.addEventListener('wheel', e => { e.preventDefault(); camAnim = null; zoomAt(e.clientX, e.clientY, cam.zoom * Math.exp(-e.deltaY * 0.0015)); }, { passive: false });
+
+// A tap on the map opens panels under the finger; the browser then fires a
+// click at the same spot, which would press whatever button just appeared.
+let ghostUntil = 0;
+document.addEventListener('click', e => { if (performance.now() < ghostUntil && e.target !== cv) { e.stopPropagation(); e.preventDefault(); } }, true);
 function tap(sx, sy) {
   const w = S2W(sx, sy), h = w2h(w.x, w.y), t = tileAt(h.q, h.r);
   if (!t) return;
@@ -1404,7 +1409,8 @@ function logCatch(who, sp, cm) {
 }
 let uiDown = false;
 document.addEventListener('pointerdown', e => { if (e.target.closest('#bar,#mcard')) uiDown = true; });
-document.addEventListener('pointerup', () => setTimeout(() => { uiDown = false; }, 0));
+document.addEventListener('pointerup', () => setTimeout(() => { uiDown = false; }, 350));
+document.addEventListener('pointercancel', () => setTimeout(() => { uiDown = false; }, 350));
 function setHtml(el, html) { if (el._h !== html) { el._h = html; el.innerHTML = html; } }
 
 function renderHud() {
@@ -1468,10 +1474,11 @@ $('bar').addEventListener('click', e => {
 });
 
 /* ---------- modal ---------- */
-let modalKind = null, confirmX = null;
-function openModal(kind) { modalKind = kind; confirmX = null; $('modal').hidden = false; renderModal(true); }
+let modalKind = null, confirmX = null, modalAt = 0;
+function openModal(kind) { modalKind = kind; confirmX = null; modalAt = performance.now(); $('modal').hidden = false; renderModal(true); }
 function closeModal() { modalKind = null; $('modal').hidden = true; }
-$('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+// a tap that opens the modal also produces a click on the new backdrop; ignore it
+$('modal').addEventListener('click', e => { if (e.target.id === 'modal' && performance.now() - modalAt > 450) closeModal(); });
 function tabs(active) {
   const port = docked(), list = [['market', 'Pazar']];
   if (!port || port.full) list.push(['board', 'Pano'], ['resto', 'Lokanta'], ['yard', 'Tersane'], ['tackle', 'Olta Dükkânı'], ['cafe', 'Kahvehane'], ['aqua', 'Akvaryum']);
@@ -1698,7 +1705,7 @@ document.addEventListener('keydown', () => { audioInit(); ambience(); }, { once:
 /* ============================================================
    Loop
    ============================================================ */
-let last = performance.now(), uiT = 0, saveT = 0, lastState = '';
+let last = performance.now(), uiT = 0, modalT = 0, saveT = 0, lastState = '';
 function frame(ts) {
   const rdt = Math.min(0.05, (ts - last) / 1000); last = ts; now = ts;
   update(rdt * S.speed);
@@ -1711,7 +1718,8 @@ function frame(ts) {
   const st = `${!!docked()}|${B.moving}|${PM.st}|${S.weather.k}`;
   if (st !== lastState) { lastState = st; renderBar(true); ambience(); }
   uiT += rdt; saveT += rdt;
-  if (uiT > 0.3) { uiT = 0; renderHud(); renderBar(); renderModal(); }
+  if (uiT > 0.3) { uiT = 0; renderHud(); renderBar(); }
+  modalT += rdt; if (modalT > 1) { modalT = 0; renderModal(); }
   if (saveT > 5) { saveT = 0; save(); }
   requestAnimationFrame(frame);
 }
