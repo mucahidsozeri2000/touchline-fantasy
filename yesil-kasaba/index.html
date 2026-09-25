@@ -30,7 +30,7 @@
   #map.dragging { cursor: grabbing; }
   #map.deco { cursor: copy; }
 
-  .glass { background: var(--panel); border: 1px solid var(--line); -webkit-backdrop-filter: blur(10px) saturate(1.2); backdrop-filter: blur(10px) saturate(1.2); box-shadow: 0 6px 18px rgba(15, 40, 25, .28); }
+  .glass { background: rgba(27, 52, 38, .96); border: 1px solid var(--line); box-shadow: 0 6px 18px rgba(15, 40, 25, .28); }
   #top { position: fixed; left: 0; right: 0; top: 0; z-index: 7; pointer-events: none; padding: calc(env(safe-area-inset-top, 0px) + 10px) 12px 0; display: flex; gap: 8px; align-items: flex-start; }
   #top > * { pointer-events: auto; }
   .strip { flex: 1; min-width: 0; display: flex; align-items: center; gap: 2px; height: 42px; padding: 0 6px; border-radius: 21px; overflow-x: auto; scrollbar-width: none; }
@@ -542,7 +542,7 @@ const ctx = cv.getContext('2d');
 const dark = document.createElement('canvas'), dctx = dark.getContext('2d');
 let W = 0, H = 0, DPR = 1;
 const cam = { x: 0, y: 0, zoom: 1.3, follow: true };
-function resize() { DPR = Math.min(2, window.devicePixelRatio || 1); W = window.innerWidth; H = window.innerHeight; cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); dark.width = cv.width; dark.height = cv.height; }
+function resize() { DPR = Math.min(window.innerWidth < 600 ? 1.5 : 2, window.devicePixelRatio || 1); W = window.innerWidth; H = window.innerHeight; cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); dark.width = cv.width; dark.height = cv.height; }
 window.addEventListener('resize', resize);
 
 /* ============================================================
@@ -1602,7 +1602,12 @@ $('bFollow').addEventListener('click', () => { cam.follow = true; animateCam(B.x
    Loop
    ============================================================ */
 let last = performance.now(), uiT = 0, saveT = 0, lastState = '';
+let frameErr = 0;
 function frame(ts) {
+  requestAnimationFrame(frame);
+  try { tick(ts); } catch (e) { if (frameErr++ < 3) console.error(e); }
+}
+function tick(ts) {
   const rdt = Math.min(0.05, (ts - last) / 1000); last = ts; now = ts;
   update(rdt * S.speed);
   checkGoals(rdt); stepCam(rdt);
@@ -1616,7 +1621,6 @@ function frame(ts) {
   uiT += rdt; saveT += rdt;
   if (uiT > 0.3) { uiT = 0; renderHud(); if (!SM.on) renderBar(); renderModal(); measureView(); }
   if (saveT > 5) { saveT = 0; save(); }
-  requestAnimationFrame(frame);
 }
 function start(data) {
   if (!load(data && data.save)) newGame();
