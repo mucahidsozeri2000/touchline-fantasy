@@ -1,16 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { BBox, Ring, Vec2 } from '../core/geometry/types';
+import type { Vec2 } from '../core/geometry/types';
 import { pointInRing } from '../core/geometry/polygon';
 import { distToSegment } from '../core/geometry/vec';
 import { tr } from '../i18n/tr';
-import type { GalleryItem } from './canvas/gallery';
+import type { OpenItem, Scene, ShapeItem } from './canvas/scene';
 import { type Viewport, fit, pan, toWorld, zoomAt } from './canvas/viewport';
 import { ERROR_COLOR, partFill, partStroke } from './colors';
 
 interface Props {
-  items: GalleryItem[];
-  bounds: BBox;
+  scene: Scene;
+  /** Değişince görünüm yeniden sığdırılır (ör. sac sekmesi). */
+  fitKey: string;
   hoveredPartId: string | null;
+  showOffset?: boolean;
   onHoverPart(id: string | null): void;
 }
 
@@ -20,38 +22,24 @@ interface Hover {
   label: string;
 }
 
-function ringPath(path: Path2D, ring: Ring, off: Vec2, v: Viewport) {
-  ring.forEach((p, i) => {
-    const x = (p.x + off.x) * v.s + v.ox;
-    const y = -(p.y + off.y) * v.s + v.oy;
-    if (i === 0) path.moveTo(x, y);
-    else path.lineTo(x, y);
-  });
-  path.closePath();
-}
-
-/** Öğe altında (dünya koordinatında) nokta var mı? */
-function hitTest(items: GalleryItem[], w: Vec2, tolWorld: number): GalleryItem | null {
+function hitTest(items: Scene['items'], w: Vec2, tolWorld: number): ShapeItem | OpenItem | null {
   for (let i = items.length - 1; i >= 0; i--) {
     const it = items[i];
     const b = it.box;
     if (w.x < b.minX - tolWorld || w.x > b.maxX + tolWorld || w.y < b.minY - tolWorld || w.y > b.maxY + tolWorld) continue;
-    const p = { x: w.x - it.offset.x, y: w.y - it.offset.y };
-    if (it.kind === 'part') {
-      if (pointInRing(p, it.part.outer.ring) !== 1) continue;
-      if (it.part.holes.some((h) => pointInRing(p, h.ring) === 1)) continue;
+    if (it.kind === 'shape') {
+      if (pointInRing(w, it.rings[0]) !== 1) continue;
+      if (it.rings.slice(1).some((h) => pointInRing(w, h) === 1)) continue;
       return it;
     }
-    for (const c of it.contours) {
-      for (let k = 1; k < c.points.length; k++) {
-        if (distToSegment(p, c.points[k - 1], c.points[k]) <= tolWorld) return it;
-      }
+    for (const pl of it.polylines) {
+      for (let k = 1; k < pl.length; k++) if (distToSegment(w, pl[k - 1], pl[k]) <= tolWorld) return it;
     }
   }
   return null;
 }
 
-export function CanvasView({ items, bounds, hoveredPartId, onHoverPart }: Props) {
+export function CanvasView({ scene, fitKey, hoveredPartId, showOffset = false, onHoverPart }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const viewRef = useRef<Viewport>({ s: 1, ox: 0, oy: 0 });
@@ -63,49 +51,59 @@ export function CanvasView({ items, bounds, hoveredPartId, onHoverPart }: Props)
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
     const dpr = window.devicePixelRatio || 1;
     const { w, h } = sizeRef.current;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
     const v = viewRef.current;
+    // Dünya (mm, y yukarı) → ekran: tek bir dönüşüm; Path2D'ler dünya koordinatında.
+    ctx.setTransform(dpr * v.s, 0, 0, -dpr * v.s, dpr * v.ox, dpr * v.oy);
+    const px = 1 / v.s; // 1 CSS pikselin dünya karşılığı
 
-    for (const it of items) {
-      if (it.kind === 'part') {
-        const path = new Path2D();
-        ringPath(path, it.part.outer.ring, it.offset, v);
-        for (const hole of it.part.holes) ringPath(path, hole.ring, it.offset, v);
-        const hot = hoveredRef.current === it.part.id;
-        ctx.fillStyle = partFill(it.colorIndex, hot ? 0.6 : 0.3);
-        ctx.fill(path, 'evenodd');
-        ctx.lineWidth = hot ? 2 : 1.25;
+    if (scene.sheet) {
+      const o = scene.sheet.outer;
+      const i = scene.sheet.inner;
+      ctx.fillStyle = '#e2e8f0';
+      ctx.fillRect(o.minX, o.minY, o.maxX - o.minX, o.maxY - o.minY);
+      ctx.lineWidth = 1.5 * px;
+      ctx.strokeStyle = '#64748b';
+      ctx.strokeRect(o.minX, o.minY, o.maxX - o.minX, o.maxY - o.minY);
+      ctx.setLineDash([6 * px, 4 * px]);
+      ctx.lineWidth = px;
+      ctx.strokeStyle = '#94a3b8';
+      ctx.strokeRect(i.minX, i.minY, i.maxX - i.minX, i.maxY - i.minY);
+      ctx.setLineDash([]);
+    }
+
+    for (const it of scene.items) {
+      if (it.kind === 'shape') {
+        const hot = hoveredRef.current === it.partId;
+        ctx.fillStyle = partFill(it.colorIndex, hot ? 0.65 : 0.4);
+        ctx.fill(it.path, 'evenodd');
+        ctx.lineWidth = (hot ? 2 : 1.1) * px;
         ctx.strokeStyle = partStroke(it.colorIndex);
-        ctx.stroke(path);
+        ctx.stroke(it.path);
+        if (showOffset && it.offsetPath) {
+          ctx.setLineDash([3 * px, 3 * px]);
+          ctx.lineWidth = px;
+          ctx.stroke(it.offsetPath);
+          ctx.setLineDash([]);
+        }
       } else {
-        ctx.lineWidth = 2.5;
+        ctx.lineWidth = 2.5 * px;
         ctx.strokeStyle = ERROR_COLOR;
+        ctx.stroke(it.path);
         ctx.fillStyle = ERROR_COLOR;
-        for (const c of it.contours) {
-          const path = new Path2D();
-          c.points.forEach((p, i) => {
-            const x = (p.x + it.offset.x) * v.s + v.ox;
-            const y = -(p.y + it.offset.y) * v.s + v.oy;
-            if (i === 0) path.moveTo(x, y);
-            else path.lineTo(x, y);
-          });
-          ctx.stroke(path);
-          // Açık uçları belirgin işaretle.
-          for (const e of [c.start, c.end]) {
-            ctx.beginPath();
-            ctx.arc((e.x + it.offset.x) * v.s + v.ox, -(e.y + it.offset.y) * v.s + v.oy, 4, 0, Math.PI * 2);
-            ctx.fill();
-          }
+        for (const e of it.ends) {
+          ctx.beginPath();
+          ctx.arc(e.x, e.y, 4 * px, 0, Math.PI * 2);
+          ctx.fill();
         }
       }
     }
-  }, [items]);
+  }, [scene, showOffset]);
 
   const requestDraw = useCallback(() => {
     cancelAnimationFrame(rafRef.current);
@@ -114,11 +112,12 @@ export function CanvasView({ items, bounds, hoveredPartId, onHoverPart }: Props)
 
   const fitView = useCallback(() => {
     const { w, h } = sizeRef.current;
-    if (w > 0 && h > 0) viewRef.current = fit(bounds, w, h);
+    if (w > 0 && h > 0) viewRef.current = fit(scene.bounds, w, h);
     requestDraw();
-  }, [bounds, requestDraw]);
+    // scene.bounds bilinçli olarak bağımlılık değil: yalnız fitKey değişince sığdır.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fitKey, requestDraw]);
 
-  // Boyut değişimi → canvas çözünürlüğünü güncelle.
   useEffect(() => {
     const wrap = wrapRef.current;
     const canvas = canvasRef.current;
@@ -139,7 +138,6 @@ export function CanvasView({ items, bounds, hoveredPartId, onHoverPart }: Props)
     return () => ro.disconnect();
   }, [fitView, requestDraw]);
 
-  // İçerik değişince sığdır.
   useEffect(() => {
     fitView();
   }, [fitView]);
@@ -167,7 +165,6 @@ export function CanvasView({ items, bounds, hoveredPartId, onHoverPart }: Props)
       e.preventDefault();
       const r = canvas.getBoundingClientRect();
       const at = { x: e.clientX - r.left, y: e.clientY - r.top };
-      // deltaMode 1 = satır; yaklaşık piksel karşılığına çevir.
       const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
       viewRef.current = zoomAt(viewRef.current, at, Math.exp(-dy * 0.0015));
       requestDraw();
@@ -177,20 +174,14 @@ export function CanvasView({ items, bounds, hoveredPartId, onHoverPart }: Props)
   }, [requestDraw]);
 
   const updateHover = (p: Vec2) => {
-    const w = toWorld(viewRef.current, p);
-    const it = hitTest(items, w, 6 / viewRef.current.s);
+    const it = hitTest(scene.items, toWorld(viewRef.current, p), 6 / viewRef.current.s);
     if (!it) {
-      if (hover) setHover(null);
-      if (hoveredRef.current) onHoverPart(null);
+      setHover(null);
+      onHoverPart(null);
       return;
     }
-    if (it.kind === 'part') {
-      if (hoveredRef.current !== it.part.id) onHoverPart(it.part.id);
-      setHover({ x: p.x, y: p.y, label: it.part.name });
-    } else {
-      if (hoveredRef.current) onHoverPart(null);
-      setHover({ x: p.x, y: p.y, label: `${tr.canvas.openContour} — ${it.fileName}` });
-    }
+    onHoverPart(it.kind === 'shape' ? it.partId : null);
+    setHover({ x: p.x, y: p.y, label: it.label });
   };
 
   const onPointerDown = (e: React.PointerEvent) => {
@@ -232,7 +223,7 @@ export function CanvasView({ items, bounds, hoveredPartId, onHoverPart }: Props)
 
   const onPointerLeave = () => {
     setHover(null);
-    if (hoveredRef.current) onHoverPart(null);
+    onHoverPart(null);
   };
 
   // Dokunmatikte çift dokunma → sığdır (dblclick mobilde güvenilir değil).

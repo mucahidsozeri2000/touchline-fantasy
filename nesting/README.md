@@ -32,7 +32,7 @@ npm run fixtures   # tests/fixtures/*.dxf dosyalarını yeniden üretir
 | Kilometre taşı | Durum |
 | --- | --- |
 | M1: İskelet, DXF okuma, canvas'ta gösterme | ✅ |
-| M2: Offset, sadeleştirme, bounding-box yerleştirme | — |
+| M2: Offset, sadeleştirme, bounding-box yerleştirme, parça/sac ayarları | ✅ |
 | M3: NFP, IFP, bottom-left, çakışma doğrulaması | — |
 | M4: Genetik algoritma, worker havuzu, canlı güncelleme | — |
 | M5: Delik içine yerleştirme | — |
@@ -47,8 +47,10 @@ src/
     geometry/      Vec2, Ring, BBox, afin dönüşüm, alan, nokta-poligon testi
     dxf/           okuma → normalizasyon → zincirleme → hiyerarşi → parçalar
     export/        DXF metin üreticisi (şimdilik fixture/örnek; M6'da R12 çıktı)
-    nfp/ placement/ optimizer/   (sonraki aşamalar)
-  workers/         DXF okuma worker'ı (Comlink)
+    placement/     varyant hazırlama, skyline kutu yerleştirme, doğrulama, metrikler
+    materials.ts   malzeme yoğunlukları
+    nfp/ optimizer/   (sonraki aşamalar)
+  workers/         DXF okuma ve nesting worker'ları (Comlink, çökme korumalı istemci)
   state/           Zustand store
   ui/              React bileşenleri, canvas görünümü
   i18n/tr.ts       tüm arayüz metinleri
@@ -89,13 +91,52 @@ Kapanmayan konturlar parça yapılmaz: canvas'ta kırmızı çizilir (uçları
 noktalı) ve uyarı verilir. Hatalı dosyalarda uygulama çökmez; Türkçe hata
 mesajı gösterilir.
 
+### Nesting hazırlığı (`src/core/geometry`, `src/core/placement`)
+
+1. **Sadeleştirme** (`simplify.ts`): offset'ten önce her halkaya Douglas–Peucker
+   uygulanır (varsayılan 0,1 mm). DP kirişleri gerçek şeklin içine en fazla
+   bu tolerans kadar kesebilir.
+2. **Offset** (`offset.ts`): parça dışa `D = kerf/2 + boşluk/2 + kiriş toleransı
+   + sadeleştirme toleransı` kadar şişirilir.
+   - Delikler aynı işlemde aynı miktarda daralır (Clipper, 1 mm = 1000 birim).
+   - Kiriş ve sadeleştirme toleransları güvenlik payıdır: şişirilmiş bölge
+     "gerçek parça ⊕ (kerf/2 + boşluk/2)" bölgesini **her zaman kapsar**.
+     Bunun bedeli en fazla 0,15 mm fazladan boşluktur.
+   - Birleşim tipi miter'dir: yuvarlak offset'i kapsar ve daha az köşe üretir.
+3. **Varyantlar** (`prepare.ts`): şişirme parça tipi başına bir kez yapılır.
+   Sonra izin verilen her dönüş (ve ayna) için döndürülüp bbox'ı orijine
+   taşınır. Her varyant "parça yerel → varyant" afin dönüşümünü saklar;
+   yerleşim sonucu bu dönüşümle orijinal geometriye (yaylar dahil) bağlanır.
+4. **Kutu yerleştirme** (`bboxNest.ts`, M2 referansı): şişirilmiş varyant
+   kutuları skyline ile yerleştirilir.
+   - Sıra: önce öncelik, sonra alan (büyükten küçüğe).
+   - Yerçekimi "sola" ise problem transpoze edilir.
+   - Yeni sac, mevcut saclarda yer yoksa ve sac limiti izin veriyorsa açılır.
+5. **Doğrulama** (`validate.ts`): her sonuçta çalışır. Şişirilmiş bölgelerin
+   kesişim alanı ve kenar payı dışına taşan alan Clipper ile ölçülür;
+   0,01 mm² üstü hata sayılır.
+
+**Sac koordinatları:** X = uzunluk, Y = genişlik. "1500 × 3000" şablonu
+genişlik 1500 (Y), uzunluk 3000 (X) demektir. Varsayılan yerçekimi "sola"
+olduğundan artan kısım sacın sağ ucunda tek şerit olarak kalır.
+
 ## Bilinen Kısıtlar
 
 - **Kiriş yaklaşımı içeride kalır.** Ayrıklaştırılmış noktalar gerçek eğri
   üzerindedir. Bu yüzden dışbükey kısımlarda poligon gerçek şeklin en fazla
-  0,05 mm içinde kalır. Nesting güvenliği için M2'de parça offset'ine bu
-  tolerans eklenecek. Parça ölçüleri (bbox) de aynı nedenle eğrili kenarlarda
-  en fazla 0,05 mm küçük gösterilebilir.
+  0,05 mm içinde kalır. Nesting'de bu fark offset'e eklenerek telafi edilir.
+  Listede gösterilen parça ölçüleri (bbox) eğrili kenarlarda en fazla 0,05 mm
+  küçük görünebilir.
+- **Kenar payı yorumu:** sac kenar payı kadar içe daraltılır; parçalar da
+  şişirilmiş halleriyle bu sınıra değer. Yani gerçek kesim kenarının sac
+  kenarına uzaklığı `kenar payı + kerf/2 + boşluk/2 (+ ≤ 0,15 mm)` olur.
+  Spesifikasyon böyle; istenirse tek bir yerden değiştirilebilir.
+- **Kutu yerleştirme (M2) referanstır:** parça kutularının içindeki boşlukları
+  ve iç bükey bölgeleri kullanamaz; skyline'ın altında kalan boşluklar da
+  bir daha kullanılmaz. Gerçek şekil yerleştirme M3'te (NFP) gelecek.
+- **Serbest dönüş maliyeti:** adım açısı küçüldükçe varyant sayısı artar
+  (15° → 24, ayna ile 48). M2'de bu yalnızca hazırlık süresini etkiliyor;
+  NFP aşamasında önbellek boyutunu doğrudan büyütecek.
 - **Kesişen konturlar** desteklenmez. Konturların ya iç içe ya ayrık olduğu
   varsayılır; kesişen konturlarda parça/delik ayrımı tanımsızdır.
 - **Belirsiz kavşaklar** (T birleşimleri, aynı köşeyi paylaşan konturlar)

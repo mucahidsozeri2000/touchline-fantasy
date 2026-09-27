@@ -3,6 +3,9 @@
  * eklenebilir.
  */
 import type { ImportErrorCode, ImportWarning } from '../core/dxf/types';
+import type { MaterialId } from '../core/materials';
+import type { RotationMode } from '../core/placement/rotations';
+import type { UnplacedReason } from '../core/placement/types';
 
 const nf = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 1 });
 const nf2 = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 });
@@ -53,14 +56,106 @@ export const tr = {
     openCount: (n: number) => `${n} açık kontur`,
   },
 
+  partSettings: {
+    quantity: 'Adet',
+    rotation: 'Dönüş',
+    rotationModes: {
+      none: 'Sadece 0°',
+      half: '0° / 180°',
+      quarter: '0° / 90° / 180° / 270°',
+      free: 'Serbest',
+    } satisfies Record<RotationMode, string>,
+    step: 'Adım (°)',
+    mirror: 'Ayna',
+    mirrorTitle: 'Parçanın aynalanmış hali de kullanılabilir',
+    priority: 'Öncelik',
+    priorities: ['Normal', 'Yüksek', 'Acil'],
+  },
+
+  tabs: {
+    parts: 'Parçalar',
+    sheet: 'Sac ve kesim',
+  },
+
+  sheet: {
+    heading: 'Sac',
+    template: 'Sac ölçüsü',
+    templates: {
+      '1000x2000': '1000 × 2000',
+      '1250x2500': '1250 × 2500',
+      '1500x3000': '1500 × 3000',
+      custom: 'Özel ölçü',
+    },
+    sizeY: 'Genişlik (Y)',
+    sizeX: 'Uzunluk (X)',
+    count: 'Sac adedi',
+    unlimited: 'Sınırsız',
+    margin: 'Kenar payı',
+    cutting: 'Kesim',
+    gap: 'Parçalar arası boşluk',
+    kerf: 'Kerf (kesim genişliği)',
+    material: 'Malzeme',
+    thickness: 'Kalınlık',
+    reportOnly: 'Malzeme ve kalınlık yalnızca rapor ve fire ağırlığı için kullanılır.',
+    gravity: 'Yerleştirme yönü',
+    gravities: { left: 'Sola (X boyunca)', down: 'Aşağıya (Y boyunca)' },
+    advanced: 'Gelişmiş',
+    simplify: 'Sadeleştirme toleransı',
+    simplifyHint: 'Büyük değer hesabı hızlandırır ama parçalar arasında biraz daha fazla boşluk bırakır.',
+    offsetHint: (d: string) => `Her parça dışa ${d} mm şişirilir (kerf/2 + boşluk/2 + güvenlik payı).`,
+    mm: 'mm',
+  },
+
+  materials: {
+    dkp: 'DKP / ST37',
+    galvaniz: 'Galvaniz',
+    paslanmaz304: 'Paslanmaz (304)',
+    aluminyum: 'Alüminyum',
+    bakir: 'Bakır',
+    pirinc: 'Pirinç',
+  } satisfies Record<MaterialId, string>,
+
+  nest: {
+    start: 'Başlat',
+    stop: 'Durdur',
+    running: 'Yerleştiriliyor…',
+    noParts: 'Yerleştirilecek parça yok (adetleri kontrol edin).',
+    stale: 'Ayarlar değişti — sonucu güncellemek için yeniden başlatın.',
+    failed: (detail?: string) => `Yerleştirme sırasında bir hata oluştu. Lütfen tekrar deneyin.${detail ? ` (Ayrıntı: ${detail})` : ''}`,
+    validationFailed: 'Uyarı: yerleşimde çakışma tespit edildi. Bu bir yazılım hatasıdır; lütfen bildirin.',
+    method: 'Yöntem: kutu (bounding-box) yerleştirme — referans. Gerçek şekil yerleştirme sonraki aşamada.',
+  },
+
   metrics: {
-    heading: 'Özet',
+    heading: 'Sonuç',
+    importHeading: 'İçe aktarma',
     fileCount: 'Dosya',
     partTypes: 'Parça tipi',
+    totalCopies: 'Toplam adet',
     totalArea: 'Toplam parça alanı',
     openContours: 'Açık kontur',
     warnings: 'Uyarı',
-    nestingSoon: 'Nesting (yerleştirme) sonraki aşamada eklenecek.',
+    sheetsUsed: 'Kullanılan sac',
+    efficiency: 'Toplam verim',
+    lastSheetEfficiency: 'Son sac verimi',
+    lastSheetLength: 'Son sacta kullanılan uzunluk',
+    scrapArea: 'Fire alanı',
+    scrapWeight: 'Tahmini fire ağırlığı',
+    unplaced: 'Yerleştirilemeyen',
+    elapsed: 'Süre',
+    placed: (a: number, b: number) => `${a} / ${b} parça yerleşti`,
+    unplacedReason: {
+      TOO_LARGE: 'saca sığmıyor',
+      NO_SHEET_LEFT: 'sac adedi yetmedi',
+    } satisfies Record<UnplacedReason, string>,
+  },
+
+  view: {
+    parts: 'Parçalar',
+    sheets: 'Yerleşim',
+    sheetTab: (i: number) => `Sac ${i}`,
+    showOffset: 'Offset sınırını göster',
+    noResult: 'Henüz yerleşim yok. "Başlat" ile hesaplayın.',
   },
 
   canvas: {
@@ -79,6 +174,10 @@ export const tr = {
     size: (w: number, h: number) => `${nf.format(w)} × ${nf.format(h)}`,
     /** mm² → cm² ya da m² (büyükse). */
     area: (mm2: number) => (mm2 >= 1e6 ? `${nf2.format(mm2 / 1e6)} m²` : `${nf.format(mm2 / 100)} cm²`),
+    m2: (mm2: number) => `${nf2.format(mm2 / 1e6)} m²`,
+    percent: (r: number) => `%${nf.format(r * 100)}`,
+    kg: (v: number) => `${nf.format(v)} kg`,
+    seconds: (ms: number) => `${nf2.format(ms / 1000)} sn`,
   },
 
   warning(w: ImportWarning): string {

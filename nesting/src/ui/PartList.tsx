@@ -1,50 +1,121 @@
 import { SUPPORTED_UNIT_CODES } from '../core/dxf/units';
 import type { ImportedPart } from '../core/dxf/types';
+import type { RotationMode } from '../core/placement/rotations';
 import { tr } from '../i18n/tr';
-import type { LoadedFile } from '../state/store';
+import { type LoadedFile, type PartSettings, DEFAULT_PART_SETTINGS } from '../state/store';
 import { PartThumb } from './PartThumb';
+import { NumberField } from './fields';
 
 interface Props {
   files: LoadedFile[];
   colorOf: Map<string, number>;
+  partSettings: Record<string, PartSettings>;
   hoveredPartId: string | null;
   onHoverPart(id: string | null): void;
   onRemoveFile(id: string): void;
   onSetUnits(id: string, code: number): void;
+  onUpdatePart(id: string, patch: Partial<PartSettings>): void;
 }
+
+const ROTATION_MODES: RotationMode[] = ['none', 'half', 'quarter', 'free'];
 
 function PartRow({
   part,
   colorIndex,
+  settings,
   hot,
   onHover,
+  onUpdate,
 }: {
   part: ImportedPart;
   colorIndex: number;
+  settings: PartSettings;
   hot: boolean;
   onHover(id: string | null): void;
+  onUpdate(patch: Partial<PartSettings>): void;
 }) {
+  const t = tr.partSettings;
+  const muted = settings.quantity === 0;
   return (
     <li
       onMouseEnter={() => onHover(part.id)}
       onMouseLeave={() => onHover(null)}
-      className={`flex items-center gap-3 rounded-md px-2 py-1.5 ${hot ? 'bg-sky-50' : ''}`}
+      className={`flex flex-col gap-1.5 rounded-md px-2 py-2 ${hot ? 'bg-sky-50' : ''} ${muted ? 'opacity-60' : ''}`}
     >
-      <PartThumb part={part} colorIndex={colorIndex} />
-      <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-medium text-slate-800" title={part.name}>
-          {part.name}
+      <div className="flex items-center gap-3">
+        <PartThumb part={part} colorIndex={colorIndex} />
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-sm font-medium text-slate-800" title={part.name}>
+            {part.name}
+          </div>
+          <div className="text-xs text-slate-500">
+            {tr.format.size(part.bbox.maxX, part.bbox.maxY)} mm · {tr.format.area(part.area)} · {tr.parts.holes(part.holes.length)}
+          </div>
         </div>
-        <div className="text-xs text-slate-500">
-          {tr.format.size(part.bbox.maxX, part.bbox.maxY)} mm · {tr.parts.holes(part.holes.length)}
-        </div>
+        <label className="flex flex-col items-end gap-0.5">
+          <span className="text-[10px] uppercase tracking-wide text-slate-400">{t.quantity}</span>
+          <NumberField
+            value={settings.quantity}
+            onChange={(v) => onUpdate({ quantity: v })}
+            integer
+            min={0}
+            max={100000}
+            className="w-16"
+            ariaLabel={`${part.name} — ${t.quantity}`}
+          />
+        </label>
       </div>
-      <div className="text-right text-xs tabular-nums text-slate-600">{tr.format.area(part.area)}</div>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pl-[52px] text-xs text-slate-600">
+        <label className="flex items-center gap-1">
+          <span>{t.rotation}</span>
+          <select
+            className="rounded border border-slate-300 bg-white px-1 py-0.5"
+            value={settings.rotation}
+            onChange={(e) => onUpdate({ rotation: e.target.value as RotationMode })}
+          >
+            {ROTATION_MODES.map((m) => (
+              <option key={m} value={m}>
+                {t.rotationModes[m]}
+              </option>
+            ))}
+          </select>
+        </label>
+        {settings.rotation === 'free' && (
+          <label className="flex items-center gap-1">
+            <span>{t.step}</span>
+            <NumberField
+              value={settings.rotationStep}
+              onChange={(v) => onUpdate({ rotationStep: v })}
+              min={1}
+              max={180}
+              className="w-14"
+            />
+          </label>
+        )}
+        <label className="flex items-center gap-1" title={t.mirrorTitle}>
+          <input type="checkbox" checked={settings.mirror} onChange={(e) => onUpdate({ mirror: e.target.checked })} />
+          <span>{t.mirror}</span>
+        </label>
+        <label className="flex items-center gap-1">
+          <span>{t.priority}</span>
+          <select
+            className="rounded border border-slate-300 bg-white px-1 py-0.5"
+            value={settings.priority}
+            onChange={(e) => onUpdate({ priority: Number(e.target.value) })}
+          >
+            {t.priorities.map((label, i) => (
+              <option key={i} value={i}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
     </li>
   );
 }
 
-export function PartList({ files, colorOf, hoveredPartId, onHoverPart, onRemoveFile, onSetUnits }: Props) {
+export function PartList({ files, colorOf, partSettings, hoveredPartId, onHoverPart, onRemoveFile, onSetUnits, onUpdatePart }: Props) {
   if (!files.length) return <p className="px-1 text-sm text-slate-500">{tr.parts.empty}</p>;
   return (
     <div className="flex flex-col gap-3">
@@ -106,14 +177,16 @@ export function PartList({ files, colorOf, hoveredPartId, onHoverPart, onRemoveF
             </ul>
           )}
           {f.result && f.result.parts.length > 0 && (
-            <ul className="p-1">
+            <ul className="divide-y divide-slate-100 p-1">
               {f.result.parts.map((p) => (
                 <PartRow
                   key={p.id}
                   part={p}
                   colorIndex={colorOf.get(p.id) ?? 0}
+                  settings={partSettings[p.id] ?? DEFAULT_PART_SETTINGS}
                   hot={hoveredPartId === p.id}
                   onHover={onHoverPart}
+                  onUpdate={(patch) => onUpdatePart(p.id, patch)}
                 />
               ))}
             </ul>
